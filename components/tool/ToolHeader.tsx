@@ -186,7 +186,8 @@ export function ToolHeader({
         </div>
 
         {(() => {
-          const cells = [
+          type Cell = { val: React.ReactNode; label: string };
+          const raw: Array<Cell | null> = [
             isCms
               ? null
               : { val: <><span style={{ color: "#f59e0b", fontSize: 12, letterSpacing: 1 }}>★★★★★</span> 4.8</>, label: `${tool.saves.toLocaleString()} reviews` },
@@ -195,7 +196,8 @@ export function ToolHeader({
             startingPrice ? { val: <span style={{ color: "var(--green)" }}>{startingPrice}</span>, label: "Starting price" } : null,
             launched ? { val: launched, label: "Launched" } : null,
             madeBy ? { val: madeBy, label: "Made by" } : null,
-          ].filter((c): c is { val: React.ReactNode; label: string } => c !== null);
+          ];
+          const cells = raw.filter((c): c is Cell => c !== null);
 
           if (cells.length === 0) return null;
 

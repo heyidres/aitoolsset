@@ -190,8 +190,11 @@ async function runAnthropic(name: string, websiteUrl: string, homepageText: stri
     messages: [{ role: "user", content: buildUserMessage(name, websiteUrl, homepageText) }],
   });
 
-  const block = response.content.find((b) => b.type === "text");
-  if (!block || block.type !== "text") {
+  // Anthropic's ContentBlock union doesn't narrow via .find — cast through
+  // the lenient shape to read the text field safely.
+  const blocks = response.content as Array<{ type: string; text?: string }>;
+  const block = blocks.find((b) => b.type === "text" && typeof b.text === "string");
+  if (!block?.text) {
     throw new Error("Claude returned no text content");
   }
   return parseJsonResponse(block.text);
