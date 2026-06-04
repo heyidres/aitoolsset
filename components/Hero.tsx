@@ -1,7 +1,15 @@
+import Link from "next/link";
 import { HeroTypewriter } from "./HeroTypewriter";
 import { HeroMosaic } from "./HeroMosaic";
 
-const PILLS = ["✦ Image AI", "✦ Code assistant", "✦ Video tools", "✦ Writing", "✦ Free only", "✦ New today"];
+const PILLS: Array<{ label: string; q: string }> = [
+  { label: "✦ Image AI", q: "image" },
+  { label: "✦ Code assistant", q: "code" },
+  { label: "✦ Video tools", q: "video" },
+  { label: "✦ Writing", q: "writing" },
+  { label: "✦ Free only", q: "free" },
+  { label: "✦ New today", q: "new" },
+];
 
 const STATS = [
   { num: "2,400+", label: "AI tools" },
@@ -77,7 +85,7 @@ export function Hero() {
             Discover, compare, and save the best AI tools — curated for writers, coders, designers, and teams.
           </p>
 
-          <form className="relative mb-7" role="search">
+          <form className="relative mb-7" role="search" action="/search" method="get">
             <svg
               className="absolute left-[17px] top-1/2 -translate-y-1/2 pointer-events-none"
               width="18"
@@ -94,7 +102,8 @@ export function Hero() {
               <path d="m21 21-4.35-4.35" />
             </svg>
             <input
-              type="text"
+              type="search"
+              name="q"
               placeholder='Search — "image generator", "coding assistant", "video AI"…'
               aria-label="Search AI tools"
               className="w-full h-[54px] rounded-pill text-[15px] text-white outline-none pl-[50px] pr-[140px] backdrop-blur-[10px] transition-colors placeholder:text-white/30 focus:border-[var(--blue)] focus:bg-white/10"
@@ -114,17 +123,18 @@ export function Hero() {
 
           <div className="flex flex-wrap gap-[6px]">
             {PILLS.map((p) => (
-              <button
-                key={p}
-                className="text-[12.5px] font-semibold px-[13px] py-[5px] rounded-pill transition-colors"
+              <Link
+                key={p.label}
+                href={`/search?q=${encodeURIComponent(p.q)}`}
+                className="text-[12.5px] font-semibold px-[13px] py-[5px] rounded-pill transition-colors hover:bg-white/10 hover:text-white"
                 style={{
                   color: "rgba(255,255,255,.5)",
                   background: "rgba(255,255,255,.05)",
                   border: "1px solid rgba(255,255,255,.12)",
                 }}
               >
-                {p}
-              </button>
+                {p.label}
+              </Link>
             ))}
           </div>
 
