@@ -142,7 +142,7 @@ export function BlogSidebar() {
             style={{ borderBottom: i < NEWS.length - 1 ? "1px solid var(--border)" : "none" }}
           >
             <div className="text-[10.5px] font-extrabold uppercase tracking-[.06em] mb-[3px] flex items-center gap-[5px]" style={{ color: "var(--text-3)" }}>
-              <img src={favicon(n.domain, 32)} alt={n.source} className="w-[11px] h-[11px] rounded-[2px]" />
+              <img src={favicon(n.domain, 32)} alt={`${n.source} icon`} width={11} height={11} loading="lazy" decoding="async" className="w-[11px] h-[11px] rounded-[2px]" />
               {n.source} · {n.time}
             </div>
             <div className="font-display text-[12.5px] font-bold leading-[1.35] transition-colors group-hover:text-blue mb-[3px]">

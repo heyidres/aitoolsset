@@ -15,6 +15,7 @@ import { Footer } from "@/components/Footer";
 import { ReadingProgress } from "@/components/blog/ReadingProgress";
 import { BlogSidebar } from "@/components/blog/BlogSidebar";
 import { getBlogPostBySlug, type CmsBlogPost } from "@/lib/cms";
+import { JsonLd, articleJsonLd, breadcrumbJsonLd } from "@/lib/json-ld";
 import LegacyGpt5Article, { LEGACY_METADATA } from "./LegacyGpt5Article";
 
 export const runtime = "nodejs";
@@ -81,6 +82,24 @@ function CmsPostRenderer({ post }: { post: CmsBlogPost }) {
 
   return (
     <main>
+      <JsonLd
+        data={[
+          articleJsonLd({
+            slug: post.slug,
+            title: post.title,
+            description: post.deck ?? post.seoDescription ?? null,
+            imageUrl: post.coverImageUrl,
+            author: post.author,
+            publishedAt: post.publishedAt,
+            updatedAt: post.updatedAt,
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", url: "/" },
+            { name: "Blog", url: "/blog" },
+            { name: post.title, url: `/blog/${post.slug}` },
+          ]),
+        ]}
+      />
       <Nav />
       <ReadingProgress />
 

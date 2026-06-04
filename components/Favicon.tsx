@@ -25,9 +25,14 @@ export function Favicon({ domain, name, size = 40, className = "", rounded = "" 
   return (
     <img
       src={favicon(domain, 64)}
-      alt={name}
+      alt={`${name} logo`}
       className={className}
       onError={() => setFailed(true)}
+      // Explicit width/height prevents Cumulative Layout Shift
+      width={size}
+      height={size}
+      loading="lazy"
+      decoding="async"
       style={{ width: size, height: size, objectFit: "cover", borderRadius: rounded || undefined }}
     />
   );

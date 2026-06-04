@@ -15,6 +15,7 @@ import { DEFAULT_TOOL_DETAIL } from "@/lib/tool-detail";
 import { getToolBySlug, getReviewsForTool, type CmsTool } from "@/lib/cms";
 import { cmsToolToLegacy, cmsReviewToLegacy, type LegacyReview } from "@/lib/cms-adapters";
 import { auth } from "@/lib/auth";
+import { JsonLd, toolJsonLd, breadcrumbJsonLd } from "@/lib/json-ld";
 
 // Dynamic so DB-managed tools resolve at request time —
 // `generateStaticParams` only lists hardcoded seed tools, but
@@ -119,8 +120,28 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
   const currentUser = session?.user
     ? { id: session.user.id, name: session.user.name ?? null, image: session.user.image ?? null }
     : null;
+  const ratingValue = found.tool.deal ? 4.8 : 4.7; // mirrors the visible header rating
+  const ratingCount = Math.max(found.tool.saves, 1);
   return (
     <main>
+      <JsonLd
+        data={[
+          toolJsonLd({
+            name: found.tool.name,
+            slug: found.tool.id,
+            description: descriptionHtml ? descriptionHtml.replace(/<[^>]+>/g, "").slice(0, 300) : found.tool.desc,
+            category: found.tool.cat,
+            pricing: found.tool.free ? "freemium" : "paid",
+            url: `https://${found.tool.domain}`,
+            rating: { value: ratingValue, count: ratingCount },
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", url: "/" },
+            { name: "AI Tools", url: "/ai-tools" },
+            { name: found.tool.name, url: `/ai-tool/${found.tool.id}` },
+          ]),
+        ]}
+      />
       <Nav />
 
       {/* Breadcrumb bar */}

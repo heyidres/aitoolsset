@@ -70,7 +70,15 @@ export function ToolHeader({
             className="w-[68px] h-[68px] rounded-[15px] overflow-hidden flex-shrink-0 flex items-center justify-center"
             style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
           >
-            <img src={favicon(tool.domain, 128)} alt={tool.name} className="w-full h-full object-cover" />
+            <img
+              src={favicon(tool.domain, 128)}
+              alt={`${tool.name} logo`}
+              width={68}
+              height={68}
+              decoding="async"
+              fetchPriority="high"
+              className="w-full h-full object-cover"
+            />
           </div>
 
           <div className="flex-1 min-w-0">

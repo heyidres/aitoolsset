@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Manrope, DM_Sans, Lora } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
+import { JsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/json-ld";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -25,23 +28,50 @@ const lora = Lora({
   display: "swap",
 });
 
+const SITE = process.env.SITE_URL ?? "https://aitoolsset.com";
+
 export const metadata: Metadata = {
-  title: "AI Tools Set — Find the Best AI Tools",
+  metadataBase: new URL(SITE),
+  title: {
+    default: "AI Tools Set — Find the Best AI Tools",
+    template: "%s — AI Tools Set",
+  },
   description:
     "Discover, compare, and save the best AI tools — curated for writers, coders, designers, and teams. 2,400+ tools across 48 categories, updated daily.",
+  applicationName: "AI Tools Set",
+  authors: [{ name: "AI Tools Set" }],
+  keywords: ["AI tools", "AI directory", "ChatGPT alternatives", "best AI tools", "AI tool comparison"],
   openGraph: {
     title: "AI Tools Set — Find the Best AI Tools",
-    description:
-      "The cleanest AI tools directory. Curated, categorized, and updated every day.",
+    description: "The cleanest AI tools directory. Curated, categorized, and updated every day.",
     type: "website",
-    url: "https://aitoolsset.com",
+    url: SITE,
+    siteName: "AI Tools Set",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI Tools Set — Find the Best AI Tools",
+    description: "Hand-curated AI tools directory. 2,400+ tools, 48 categories.",
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${manrope.variable} ${dmSans.variable} ${lora.variable}`}>
-      <body>{children}</body>
+      <head>
+        {/* Speed up favicon + font loads */}
+        <link rel="preconnect" href="https://www.google.com" />
+        <link rel="dns-prefetch" href="https://www.google.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        {/* Schema.org root entities — site + organization */}
+        <JsonLd data={[websiteJsonLd(), organizationJsonLd()]} />
+      </head>
+      <body>
+        {children}
+        <Analytics />
+        <SpeedInsights />
+      </body>
     </html>
   );
 }

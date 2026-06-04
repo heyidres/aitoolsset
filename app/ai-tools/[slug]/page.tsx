@@ -13,6 +13,7 @@ import { ALL_CATS } from "@/lib/categories";
 import { MARKETING_FAQ_TEXT } from "@/lib/category-detail";
 import { getToolsByCategory, getCategoryBySlug } from "@/lib/cms";
 import { cmsToolToDetail } from "@/lib/cms-adapters";
+import { JsonLd, breadcrumbJsonLd, faqJsonLd } from "@/lib/json-ld";
 
 export const runtime = "nodejs";
 export const dynamicParams = true;
@@ -62,6 +63,21 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
 
   return (
     <main>
+      <JsonLd
+        data={[
+          breadcrumbJsonLd([
+            { name: "Home", url: "/" },
+            { name: "AI Tools", url: "/ai-tools" },
+            { name: cat.name, url: `/ai-tools/${cat.slug}` },
+          ]),
+          faqJsonLd(
+            MARKETING_FAQ_TEXT.map((f) => ({
+              q: f.q.replace(/marketing/gi, cat.name.toLowerCase()),
+              a: f.a.replace(/<[^>]+>/g, ""),
+            }))
+          ),
+        ]}
+      />
       <Nav />
       <CategoryHero categoryName={cat.name} count={finalCount} />
       <CategoryIntro categoryName={cat.name} count={finalCount} />
