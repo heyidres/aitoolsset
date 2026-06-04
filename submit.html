@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Submit Your AI Tool — AI Tools Set</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --blue:#0052ff;--blue-h:#578bfa;--blue-soft:rgba(0,82,255,.08);
+  --white:#fff;--bg:#f8f9fa;--surface:#eef0f3;
+  --cream:#FBF8F1;--mint:#F1F7F3;--lavender:#F4F2FA;--sand:#F6F2EC;
+  --near-black:#0F172A;--dark-card:#1E293B;--dark-border:rgba(255,255,255,.07);
+  --text:#0a0b0d;--text-2:#5b616e;--text-3:#9aa0ae;
+  --border:rgba(91,97,110,.18);--border-2:rgba(91,97,110,.28);
+  --green:#16a34a;--green-bg:#f0fdf4;--green-border:#bbf7d0;
+  --r-sm:6px;--r:12px;--r-lg:20px;--r-pill:100px;
+  --font:'Manrope',sans-serif;--font-body:'DM Sans',sans-serif;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 4px 16px rgba(0,0,0,.08);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.12);
+  --gold:#d97706;--gold-bg:#fffbeb;--gold-border:#fde68a;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{overflow-x:hidden;}
+body{font-family:var(--font-body);background:var(--white);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.6;}
+a{color:inherit;text-decoration:none;}
+button{cursor:pointer;border:none;background:none;font-family:inherit;color:inherit;}
+img{display:block;max-width:100%;}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.nav-inner{max-width:1280px;margin:0 auto;padding:0 36px;height:58px;display:flex;align-items:center;}
+.logo{font-family:var(--font);font-size:16px;font-weight:800;letter-spacing:-.4px;color:var(--text);display:flex;align-items:center;gap:8px;margin-right:36px;flex-shrink:0;}
+.logo-mark{width:26px;height:26px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center;}
+.logo-mark svg{width:14px;height:14px;}
+.nav-links{display:flex;align-items:center;gap:2px;flex:1;}
+.nav-links a{font-family:var(--font);font-size:13.5px;font-weight:600;color:var(--text-2);padding:5px 12px;border-radius:var(--r-pill);transition:color .12s,background .12s;}
+.nav-links a:hover{color:var(--text);background:var(--surface);}
+.nav-right{display:flex;align-items:center;gap:8px;}
+.nav-ghost{font-family:var(--font);font-size:13.5px;font-weight:600;color:var(--text-2);padding:7px 16px;border-radius:var(--r-pill);transition:background .12s;}
+.nav-ghost:hover{background:var(--surface);}
+.nav-primary{font-family:var(--font);font-size:13.5px;font-weight:700;color:#fff;background:var(--blue);padding:8px 20px;border-radius:var(--r-pill);transition:background .15s;}
+.nav-primary:hover{background:var(--blue-h);}
+
+/* ── HERO ── */
+.hero{background:var(--near-black);padding:72px 36px 80px;position:relative;overflow:hidden;text-align:center;}
+.hero::before{content:'';position:absolute;top:-150px;left:50%;transform:translateX(-50%);width:800px;height:800px;background:radial-gradient(circle,rgba(0,82,255,.2) 0%,transparent 60%);pointer-events:none;}
+.hero-inner{max-width:760px;margin:0 auto;position:relative;}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:var(--r-pill);padding:5px 14px;font-family:var(--font);font-size:12px;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.06em;margin-bottom:20px;}
+.hero h1{font-family:var(--font);font-size:clamp(42px,5vw,68px);font-weight:900;letter-spacing:-2.5px;line-height:1.00;color:#fff;margin-bottom:16px;}
+.hero h1 span{color:var(--blue-h);}
+.hero-sub{font-size:17px;color:rgba(255,255,255,.5);line-height:1.7;max-width:520px;margin:0 auto 36px;}
+.hero-stats{display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap;}
+.hs{text-align:center;}
+.hs-num{font-family:var(--font);font-size:28px;font-weight:900;letter-spacing:-1px;color:#fff;line-height:1;}
+.hs-label{font-size:12.5px;color:rgba(255,255,255,.35);margin-top:4px;}
+.hs-div{width:1px;height:36px;background:rgba(255,255,255,.1);}
+
+/* ── TRUST BAR ── */
+.trust-bar{background:var(--white);border-bottom:1px solid var(--border);padding:16px 36px;}
+.trust-bar-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap;}
+.trust-item{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--text-2);}
+.trust-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+
+/* ── SECTION HELPERS ── */
+.section{padding:72px 36px;}
+.section-inner{max-width:1280px;margin:0 auto;}
+.section-center{text-align:center;max-width:680px;margin:0 auto 56px;}
+.section-eyebrow{font-family:var(--font);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--blue);margin-bottom:8px;}
+.section-title{font-family:var(--font);font-size:clamp(28px,3vw,42px);font-weight:900;letter-spacing:-1.5px;line-height:1.1;margin-bottom:12px;}
+.section-sub{font-size:16px;color:var(--text-2);line-height:1.7;}
+
+/* ── PRICING ── */
+.pricing-toggle{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:48px;}
+.pt-label{font-family:var(--font);font-size:14px;font-weight:600;color:var(--text-2);}
+.pt-track{width:48px;height:26px;background:var(--blue);border-radius:100px;cursor:pointer;position:relative;transition:background .2s;}
+.pt-thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;}
+.pt-track.monthly .pt-thumb{transform:translateX(0);}
+.pt-track.annual .pt-thumb{transform:translateX(22px);}
+.pt-save-badge{background:#d1fae5;color:#065f46;font-family:var(--font);font-size:11px;font-weight:800;padding:3px 9px;border-radius:var(--r-pill);border:1px solid #a7f3d0;}
+
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1100px;margin:0 auto;}
+.plan-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:32px;position:relative;transition:border-color .2s,box-shadow .2s,transform .2s;}
+.plan-card:hover{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft),var(--shadow);}
+.plan-card.popular{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft),var(--shadow-lg);}
+.plan-card.enterprise{background:var(--near-black);}
+.popular-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-family:var(--font);font-size:11px;font-weight:800;padding:4px 14px;border-radius:var(--r-pill);white-space:nowrap;letter-spacing:.04em;text-transform:uppercase;}
+.plan-name{font-family:var(--font);font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--text-2);margin-bottom:8px;}
+.plan-card.enterprise .plan-name{color:rgba(255,255,255,.5);}
+.plan-price-row{display:flex;align-items:flex-end;gap:4px;margin-bottom:6px;}
+.plan-price{font-family:var(--font);font-size:48px;font-weight:900;letter-spacing:-2px;line-height:1;color:var(--text);}
+.plan-card.enterprise .plan-price{color:#fff;}
+.plan-price-period{font-size:14px;color:var(--text-2);padding-bottom:8px;font-weight:500;}
+.plan-card.enterprise .plan-price-period{color:rgba(255,255,255,.4);}
+.plan-desc{font-size:13.5px;color:var(--text-2);line-height:1.55;margin-bottom:24px;min-height:44px;}
+.plan-card.enterprise .plan-desc{color:rgba(255,255,255,.45);}
+.plan-btn{width:100%;font-family:var(--font);font-size:14px;font-weight:700;padding:13px;border-radius:var(--r-pill);margin-bottom:28px;transition:all .15s;}
+.plan-btn-primary{background:var(--blue);color:#fff;}
+.plan-btn-primary:hover{background:var(--blue-h);}
+.plan-btn-surface{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
+.plan-btn-surface:hover{background:#dde0e5;}
+.plan-btn-dark{background:rgba(255,255,255,.1);color:#fff;border:1.5px solid rgba(255,255,255,.15);}
+.plan-btn-dark:hover{background:rgba(255,255,255,.18);}
+.plan-divider{height:1px;background:var(--border);margin-bottom:24px;}
+.plan-card.enterprise .plan-divider{background:rgba(255,255,255,.08);}
+.plan-features-title{font-family:var(--font);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);margin-bottom:14px;}
+.plan-card.enterprise .plan-features-title{color:rgba(255,255,255,.3);}
+.plan-feats{display:flex;flex-direction:column;gap:10px;}
+.plan-feat{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;color:var(--text-2);line-height:1.45;}
+.plan-card.enterprise .plan-feat{color:rgba(255,255,255,.55);}
+.feat-check{width:18px;height:18px;border-radius:50%;background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;flex-shrink:0;margin-top:1px;}
+.plan-card.popular .feat-check{background:var(--blue-soft);border-color:rgba(0,82,255,.2);color:var(--blue);}
+.plan-card.enterprise .feat-check{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.7);}
+
+/* ── WHAT YOU GET ── */
+.benefits-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+.benefit-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px;}
+.bi-icon{width:44px;height:44px;border-radius:12px;background:var(--blue-soft);border:1px solid rgba(0,82,255,.12);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px;}
+.bi-title{font-family:var(--font);font-size:16px;font-weight:800;letter-spacing:-.3px;margin-bottom:6px;}
+.bi-desc{font-size:13.5px;color:var(--text-2);line-height:1.6;}
+
+/* ── SUBMIT FORM ── */
+.form-section{background:var(--white);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.form-wrap{max-width:800px;margin:0 auto;padding:72px 36px;}
+.form-header{text-align:center;margin-bottom:48px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-group.full{grid-column:1/-1;}
+.form-label{font-family:var(--font);font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:5px;}
+.form-label-req{color:#ef4444;font-size:12px;}
+.form-input{height:46px;border:1.5px solid var(--border);border-radius:var(--r);font-family:var(--font-body);font-size:14px;color:var(--text);padding:0 14px;outline:none;background:var(--white);transition:border-color .15s,box-shadow .15s;}
+.form-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft);}
+.form-input::placeholder{color:var(--text-3);}
+.form-textarea{min-height:110px;border:1.5px solid var(--border);border-radius:var(--r);font-family:var(--font-body);font-size:14px;color:var(--text);padding:12px 14px;outline:none;background:var(--white);resize:vertical;transition:border-color .15s;line-height:1.6;}
+.form-textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft);}
+.form-select{height:46px;border:1.5px solid var(--border);border-radius:var(--r);font-family:var(--font-body);font-size:14px;color:var(--text);padding:0 14px;outline:none;background:var(--white);cursor:pointer;transition:border-color .15s;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239aa0ae' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;}
+.form-select:focus{border-color:var(--blue);}
+.form-hint{font-size:12px;color:var(--text-3);margin-top:2px;}
+
+/* plan selector */
+.plan-selector{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;grid-column:1/-1;}
+.ps-option{border:1.5px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;transition:all .15s;position:relative;}
+.ps-option:hover{border-color:var(--blue);}
+.ps-option.selected{border-color:var(--blue);background:var(--blue-soft);}
+.ps-option.selected .ps-name{color:var(--blue);}
+.ps-name{font-family:var(--font);font-size:14px;font-weight:800;margin-bottom:3px;}
+.ps-price{font-family:var(--font);font-size:20px;font-weight:900;letter-spacing:-.5px;color:var(--text);}
+.ps-desc{font-size:12px;color:var(--text-2);margin-top:4px;}
+.ps-badge{position:absolute;top:-9px;right:12px;background:var(--blue);color:#fff;font-family:var(--font);font-size:10px;font-weight:800;padding:2px 9px;border-radius:var(--r-pill);}
+
+/* upload area */
+.upload-area{border:2px dashed var(--border);border-radius:var(--r);padding:32px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;}
+.upload-area:hover,.upload-area.dragover{border-color:var(--blue);background:var(--blue-soft);}
+.upload-icon{font-size:28px;margin-bottom:8px;}
+.upload-text{font-family:var(--font);font-size:14px;font-weight:700;margin-bottom:4px;}
+.upload-sub{font-size:12.5px;color:var(--text-3);}
+
+/* checkbox */
+.checkbox-group{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:var(--text-2);line-height:1.5;}
+.checkbox-group input[type=checkbox]{width:16px;height:16px;accent-color:var(--blue);flex-shrink:0;margin-top:2px;cursor:pointer;}
+
+/* form submit */
+.form-submit-area{margin-top:32px;text-align:center;}
+.form-submit-btn{font-family:var(--font);font-size:16px;font-weight:700;color:#fff;background:var(--blue);padding:15px 48px;border-radius:var(--r-pill);transition:background .15s,transform .1s,box-shadow .15s;display:inline-flex;align-items:center;gap:8px;}
+.form-submit-btn:hover{background:var(--blue-h);transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,82,255,.35);}
+.form-submit-note{font-size:12.5px;color:var(--text-3);margin-top:12px;}
+
+/* success state */
+.success-msg{display:none;text-align:center;padding:48px 24px;}
+.success-msg.show{display:block;}
+.success-icon{width:72px;height:72px;background:var(--green-bg);border:2px solid var(--green-border);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;}
+.success-title{font-family:var(--font);font-size:28px;font-weight:900;letter-spacing:-.8px;margin-bottom:10px;}
+.success-sub{font-size:15px;color:var(--text-2);max-width:420px;margin:0 auto;}
+
+/* ── WHY WE CHARGE ── */
+.why-section{background:var(--near-black);padding:72px 36px;}
+.why-inner{max-width:1280px;margin:0 auto;}
+.why-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;}
+.why-left{}
+.why-eyebrow{font-family:var(--font);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--blue-h);margin-bottom:12px;}
+.why-title{font-family:var(--font);font-size:clamp(32px,3vw,48px);font-weight:900;letter-spacing:-1.5px;line-height:1.05;color:#fff;margin-bottom:20px;}
+.why-text{font-size:15px;color:rgba(255,255,255,.5);line-height:1.8;}
+.why-text p{margin-bottom:14px;}
+.why-text p:last-child{margin-bottom:0;}
+.why-right{}
+.why-points{display:flex;flex-direction:column;gap:16px;}
+.why-point{display:flex;gap:14px;align-items:flex-start;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:var(--r);padding:18px;}
+.wp-icon{width:40px;height:40px;border-radius:10px;background:var(--blue-soft);border:1px solid rgba(0,82,255,.2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.wp-title{font-family:var(--font);font-size:14.5px;font-weight:800;color:#fff;margin-bottom:4px;}
+.wp-desc{font-size:13px;color:rgba(255,255,255,.4);line-height:1.55;}
+
+/* ── FAQs ── */
+.faq-section{padding:72px 36px;background:var(--white);}
+.faq-inner{max-width:800px;margin:0 auto;}
+.faq-list{display:flex;flex-direction:column;gap:0;margin-top:40px;}
+.faq-item{border-bottom:1px solid var(--border);}
+.faq-q{display:flex;align-items:center;justify-content:space-between;padding:20px 0;cursor:pointer;gap:16px;}
+.faq-q-text{font-family:var(--font);font-size:15.5px;font-weight:700;color:var(--text);flex:1;}
+.faq-icon{width:24px;height:24px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text-2);font-size:14px;transition:background .15s,transform .2s;}
+.faq-item.open .faq-icon{background:var(--blue);color:#fff;transform:rotate(45deg);}
+.faq-a{font-size:14.5px;color:var(--text-2);line-height:1.75;padding:0 0 20px;display:none;}
+.faq-item.open .faq-a{display:block;}
+.faq-a strong{color:var(--text);font-weight:700;}
+.faq-a a{color:var(--blue);text-decoration:underline;text-underline-offset:2px;}
+
+/* ── COMPARISON TABLE ── */
+.compare-section{padding:72px 36px;background:var(--bg);}
+.compare-inner{max-width:1100px;margin:0 auto;}
+.compare-table{width:100%;border-collapse:collapse;background:var(--white);border-radius:var(--r-lg);overflow:hidden;border:1px solid var(--border);}
+.compare-table th{background:var(--near-black);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;padding:16px 20px;text-align:left;}
+.compare-table th:first-child{color:rgba(255,255,255,.4);}
+.compare-table th.highlight{background:var(--blue);}
+.compare-table td{padding:14px 20px;border-bottom:1px solid var(--border);font-size:13.5px;color:var(--text-2);}
+.compare-table td:first-child{font-weight:600;color:var(--text);}
+.compare-table tr:last-child td{border-bottom:none;}
+.compare-table td.highlight{background:var(--blue-soft);}
+.ct-yes{color:var(--green);font-weight:700;}
+.ct-no{color:var(--text-3);}
+.ct-badge{display:inline-flex;font-size:11px;font-weight:700;color:var(--blue);background:var(--blue-soft);border:1px solid rgba(0,82,255,.15);padding:2px 8px;border-radius:var(--r-pill);}
+
+/* ── FOOTER ── */
+footer{background:var(--near-black);border-top:1px solid var(--dark-border);padding:52px 36px 32px;}
+.footer-inner{max-width:1280px;margin:0 auto;}
+.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:40px;}
+.footer-logo{font-family:var(--font);font-size:15px;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.footer-desc{font-size:13px;color:rgba(255,255,255,.3);line-height:1.65;max-width:220px;}
+.fc-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.25);margin-bottom:14px;}
+.fc a{display:block;font-size:13px;color:rgba(255,255,255,.4);margin-bottom:9px;transition:color .12s;}
+.fc a:hover{color:#fff;}
+.footer-bottom{border-top:1px solid var(--dark-border);padding-top:20px;display:flex;justify-content:space-between;}
+.footer-copy{font-size:12px;color:rgba(255,255,255,.2);}
+.footer-links{display:flex;gap:18px;}
+.footer-links a{font-size:12px;color:rgba(255,255,255,.25);transition:color .12s;}
+.footer-links a:hover{color:rgba(255,255,255,.7);}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <div class="logo-mark"><svg viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1.2" fill="white"/><rect x="8" y="1" width="5" height="5" rx="1.2" fill="white" opacity=".5"/><rect x="1" y="8" width="5" height="5" rx="1.2" fill="white" opacity=".5"/><rect x="8" y="8" width="5" height="5" rx="1.2" fill="white"/></svg></div>
+      AI Tools Set
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Browse</a><a href="#">Categories</a><a href="news.html">News</a><a href="#">Top Rated</a><a href="#">Blog</a>
+    </div>
+    <div class="nav-right">
+      <button class="nav-ghost">Sign in</button>
+      <button class="nav-primary">Submit a Tool</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">For AI Tool Makers</div>
+    <h1>Get your AI tool in front of<br/><span>50,000+ users</span></h1>
+    <p class="hero-sub">AI Tools Set is the most curated AI directory on the internet. Submit your tool and reach the exact audience that needs it — developers, creators, and AI enthusiasts.</p>
+    <div class="hero-stats">
+      <div class="hs"><div class="hs-num">50k+</div><div class="hs-label">Monthly visitors</div></div>
+      <div class="hs-div"></div>
+      <div class="hs"><div class="hs-num">2,400+</div><div class="hs-label">Tools listed</div></div>
+      <div class="hs-div"></div>
+      <div class="hs"><div class="hs-num">12k+</div><div class="hs-label">User reviews</div></div>
+      <div class="hs-div"></div>
+      <div class="hs"><div class="hs-num">48h</div><div class="hs-label">Avg. review time</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- TRUST BAR -->
+<div class="trust-bar">
+  <div class="trust-bar-inner">
+    <div class="trust-item"><div class="trust-icon" style="background:#f0fdf4;">✓</div>Quality-reviewed by our editorial team</div>
+    <div class="trust-item"><div class="trust-icon" style="background:#eff6ff;">🔒</div>Secure payment via Stripe</div>
+    <div class="trust-item"><div class="trust-icon" style="background:#fdf4ff;">⚡</div>Listed within 48 hours</div>
+    <div class="trust-item"><div class="trust-icon" style="background:#fff7ed;">📈</div>Real traffic from real users</div>
+    <div class="trust-item"><div class="trust-icon" style="background:#fef9c3;">🌍</div>SEO-optimised tool pages</div>
+  </div>
+</div>
+
+<!-- PRICING PLANS -->
+<div class="section" style="background:var(--bg);">
+  <div class="section-inner">
+    <div class="section-center">
+      <div class="section-eyebrow">Pricing</div>
+      <div class="section-title">Choose your listing plan</div>
+      <div class="section-sub">Start with a free basic listing or unlock premium visibility with featured placement, priority indexing, and direct analytics.</div>
+    </div>
+
+    <!-- Toggle -->
+    <div class="pricing-toggle">
+      <span class="pt-label" id="toggle-monthly" style="color:var(--text);font-weight:700;">Monthly</span>
+      <div class="pt-track monthly" id="billing-toggle" onclick="toggleBilling()"><div class="pt-thumb"></div></div>
+      <span class="pt-label" id="toggle-annual">Annual</span>
+      <span class="pt-save-badge">Save 30%</span>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- Free -->
+      <div class="plan-card">
+        <div class="plan-name">Free</div>
+        <div class="plan-price-row">
+          <div class="plan-price">$0</div>
+          <div class="plan-price-period">/forever</div>
+        </div>
+        <div class="plan-desc">Get your tool listed in our directory. Perfect for early-stage tools and open-source projects.</div>
+        <button class="plan-btn plan-btn-surface" onclick="selectPlan('free')">Get Listed Free</button>
+        <div class="plan-divider"></div>
+        <div class="plan-features-title">What's included</div>
+        <div class="plan-feats">
+          <div class="plan-feat"><div class="feat-check">✓</div>Basic tool listing page</div>
+          <div class="plan-feat"><div class="feat-check">✓</div>Searchable in directory</div>
+          <div class="plan-feat"><div class="feat-check">✓</div>Category placement</div>
+          <div class="plan-feat"><div class="feat-check">✓</div>User reviews enabled</div>
+          <div class="plan-feat"><div class="feat-check">✓</div>Mobile optimised</div>
+          <div class="plan-feat" style="opacity:.4;"><div class="feat-check" style="background:var(--surface);border-color:var(--border);color:var(--text-3);">—</div>No featured placement</div>
+          <div class="plan-feat" style="opacity:.4;"><div class="feat-check" style="background:var(--surface);border-color:var(--border);color:var(--text-3);">—</div>No analytics dashboard</div>
+        </div>
+      </div>
+
+      <!-- Featured -->
+      <div class="plan-card popular">
+        <div class="popular-badge">Most Popular</div>
+        <div class="plan-name">Featured</div>
+        <div class="plan-price-row">
+          <div class="plan-price" id="featured-price">$49</div>
+          <div class="plan-price-period" id="featured-period">/month</div>
+        </div>
+        <div class="plan-desc">Get prominent placement in our featured sections with a verified badge and analytics access.</div>
+        <button class="plan-btn plan-btn-primary" onclick="selectPlan('featured')">Get Featured</button>
+        <div class="plan-divider"></div>
+        <div class="plan-features-title">Everything in Free, plus</div>
+        <div class="plan-feats">
+          <div class="plan-feat"><div class="feat-check">✓</div><strong>Featured</strong> badge on listing</div>
+          <div class="plan-feat"><div class="feat-check">✓</div>Homepage featured section</div>
+          <div class="plan-feat"><div class="feat-check">✓</div>Category page top placement</div>
+          <div class="plan-feat"><div class="feat-check">✓</div>Verified ✓ badge</div>
+          <div class="plan-feat"><div class="feat-check">✓</div>Analytics dashboard</div>
+          <div class="plan-feat"><div class="feat-check">✓</div>Priority review (24h)</div>
+          <div class="plan-feat"><div class="feat-check">✓</div>Social media mention</div>
+          <div class="plan-feat"><div class="feat-check">✓</div>Newsletter inclusion (1×/mo)</div>
+        </div>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="plan-card enterprise">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price-row">
+          <div class="plan-price">Custom</div>
+        </div>
+        <div class="plan-price-period" style="color:rgba(255,255,255,.3);margin-bottom:6px;">Tailored for your needs</div>
+        <div class="plan-desc">Dedicated placement, news coverage, sponsored content, and custom integrations for established AI companies.</div>
+        <button class="plan-btn plan-btn-dark" onclick="selectPlan('enterprise')">Contact Us</button>
+        <div class="plan-divider"></div>
+        <div class="plan-features-title">Everything in Featured, plus</div>
+        <div class="plan-feats">
+          <div class="plan-feat"><div class="feat-check">✓</div>Dedicated landing page</div>
+          <div class="plan-feat"><div class="feat-check">✓</div>Sponsored news article</div>
+          <div class="plan-feat"><div class="feat-check">✓</div>Homepage hero banner</div>
+          <div class="plan-feat"><div class="feat-check">✓</div>Newsletter sponsorship</div>
+          <div class="plan-feat"><div class="feat-check">✓</div>API integration support</div>
+          <div class="plan-feat"><div class="feat-check">✓</div>Dedicated account manager</div>
+          <div class="plan-feat"><div class="feat-check">✓</div>Custom analytics reports</div>
+          <div class="plan-feat"><div class="feat-check">✓</div>Priority customer support</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPARISON TABLE -->
+<div class="compare-section">
+  <div class="compare-inner">
+    <div class="section-center" style="margin-bottom:36px;">
+      <div class="section-eyebrow">Compare Plans</div>
+      <div class="section-title" style="font-size:32px;">Everything side by side</div>
+    </div>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Free</th>
+          <th class="highlight">Featured</th>
+          <th>Enterprise</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Basic listing page</td><td class="ct-yes">✓</td><td class="highlight ct-yes">✓</td><td class="ct-yes">✓</td></tr>
+        <tr><td>Searchable in directory</td><td class="ct-yes">✓</td><td class="highlight ct-yes">✓</td><td class="ct-yes">✓</td></tr>
+        <tr><td>User reviews</td><td class="ct-yes">✓</td><td class="highlight ct-yes">✓</td><td class="ct-yes">✓</td></tr>
+        <tr><td>SEO-optimised page</td><td class="ct-yes">✓</td><td class="highlight ct-yes">✓</td><td class="ct-yes">✓</td></tr>
+        <tr><td>Verified badge</td><td class="ct-no">—</td><td class="highlight ct-yes">✓</td><td class="ct-yes">✓</td></tr>
+        <tr><td>Featured placement</td><td class="ct-no">—</td><td class="highlight"><span class="ct-badge">Homepage + Category</span></td><td class="ct-yes">✓ Priority</td></tr>
+        <tr><td>Analytics dashboard</td><td class="ct-no">—</td><td class="highlight ct-yes">✓</td><td class="ct-yes">✓ Advanced</td></tr>
+        <tr><td>Newsletter inclusion</td><td class="ct-no">—</td><td class="highlight">1× per month</td><td class="ct-yes">Dedicated issue</td></tr>
+        <tr><td>Social media mention</td><td class="ct-no">—</td><td class="highlight ct-yes">✓</td><td class="ct-yes">✓ Multiple</td></tr>
+        <tr><td>Review turnaround</td><td>5–7 days</td><td class="highlight">24 hours</td><td>Same day</td></tr>
+        <tr><td>Sponsored article</td><td class="ct-no">—</td><td class="highlight ct-no">—</td><td class="ct-yes">✓</td></tr>
+        <tr><td>Account manager</td><td class="ct-no">—</td><td class="highlight ct-no">—</td><td class="ct-yes">✓ Dedicated</td></tr>
+        <tr><td>Homepage hero banner</td><td class="ct-no">—</td><td class="highlight ct-no">—</td><td class="ct-yes">✓</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- WHAT YOU GET -->
+<div class="section" style="background:var(--bg);">
+  <div class="section-inner">
+    <div class="section-center">
+      <div class="section-eyebrow">What You Get</div>
+      <div class="section-title">Built to drive real results</div>
+      <div class="section-sub">Every listing on AI Tools Set is crafted to convert visitors into users — not just eyeballs.</div>
+    </div>
+    <div class="benefits-grid">
+      <div class="benefit-item">
+        <div class="bi-icon">🎯</div>
+        <div class="bi-title">Targeted audience</div>
+        <div class="bi-desc">Our visitors are AI professionals, developers, and power users actively looking for tools to integrate into their workflows — not casual browsers.</div>
+      </div>
+      <div class="benefit-item">
+        <div class="bi-icon">🔍</div>
+        <div class="bi-title">SEO authority</div>
+        <div class="bi-desc">Each tool page is fully optimised for search engines with structured data, fast loading, and keyword-rich content — driving long-term organic traffic.</div>
+      </div>
+      <div class="benefit-item">
+        <div class="bi-icon">⭐</div>
+        <div class="bi-title">Social proof engine</div>
+        <div class="bi-desc">User reviews, saves, and ratings build credibility that converts. Tools with 50+ reviews see 3× higher click-through rates from our directory.</div>
+      </div>
+      <div class="benefit-item">
+        <div class="bi-icon">📊</div>
+        <div class="bi-title">Analytics dashboard</div>
+        <div class="bi-desc">Track impressions, clicks, saves, and review scores in real time. Understand where your traffic comes from and which features resonate most.</div>
+      </div>
+      <div class="benefit-item">
+        <div class="bi-icon">📧</div>
+        <div class="bi-title">Newsletter reach</div>
+        <div class="bi-desc">Our weekly AI newsletter goes to 28,000+ subscribers. Featured tools get a dedicated mention, driving a measurable spike in signups.</div>
+      </div>
+      <div class="benefit-item">
+        <div class="bi-icon">🔗</div>
+        <div class="bi-title">Embed badge</div>
+        <div class="bi-desc">Featured listings come with an "As seen on AI Tools Set" badge you can embed on your landing page — adding trusted third-party credibility.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUBMIT FORM -->
+<div class="form-section" id="submit-form-section">
+  <div class="form-wrap">
+    <div class="form-header">
+      <div class="section-eyebrow">Submit Your Tool</div>
+      <div class="section-title" style="font-size:36px;">Tell us about your tool</div>
+      <div class="section-sub" style="font-size:15px;margin-top:8px;">Fill in the details below. Our editorial team reviews every submission within 48 hours.</div>
+    </div>
+
+    <form id="submit-form" onsubmit="submitForm(event)">
+      <div class="form-grid">
+
+        <!-- Plan selector -->
+        <div class="form-group full">
+          <div class="form-label">Select Plan <span class="form-label-req">*</span></div>
+          <div class="plan-selector">
+            <div class="ps-option" data-plan="free" onclick="selectPlanForm('free',this)">
+              <div class="ps-name">Free</div>
+              <div class="ps-price">$0</div>
+              <div class="ps-desc">Basic listing</div>
+            </div>
+            <div class="ps-option selected" data-plan="featured" onclick="selectPlanForm('featured',this)">
+              <div class="ps-badge">Popular</div>
+              <div class="ps-name">Featured</div>
+              <div class="ps-price">$49<span style="font-size:13px;font-weight:500;color:var(--text-2);">/mo</span></div>
+              <div class="ps-desc">Homepage placement + verified badge</div>
+            </div>
+            <div class="ps-option" data-plan="enterprise" onclick="selectPlanForm('enterprise',this)">
+              <div class="ps-name">Enterprise</div>
+              <div class="ps-price" style="font-size:24px;">Custom</div>
+              <div class="ps-desc">Contact us for custom package</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tool details -->
+        <div class="form-group">
+          <div class="form-label">Tool Name <span class="form-label-req">*</span></div>
+          <input class="form-input" type="text" placeholder="e.g. My AI Tool" required/>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Website URL <span class="form-label-req">*</span></div>
+          <input class="form-input" type="url" placeholder="https://mytool.com" required/>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Category <span class="form-label-req">*</span></div>
+          <select class="form-select" required>
+            <option value="" disabled selected>Select a category</option>
+            <option>Writing & Editing</option>
+            <option>Image Generation</option>
+            <option>Video</option>
+            <option>Code & Developer</option>
+            <option>Audio & Music</option>
+            <option>Productivity</option>
+            <option>Marketing</option>
+            <option>Research & Data</option>
+            <option>Design & Creative</option>
+            <option>Business & Finance</option>
+            <option>Education</option>
+            <option>Automation</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Pricing Model <span class="form-label-req">*</span></div>
+          <select class="form-select" required>
+            <option value="" disabled selected>Select pricing model</option>
+            <option>Free</option>
+            <option>Free tier available</option>
+            <option>Freemium</option>
+            <option>Paid only</option>
+            <option>Contact for pricing</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <div class="form-label">Short Tagline <span class="form-label-req">*</span></div>
+          <input class="form-input" type="text" placeholder="One sentence describing what your tool does (max 120 characters)" maxlength="120" required/>
+          <div class="form-hint">This appears under your tool name in directory listings.</div>
+        </div>
+        <div class="form-group full">
+          <div class="form-label">Full Description <span class="form-label-req">*</span></div>
+          <textarea class="form-textarea" placeholder="Describe your tool in detail — what it does, who it's for, what makes it unique. Minimum 100 words." required></textarea>
+          <div class="form-hint">This is used for your tool's detail page and SEO.</div>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Your Name <span class="form-label-req">*</span></div>
+          <input class="form-input" type="text" placeholder="John Smith" required/>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Business Email <span class="form-label-req">*</span></div>
+          <input class="form-input" type="email" placeholder="john@mytool.com" required/>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Twitter / X Handle</div>
+          <input class="form-input" type="text" placeholder="@mytool"/>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Launch Date</div>
+          <input class="form-input" type="date"/>
+        </div>
+
+        <!-- Logo upload -->
+        <div class="form-group full">
+          <div class="form-label">Tool Logo</div>
+          <div class="upload-area" id="logo-upload" onclick="document.getElementById('logo-input').click()"
+            ondragover="event.preventDefault();this.classList.add('dragover')"
+            ondragleave="this.classList.remove('dragover')"
+            ondrop="handleDrop(event)">
+            <div class="upload-icon">🖼️</div>
+            <div class="upload-text">Drop your logo here or click to upload</div>
+            <div class="upload-sub">PNG, SVG or JPG · Min 256×256px · Max 2MB</div>
+          </div>
+          <input type="file" id="logo-input" accept="image/*" style="display:none;" onchange="handleFile(this)"/>
+        </div>
+
+        <!-- Screenshot upload -->
+        <div class="form-group full">
+          <div class="form-label">Product Screenshot <span style="font-size:12px;color:var(--text-3);font-weight:500;">(recommended)</span></div>
+          <div class="upload-area" onclick="document.getElementById('ss-input').click()">
+            <div class="upload-icon">📸</div>
+            <div class="upload-text">Upload a product screenshot</div>
+            <div class="upload-sub">PNG or JPG · 1280×800px recommended · Max 5MB</div>
+          </div>
+          <input type="file" id="ss-input" accept="image/*" style="display:none;"/>
+        </div>
+
+        <!-- Deal -->
+        <div class="form-group full" style="background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:var(--r);padding:18px;">
+          <div class="form-label" style="color:var(--gold);">🏷️ Active Deal or Discount?</div>
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:10px;">If you have an active promo, we'll show it as a deal badge on your listing — driving more clicks.</div>
+          <input class="form-input" type="text" placeholder="e.g. 30% off first 3 months — use code LAUNCH30 · Expires June 1"/>
+        </div>
+
+        <!-- Checkboxes -->
+        <div class="form-group full" style="display:flex;flex-direction:column;gap:12px;">
+          <label class="checkbox-group"><input type="checkbox" required/><span>I confirm this is my tool or I have permission to submit it, and the information provided is accurate.</span></label>
+          <label class="checkbox-group"><input type="checkbox"/><span>I agree to receive email updates about my listing and relevant AI Tools Set news. Unsubscribe anytime.</span></label>
+          <label class="checkbox-group"><input type="checkbox" required/><span>I have read and agree to the <a href="#" style="color:var(--blue);text-decoration:underline;">Terms of Service</a> and <a href="#" style="color:var(--blue);text-decoration:underline;">Listing Policy</a>.</span></label>
+        </div>
+
+      </div><!-- /form-grid -->
+
+      <div class="form-submit-area">
+        <button type="submit" class="form-submit-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Submit for Review
+        </button>
+        <div class="form-submit-note">🔒 Secure payment processed via Stripe · No charge until approved</div>
+      </div>
+    </form>
+
+    <!-- Success message -->
+    <div class="success-msg" id="success-msg">
+      <div class="success-icon">🎉</div>
+      <div class="success-title">Submission received!</div>
+      <p class="success-sub">Thank you! Our editorial team will review your tool within 48 hours. You'll receive a confirmation email at the address you provided.</p>
+      <div style="margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <a href="index.html" style="font-family:var(--font);font-size:14px;font-weight:700;color:#fff;background:var(--blue);padding:11px 24px;border-radius:var(--r-pill);">Browse Tools</a>
+        <a href="news.html" style="font-family:var(--font);font-size:14px;font-weight:700;color:var(--text);background:var(--surface);border:1px solid var(--border);padding:11px 24px;border-radius:var(--r-pill);">Read AI News</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WHY WE CHARGE -->
+<div class="why-section">
+  <div class="why-inner">
+    <div class="why-grid">
+      <div class="why-left">
+        <div class="why-eyebrow">Transparency</div>
+        <div class="why-title">Why we charge<br/>for featured listings</div>
+        <div class="why-text">
+          <p>We believe a great directory requires editorial work — not automation. Every tool on AI Tools Set is manually reviewed by our team to ensure it's real, functional, and genuinely useful.</p>
+          <p>Charging for featured placement lets us fund this curation work, keep the directory free for users, and dedicate marketing resources that actually get your tool in front of the right people.</p>
+          <p>We will never charge for basic inclusion or sell fake reviews. Our credibility depends on your users trusting our recommendations.</p>
+        </div>
+      </div>
+      <div class="why-right">
+        <div class="why-points">
+          <div class="why-point"><div class="wp-icon">👩‍💻</div><div><div class="wp-title">Human editorial review</div><div class="wp-desc">Every tool is tested and reviewed by a real person — we don't auto-approve submissions.</div></div></div>
+          <div class="why-point"><div class="wp-icon">📣</div><div><div class="wp-title">Real marketing spend</div><div class="wp-desc">Fees fund paid social, SEO campaigns, and newsletter distribution that drive traffic to your listing.</div></div></div>
+          <div class="why-point"><div class="wp-icon">🆓</div><div><div class="wp-title">Free for users, always</div><div class="wp-desc">Charging tool makers — not users — keeps our recommendations unbiased and the directory free to browse.</div></div></div>
+          <div class="why-point"><div class="wp-icon">📊</div><div><div class="wp-title">Infrastructure & analytics</div><div class="wp-desc">Fees fund the analytics dashboard, uptime, CDN, and the engineering that powers your listing page.</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FAQs -->
+<div class="faq-section">
+  <div class="faq-inner">
+    <div style="text-align:center;margin-bottom:0;">
+      <div class="section-eyebrow">FAQ</div>
+      <div class="section-title" style="font-size:36px;">Common questions</div>
+    </div>
+    <div class="faq-list" id="faq-list"></div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo"><div class="logo-mark"><svg viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1.2" fill="white"/><rect x="8" y="1" width="5" height="5" rx="1.2" fill="white" opacity=".5"/><rect x="1" y="8" width="5" height="5" rx="1.2" fill="white" opacity=".5"/><rect x="8" y="8" width="5" height="5" rx="1.2" fill="white"/></svg></div>AI Tools Set</div>
+        <div class="footer-desc">The cleanest AI tools directory. Curated, categorized, and updated daily.</div>
+      </div>
+      <div class="fc"><div class="fc-title">Explore</div><a href="index.html">All Tools</a><a href="#">Categories</a><a href="news.html">AI News</a><a href="#">New Arrivals</a></div>
+      <div class="fc"><div class="fc-title">Company</div><a href="#">About</a><a href="#">Blog</a><a href="submit.html">Submit Tool</a><a href="#">Advertise</a></div>
+      <div class="fc"><div class="fc-title">Legal</div><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Listing Policy</a><a href="#">Contact</a></div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2026 AI Tools Set. All rights reserved.</div>
+      <div class="footer-links"><a href="#">Twitter / X</a><a href="#">LinkedIn</a><a href="#">YouTube</a></div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── FAQS ──
+const FAQS = [
+  {q:"How long does the review process take?",a:"Free listings are reviewed within <strong>5–7 business days</strong>. Featured listings are prioritised and reviewed within <strong>24 hours</strong>. Enterprise submissions are reviewed same day with a dedicated point of contact."},
+  {q:"What criteria does your team use to approve tools?",a:"We review every tool to ensure it's genuinely functional, solves a real problem, and has an active development team behind it. We do not list abandoned projects, scam tools, or tools that make false claims. We also check that the listing information is accurate and the website is live."},
+  {q:"Do I pay before or after approval?",a:"<strong>You do not pay until your listing is approved.</strong> For free listings, there is no payment. For Featured, you'll receive a payment link after approval. If your submission is declined, you are not charged."},
+  {q:"Can I list my tool for free?",a:"Yes. Free listings are always available and include a full tool page, search visibility, and user reviews. Free listings do not include featured placement, verified badges, or analytics. We believe every legitimate AI tool deserves to be discoverable."},
+  {q:"What is the Featured badge and verified checkmark?",a:"The Featured badge gives your tool prominent placement on the homepage and at the top of relevant category pages. The verified checkmark (similar to Twitter's blue tick) tells users that your tool's features and capabilities have been manually reviewed and confirmed by our editorial team."},
+  {q:"Can I update my listing after it's published?",a:"Yes. Featured and Enterprise subscribers can update their listing content, screenshots, and details at any time via their account dashboard. Free listings can request updates by emailing our team — we process these within 5 business days."},
+  {q:"Is my listing permanent?",a:"Free listings remain in the directory as long as your tool is actively maintained. Featured and Enterprise listings are active for the duration of your subscription. Listings for tools that become unavailable or abandoned are removed to maintain directory quality."},
+  {q:"Do you offer refunds?",a:"We offer a <strong>7-day refund policy</strong> for Featured subscriptions if your listing has not yet been approved. Once a listing is live and traffic has been delivered, we do not offer refunds — but you can cancel anytime to stop future billing."},
+  {q:"Can I submit a competitor's tool?",a:"No. You must own the tool or have explicit written permission from the tool's owner. Submitting tools you don't own without permission violates our Terms of Service and will result in your account being banned."},
+  {q:"Do you offer deals for early-stage startups?",a:"Yes — we offer a <strong>50% discount</strong> on Featured listings for bootstrapped founders and early-stage startups (pre-seed, no external funding). Email us at listings@aitoolsset.com with your tool URL and a brief description of your stage."},
+];
+
+const faqList = document.getElementById('faq-list');
+faqList.innerHTML = FAQS.map((f,i)=>`
+  <div class="faq-item" id="faq-${i}">
+    <div class="faq-q" onclick="toggleFaq(${i})">
+      <div class="faq-q-text">${f.q}</div>
+      <div class="faq-icon">+</div>
+    </div>
+    <div class="faq-a">${f.a}</div>
+  </div>
+`).join('');
+
+function toggleFaq(i){
+  const item = document.getElementById('faq-'+i);
+  item.classList.toggle('open');
+}
+
+// ── BILLING TOGGLE ──
+let isAnnual = false;
+function toggleBilling(){
+  isAnnual = !isAnnual;
+  const track = document.getElementById('billing-toggle');
+  track.classList.toggle('monthly', !isAnnual);
+  track.classList.toggle('annual', isAnnual);
+  document.getElementById('toggle-monthly').style.color = isAnnual ? 'var(--text-2)' : 'var(--text)';
+  document.getElementById('toggle-monthly').style.fontWeight = isAnnual ? '600' : '800';
+  document.getElementById('toggle-annual').style.color = isAnnual ? 'var(--text)' : 'var(--text-2)';
+  document.getElementById('toggle-annual').style.fontWeight = isAnnual ? '800' : '600';
+  document.getElementById('featured-price').textContent = isAnnual ? '$34' : '$49';
+  document.getElementById('featured-period').textContent = isAnnual ? '/month, billed annually' : '/month';
+}
+
+// ── PLAN SELECTION (pricing section) ──
+function selectPlan(plan){
+  const form = document.getElementById('submit-form-section');
+  form.scrollIntoView({behavior:'smooth', block:'start'});
+  setTimeout(()=>{
+    document.querySelectorAll('.ps-option').forEach(o=>{
+      o.classList.toggle('selected', o.dataset.plan === plan);
+    });
+  }, 600);
+}
+
+// ── PLAN SELECTION (form) ──
+function selectPlanForm(plan, el){
+  document.querySelectorAll('.ps-option').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ── FILE UPLOAD ──
+function handleFile(input){
+  if(input.files.length){
+    const area = document.getElementById('logo-upload');
+    area.innerHTML = `<div class="upload-icon">✅</div><div class="upload-text">${input.files[0].name}</div><div class="upload-sub">Click to replace</div>`;
+  }
+}
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('logo-upload').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if(file){
+    document.getElementById('logo-upload').innerHTML = `<div class="upload-icon">✅</div><div class="upload-text">${file.name}</div><div class="upload-sub">Drop to replace</div>`;
+  }
+}
+
+// ── FORM SUBMIT ──
+function submitForm(e){
+  e.preventDefault();
+  const form = document.getElementById('submit-form');
+  const success = document.getElementById('success-msg');
+  form.style.display = 'none';
+  success.classList.add('show');
+  success.scrollIntoView({behavior:'smooth', block:'center'});
+}
+</script>
+</body>
+</html>

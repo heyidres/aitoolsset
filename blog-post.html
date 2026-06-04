@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GPT-5 Complete Guide: Everything You Need to Know — AI Tools Set Blog</title>
+<meta name="description" content="OpenAI's GPT-5 brings a 1M token context window, native web access, and dramatically improved reasoning. We tested it for 2 weeks — here's our complete guide."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --blue:#0052ff;--blue-h:#578bfa;--blue-soft:rgba(0,82,255,.08);
+  --white:#fff;--bg:#f8f9fa;--surface:#eef0f3;
+  --cream:#FBF8F1;--mint:#F1F7F3;--lavender:#F4F2FA;--sand:#F6F2EC;
+  --near-black:#0F172A;--dark-card:#1E293B;--dark-border:rgba(255,255,255,.07);
+  --text:#0a0b0d;--text-2:#5b616e;--text-3:#9aa0ae;
+  --border:rgba(91,97,110,.18);--border-2:rgba(91,97,110,.28);
+  --green:#16a34a;--green-bg:#f0fdf4;--green-border:#bbf7d0;
+  --yellow:#fbbf24;
+  --r-sm:6px;--r:12px;--r-lg:20px;--r-pill:100px;
+  --font:'Manrope',sans-serif;--font-body:'DM Sans',sans-serif;--font-serif:'Lora',Georgia,serif;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06);--shadow:0 4px 16px rgba(0,0,0,.08);--shadow-lg:0 12px 40px rgba(0,0,0,.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{overflow-x:hidden;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font-body);background:var(--white);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.6;}
+a{color:inherit;text-decoration:none;}
+button{cursor:pointer;border:none;background:none;font-family:inherit;color:inherit;}
+img{display:block;max-width:100%;}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.nav-inner{max-width:1320px;margin:0 auto;padding:0 36px;height:58px;display:flex;align-items:center;}
+.logo{font-family:var(--font);font-size:16px;font-weight:800;letter-spacing:-.4px;color:var(--text);display:flex;align-items:center;gap:8px;margin-right:36px;flex-shrink:0;}
+.logo-mark{width:26px;height:26px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center;}
+.nav-links{display:flex;align-items:center;gap:2px;flex:1;}
+.nav-links a{font-family:var(--font);font-size:13.5px;font-weight:600;color:var(--text-2);padding:5px 12px;border-radius:var(--r-pill);transition:all .12s;}
+.nav-links a:hover{color:var(--text);background:var(--surface);}
+.nav-links a.active{color:var(--blue);background:var(--blue-soft);}
+.nav-right{display:flex;align-items:center;gap:8px;}
+.nav-ghost{font-family:var(--font);font-size:13.5px;font-weight:600;color:var(--text-2);padding:7px 16px;border-radius:var(--r-pill);}
+.nav-ghost:hover{background:var(--surface);}
+.nav-primary{font-family:var(--font);font-size:13.5px;font-weight:700;color:#fff;background:var(--blue);padding:8px 20px;border-radius:var(--r-pill);}
+.nav-primary:hover{background:var(--blue-h);}
+
+/* ── READING PROGRESS BAR ── */
+.progress-bar{position:fixed;top:58px;left:0;right:0;height:3px;background:var(--surface);z-index:150;}
+.progress-fill{height:100%;background:var(--blue);width:0%;transition:width .1s;}
+
+/* ── ARTICLE HEADER ── */
+.article-header{padding:48px 36px 40px;background:var(--white);border-bottom:1px solid var(--border);}
+.article-header-inner{max-width:760px;margin:0 auto;}
+.crumb{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-3);margin-bottom:22px;font-weight:500;flex-wrap:wrap;}
+.crumb a{color:var(--text-3);}
+.crumb a:hover{color:var(--blue);}
+.crumb span.sep{color:var(--border-2);}
+.ah-tag{display:inline-flex;align-items:center;gap:6px;background:var(--blue-soft);border:1px solid rgba(0,82,255,.18);color:var(--blue);border-radius:var(--r-pill);padding:5px 12px;font-family:var(--font);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px;}
+.ah-title{font-family:var(--font-serif);font-size:clamp(36px,4.2vw,52px);font-weight:600;letter-spacing:-1px;line-height:1.1;color:var(--text);margin-bottom:18px;}
+.ah-deck{font-size:18px;color:var(--text-2);line-height:1.65;margin-bottom:30px;font-weight:400;}
+.ah-meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.ah-author{display:flex;align-items:center;gap:10px;}
+.ah-av{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#0052ff,#578bfa);color:#fff;font-family:var(--font);font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ah-author-info{display:flex;flex-direction:column;}
+.ah-name{font-family:var(--font);font-size:14px;font-weight:800;color:var(--text);}
+.ah-role{font-size:12px;color:var(--text-3);}
+.ah-dot{width:3px;height:3px;border-radius:50%;background:var(--border-2);}
+.ah-meta-item{font-size:13px;color:var(--text-2);font-weight:500;display:flex;align-items:center;gap:5px;}
+
+/* ── HERO IMAGE ── */
+.hero-img{max-width:1080px;margin:0 auto;padding:0 36px;}
+.hero-img-inner{height:420px;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0052ff 100%);border-radius:var(--r-lg);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-top:32px;}
+.hero-img-inner::before{content:'';position:absolute;top:-100px;right:-80px;width:400px;height:400px;background:radial-gradient(circle,rgba(255,255,255,.1) 0%,transparent 60%);pointer-events:none;}
+.hero-img-text{font-family:var(--font);font-size:120px;font-weight:900;letter-spacing:-4px;color:rgba(255,255,255,.12);position:relative;}
+.hero-img-caption{position:absolute;bottom:14px;left:14px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);color:rgba(255,255,255,.7);font-family:var(--font);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:5px 12px;border-radius:var(--r-pill);}
+
+/* ── MAIN LAYOUT ── */
+.layout{max-width:1320px;margin:0 auto;padding:48px 36px 64px;display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:56px;align-items:flex-start;}
+
+/* ── ARTICLE BODY ── */
+.article-body{min-width:0;max-width:720px;justify-self:center;}
+.article-body p{font-family:var(--font-serif);font-size:18px;line-height:1.8;color:var(--text);margin-bottom:22px;}
+.article-body p:first-of-type::first-letter{font-family:var(--font);font-size:64px;font-weight:900;float:left;line-height:.9;margin:6px 12px 0 0;color:var(--blue);}
+.article-body h2{font-family:var(--font);font-size:30px;font-weight:900;letter-spacing:-1px;line-height:1.15;color:var(--text);margin:44px 0 16px;}
+.article-body h3{font-family:var(--font);font-size:22px;font-weight:800;letter-spacing:-.5px;line-height:1.25;color:var(--text);margin:36px 0 12px;}
+.article-body strong{font-weight:700;color:var(--text);}
+.article-body a{color:var(--blue);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px;}
+.article-body a:hover{color:var(--blue-h);}
+.article-body ul,.article-body ol{margin:0 0 22px 0;padding-left:0;list-style:none;}
+.article-body ul li,.article-body ol li{font-family:var(--font-serif);font-size:18px;line-height:1.75;color:var(--text);padding-left:28px;position:relative;margin-bottom:10px;}
+.article-body ul li::before{content:'';position:absolute;left:8px;top:14px;width:6px;height:6px;background:var(--blue);border-radius:50%;}
+.article-body ol{counter-reset:item;}
+.article-body ol li{counter-increment:item;}
+.article-body ol li::before{content:counter(item);position:absolute;left:0;top:6px;width:22px;height:22px;background:var(--blue-soft);color:var(--blue);font-family:var(--font);font-size:12px;font-weight:800;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.article-body blockquote{border-left:3px solid var(--blue);background:var(--cream);padding:20px 24px;margin:28px 0;border-radius:0 var(--r) var(--r) 0;font-family:var(--font-serif);font-style:italic;font-size:19px;line-height:1.65;color:var(--text);position:relative;}
+.article-body blockquote::before{content:'"';position:absolute;top:-10px;left:14px;font-family:var(--font-serif);font-size:48px;color:var(--blue);font-weight:700;line-height:1;}
+.article-body code{font-family:'SF Mono',Monaco,monospace;font-size:14px;background:var(--surface);color:var(--text);padding:2px 7px;border-radius:5px;}
+.article-body img{border-radius:var(--r-lg);margin:28px 0;border:1px solid var(--border);}
+
+/* highlight box */
+.highlight-box{background:var(--blue-soft);border:1px solid rgba(0,82,255,.18);border-radius:var(--r-lg);padding:24px;margin:28px 0;display:flex;gap:16px;align-items:flex-start;}
+.hb-icon{width:36px;height:36px;border-radius:10px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;}
+.hb-body{flex:1;}
+.hb-title{font-family:var(--font);font-size:14px;font-weight:800;color:var(--text);margin-bottom:6px;}
+.hb-text{font-size:14.5px;color:var(--text-2);line-height:1.65;margin:0!important;}
+
+/* tool callout — embedded tool card */
+.tool-callout{display:flex;gap:14px;align-items:center;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:18px;margin:28px 0;cursor:pointer;transition:border-color .15s,box-shadow .15s;}
+.tool-callout:hover{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft);}
+.tc-logo{width:48px;height:48px;border-radius:11px;overflow:hidden;background:var(--surface);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.tc-logo img{width:100%;height:100%;object-fit:cover;}
+.tc-info{flex:1;}
+.tc-name-row{display:flex;align-items:center;gap:5px;margin-bottom:3px;}
+.tc-name{font-family:var(--font);font-size:15px;font-weight:800;}
+.tc-verified{color:var(--blue);}
+.tc-tagline{font-size:13px;color:var(--text-2);line-height:1.45;}
+.tc-cta{font-family:var(--font);font-size:12.5px;font-weight:700;color:var(--blue);background:var(--blue-soft);border:1px solid rgba(0,82,255,.15);padding:7px 14px;border-radius:var(--r-pill);flex-shrink:0;}
+.tc-cta:hover{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+/* tags */
+.article-tags{display:flex;flex-wrap:wrap;gap:6px;margin:36px 0 0;padding-top:24px;border-top:1px solid var(--border);}
+.atag{font-family:var(--font);font-size:12px;font-weight:600;color:var(--text-2);border:1px solid var(--border);background:var(--white);padding:5px 12px;border-radius:var(--r-pill);cursor:pointer;transition:all .12s;}
+.atag:hover{border-color:var(--blue);color:var(--blue);}
+
+/* share row */
+.share-row{display:flex;align-items:center;gap:12px;margin-top:28px;padding:18px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.share-label{font-family:var(--font);font-size:12.5px;font-weight:700;color:var(--text-2);margin-right:auto;}
+.share-btns{display:flex;gap:6px;}
+.share-btn{width:36px;height:36px;border-radius:var(--r-sm);background:var(--surface);color:var(--text-2);display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.share-btn:hover{background:var(--near-black);color:#fff;}
+
+/* author bio */
+.author-bio{display:flex;gap:18px;background:var(--cream);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px;margin-top:32px;}
+.ab-av{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#0052ff,#578bfa);color:#fff;font-family:var(--font);font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ab-body{flex:1;}
+.ab-name{font-family:var(--font);font-size:16px;font-weight:800;color:var(--text);margin-bottom:2px;display:flex;align-items:center;gap:5px;}
+.ab-role{font-size:12.5px;color:var(--text-3);margin-bottom:10px;}
+.ab-text{font-size:13.5px;color:var(--text-2);line-height:1.65;margin-bottom:12px;}
+.ab-socials{display:flex;gap:6px;}
+.ab-soc{width:28px;height:28px;border-radius:6px;background:var(--white);border:1px solid var(--border);color:var(--text-2);display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.ab-soc:hover{background:var(--near-black);color:#fff;border-color:var(--near-black);}
+
+/* ── SIDEBAR ── */
+.sidebar{position:sticky;top:80px;display:flex;flex-direction:column;gap:18px;min-width:0;}
+.sb-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;}
+.sb-header{padding:14px 18px;border-bottom:1px solid var(--border);font-family:var(--font);font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--text-2);display:flex;align-items:center;justify-content:space-between;}
+.sb-header-link{font-size:11px;font-weight:700;color:var(--blue);text-transform:none;letter-spacing:0;}
+.sb-body{padding:16px 18px;}
+
+/* TOC */
+.toc-list{display:flex;flex-direction:column;gap:2px;}
+.toc-item{font-size:13px;color:var(--text-2);padding:7px 10px;border-radius:var(--r-sm);cursor:pointer;border-left:2px solid transparent;line-height:1.4;transition:all .12s;}
+.toc-item:hover,.toc-item.active{background:var(--blue-soft);color:var(--blue);border-left-color:var(--blue);font-weight:700;}
+.toc-item.sub{padding-left:24px;font-size:12.5px;}
+
+/* tools mentioned in article */
+.tool-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.tool-item:last-child{border-bottom:none;}
+.tool-item:hover .ti-name{color:var(--blue);}
+.ti-logo{width:30px;height:30px;border-radius:7px;overflow:hidden;border:1px solid var(--border);background:var(--surface);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.ti-logo img{width:100%;height:100%;object-fit:cover;}
+.ti-info{flex:1;min-width:0;}
+.ti-name{font-family:var(--font);font-size:13px;font-weight:700;transition:color .12s;}
+.ti-cat{font-size:11px;color:var(--text-3);}
+.ti-free{font-size:10.5px;font-weight:800;color:var(--green);background:var(--green-bg);border:1px solid var(--green-border);padding:2px 7px;border-radius:var(--r-pill);flex-shrink:0;}
+
+/* related posts in sidebar */
+.rel-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;align-items:flex-start;}
+.rel-item:last-child{border-bottom:none;}
+.rel-item:hover .rel-title{color:var(--blue);}
+.rel-img{width:64px;height:48px;border-radius:7px;flex-shrink:0;background:var(--near-black);overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.rel-img-text{font-family:var(--font);font-size:11px;font-weight:900;color:rgba(255,255,255,.25);letter-spacing:-.3px;}
+.rel-body{flex:1;min-width:0;}
+.rel-tag{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--blue);margin-bottom:3px;}
+.rel-title{font-family:var(--font);font-size:12.5px;font-weight:700;line-height:1.35;transition:color .12s;}
+
+/* newsletter */
+.sb-nl{background:var(--near-black);border-radius:var(--r-lg);padding:20px;}
+.sb-nl-eyebrow{font-family:var(--font);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.4);margin-bottom:8px;}
+.sb-nl-title{font-family:var(--font);font-size:17px;font-weight:800;color:#fff;margin-bottom:6px;line-height:1.2;letter-spacing:-.3px;}
+.sb-nl-sub{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:14px;line-height:1.55;}
+.sb-nl-input{width:100%;height:38px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:var(--r-pill);font-family:var(--font-body);font-size:12.5px;color:#fff;padding:0 13px;outline:none;margin-bottom:7px;}
+.sb-nl-input::placeholder{color:rgba(255,255,255,.3);}
+.sb-nl-input:focus{border-color:var(--blue);}
+.sb-nl-btn{width:100%;font-family:var(--font);font-size:12.5px;font-weight:700;color:#fff;background:var(--blue);border-radius:var(--r-pill);height:36px;}
+.sb-nl-btn:hover{background:var(--blue-h);}
+
+/* categories quick links */
+.cat-links{display:flex;flex-wrap:wrap;gap:6px;}
+.cat-link{font-family:var(--font);font-size:11.5px;font-weight:700;color:var(--text-2);background:var(--surface);padding:5px 11px;border-radius:var(--r-pill);transition:all .12s;}
+.cat-link:hover{background:var(--blue);color:#fff;}
+
+/* trending now compact list */
+.trending-item{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer;align-items:center;}
+.trending-item:last-child{border-bottom:none;}
+.trending-item:hover .tr-title{color:var(--blue);}
+.tr-num{font-family:var(--font);font-size:14px;font-weight:900;color:var(--blue-soft);width:20px;flex-shrink:0;letter-spacing:-.5px;}
+.tr-num span{color:var(--blue);}
+.tr-info{flex:1;min-width:0;}
+.tr-title{font-family:var(--font);font-size:12.5px;font-weight:700;line-height:1.35;transition:color .12s;margin-bottom:2px;}
+.tr-meta{font-size:11px;color:var(--text-3);}
+
+/* news in sidebar */
+.news-item{padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.news-item:last-child{border-bottom:none;}
+.news-item:hover .ni-title{color:var(--blue);}
+.ni-source{font-size:10.5px;font-weight:800;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;display:flex;align-items:center;gap:5px;}
+.ni-source img{width:11px;height:11px;border-radius:2px;}
+.ni-title{font-family:var(--font);font-size:12.5px;font-weight:700;line-height:1.35;transition:color .12s;margin-bottom:3px;}
+.ni-time{font-size:11px;color:var(--text-3);}
+
+/* submit your tool CTA in sidebar */
+.sb-cta{background:linear-gradient(135deg,#0052ff,#578bfa);border-radius:var(--r-lg);padding:22px;color:#fff;}
+.sb-cta-title{font-family:var(--font);font-size:16px;font-weight:900;line-height:1.2;margin-bottom:6px;letter-spacing:-.3px;}
+.sb-cta-text{font-size:12.5px;color:rgba(255,255,255,.85);line-height:1.55;margin-bottom:14px;}
+.sb-cta-btn{font-family:var(--font);font-size:12.5px;font-weight:700;background:#fff;color:var(--blue);padding:9px 16px;border-radius:var(--r-pill);display:inline-flex;align-items:center;gap:5px;}
+.sb-cta-btn:hover{background:rgba(255,255,255,.9);}
+
+/* ── COMMENTS / RELATED SECTION ── */
+.below-section{padding:56px 36px;background:var(--cream);border-top:1px solid var(--border);}
+.below-inner{max-width:1320px;margin:0 auto;}
+.below-head{margin-bottom:28px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:14px;}
+.below-eyebrow{font-family:var(--font);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--blue);margin-bottom:6px;}
+.below-title{font-family:var(--font);font-size:32px;font-weight:900;letter-spacing:-1.2px;line-height:1.1;}
+.below-link{font-family:var(--font);font-size:13.5px;font-weight:700;color:var(--blue);}
+
+.related-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+.related-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;cursor:pointer;transition:all .15s;}
+.related-card:hover{border-color:var(--blue);transform:translateY(-3px);box-shadow:var(--shadow);}
+.rc-img{height:160px;background:var(--near-black);display:flex;align-items:center;justify-content:center;position:relative;}
+.rc-img-text{font-family:var(--font);font-size:42px;font-weight:900;color:rgba(255,255,255,.15);letter-spacing:-1.5px;}
+.rc-body{padding:20px;}
+.rc-tag{font-family:var(--font);font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--blue);margin-bottom:8px;}
+.rc-title{font-family:var(--font);font-size:16px;font-weight:800;letter-spacing:-.3px;line-height:1.3;margin-bottom:8px;}
+.related-card:hover .rc-title{color:var(--blue);}
+.rc-meta{font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:6px;}
+.rc-av{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#0052ff,#578bfa);color:#fff;font-family:var(--font);font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+
+/* ── COMMENTS ── */
+.comments-section{padding:56px 36px;background:var(--white);border-top:1px solid var(--border);}
+.comments-inner{max-width:760px;margin:0 auto;}
+.cs-head{margin-bottom:28px;}
+.cs-title{font-family:var(--font);font-size:24px;font-weight:900;letter-spacing:-.8px;}
+.comment-form{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;margin-bottom:28px;}
+.cf-textarea{width:100%;height:90px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--white);font-family:var(--font-body);font-size:14px;padding:12px 14px;outline:none;resize:vertical;line-height:1.55;}
+.cf-textarea:focus{border-color:var(--blue);}
+.cf-row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
+.cf-hint{font-size:11.5px;color:var(--text-3);}
+.cf-submit{font-family:var(--font);font-size:13px;font-weight:700;color:#fff;background:var(--blue);padding:9px 20px;border-radius:var(--r-pill);}
+.cf-submit:hover{background:var(--blue-h);}
+
+.comment{display:flex;gap:12px;padding:18px 0;border-bottom:1px solid var(--border);}
+.comment:last-child{border-bottom:none;}
+.com-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font);font-size:13px;font-weight:800;flex-shrink:0;}
+.com-body{flex:1;}
+.com-top{display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap;}
+.com-name{font-family:var(--font);font-size:13.5px;font-weight:800;}
+.com-meta{font-size:11.5px;color:var(--text-3);}
+.com-text{font-size:14px;color:var(--text);line-height:1.65;margin-bottom:8px;}
+.com-actions{display:flex;gap:14px;font-size:12px;color:var(--text-3);font-weight:600;}
+.com-action{display:flex;align-items:center;gap:4px;cursor:pointer;transition:color .12s;}
+.com-action:hover{color:var(--blue);}
+
+/* ── FOOTER ── */
+footer{background:var(--near-black);border-top:1px solid var(--dark-border);padding:52px 36px 32px;}
+.footer-inner{max-width:1320px;margin:0 auto;}
+.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:40px;}
+.footer-logo{font-family:var(--font);font-size:15px;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.footer-desc{font-size:13px;color:rgba(255,255,255,.3);line-height:1.65;max-width:220px;}
+.fc-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.25);margin-bottom:14px;}
+.fc a{display:block;font-size:13px;color:rgba(255,255,255,.4);margin-bottom:9px;}
+.fc a:hover{color:#fff;}
+.footer-bottom{border-top:1px solid var(--dark-border);padding-top:20px;display:flex;justify-content:space-between;}
+.footer-copy{font-size:12px;color:rgba(255,255,255,.2);}
+.footer-links{display:flex;gap:18px;}
+.footer-links a{font-size:12px;color:rgba(255,255,255,.25);}
+.footer-links a:hover{color:rgba(255,255,255,.7);}
+
+@media (max-width:980px){
+  .layout{grid-template-columns:1fr;}
+  .sidebar{position:static;}
+  .related-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <div class="logo-mark"><svg viewBox="0 0 14 14" width="14" height="14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1.2" fill="white"/><rect x="8" y="1" width="5" height="5" rx="1.2" fill="white" opacity=".5"/><rect x="1" y="8" width="5" height="5" rx="1.2" fill="white" opacity=".5"/><rect x="8" y="8" width="5" height="5" rx="1.2" fill="white"/></svg></div>
+      AI Tools Set
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Browse</a>
+      <a href="categories.html">Categories</a>
+      <a href="news.html">News</a>
+      <a href="blog.html" class="active">Blog</a>
+      <a href="submit.html">Submit a Tool</a>
+    </div>
+    <div class="nav-right">
+      <button class="nav-ghost">Sign in</button>
+      <button class="nav-primary">Subscribe</button>
+    </div>
+  </div>
+</nav>
+
+<!-- READING PROGRESS -->
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+<!-- ARTICLE HEADER -->
+<div class="article-header">
+  <div class="article-header-inner">
+    <div class="crumb">
+      <a href="index.html">Home</a><span class="sep">/</span>
+      <a href="blog.html">Blog</a><span class="sep">/</span>
+      <a href="blog.html">Guides</a><span class="sep">/</span>
+      <span style="color:var(--text-2);">GPT-5 Complete Guide</span>
+    </div>
+    <div class="ah-tag">📘 In-depth guide</div>
+    <h1 class="ah-title">GPT-5 Complete Guide: Everything you need to know about OpenAI's most powerful model</h1>
+    <p class="ah-deck">OpenAI's GPT-5 has finally arrived with a 1M token context window, native web access, and dramatically improved reasoning. We tested it for two weeks across writing, code, analysis, and creative tasks — here's our complete verdict.</p>
+    <div class="ah-meta">
+      <div class="ah-author">
+        <div class="ah-av">AJ</div>
+        <div class="ah-author-info">
+          <div class="ah-name">Alex Johnson</div>
+          <div class="ah-role">Senior Editor · AI Tools Set</div>
+        </div>
+      </div>
+      <span class="ah-dot"></span>
+      <div class="ah-meta-item">📅 May 4, 2026</div>
+      <span class="ah-dot"></span>
+      <div class="ah-meta-item">⏱️ 8 min read</div>
+      <span class="ah-dot"></span>
+      <div class="ah-meta-item">👁️ 18,420 views</div>
+    </div>
+  </div>
+</div>
+
+<!-- HERO IMAGE -->
+<div class="hero-img">
+  <div class="hero-img-inner">
+    <div class="hero-img-text">GPT-5</div>
+    <div class="hero-img-caption">Illustration · AI Tools Set</div>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- ARTICLE BODY -->
+  <article class="article-body">
+    <p>OpenAI quietly rolled out <strong>GPT-5</strong> to ChatGPT Plus users on May 1, 2026 — and after two weeks of daily use, our team can confidently say: this is the largest leap forward since GPT-4. The model isn't just better at the things GPT-4o did well. It can do <em>entirely new things</em> — multi-hour reasoning chains, codebase-scale refactoring, and real-time web research with citations that actually check out.</p>
+
+    <p>This guide walks through everything we tested: <a href="#whats-new">what's new in GPT-5</a>, <a href="#benchmarks">benchmark results</a>, <a href="#use-cases">use cases we recommend</a>, <a href="#pricing">pricing and access</a>, and <a href="#vs-claude">how it compares to Claude 4</a> — Anthropic's competing flagship.</p>
+
+    <div class="highlight-box">
+      <div class="hb-icon">💡</div>
+      <div class="hb-body">
+        <div class="hb-title">TL;DR</div>
+        <div class="hb-text">GPT-5 is significantly better than GPT-4o at reasoning, code, and long-context tasks. It's worth the $20/month Plus subscription. For pure writing and creative tasks, Claude 4 is still slightly ahead. For everything else, GPT-5 is the new default.</div>
+      </div>
+    </div>
+
+    <h2 id="whats-new">What's new in GPT-5</h2>
+    <p>GPT-5 introduces three substantial improvements over GPT-4o, plus a handful of smaller quality-of-life upgrades. Here's what matters most:</p>
+
+    <h3>1. A 1 million token context window</h3>
+    <p>This is the headline number, and it deserves attention. GPT-5 can ingest roughly <strong>750,000 words</strong> in a single conversation — that's the entire Lord of the Rings trilogy, three times. In practice, this means you can paste your full codebase, an entire research paper collection, or hours of meeting transcripts and have a productive conversation about all of it without manual chunking.</p>
+
+    <h3>2. Native real-time web access</h3>
+    <p>GPT-5 doesn't just "browse the web" anymore — it can run continuous searches, follow citations, cross-reference sources, and produce final answers that include working footnote-style links. We tested this against Perplexity and Claude with web browsing: GPT-5 was more thorough, though Perplexity was faster.</p>
+
+    <!-- Tool callout -->
+    <a href="tool.html" class="tool-callout">
+      <div class="tc-logo"><img src="https://www.google.com/s2/favicons?domain=chat.openai.com&sz=64" alt="ChatGPT"/></div>
+      <div class="tc-info">
+        <div class="tc-name-row">
+          <span class="tc-name">ChatGPT</span>
+          <svg class="tc-verified" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91-1.01-1-2.52-1.26-3.91-.8C14.66 2.88 13.43 2 12 2s-2.66.88-3.34 2.19c-1.39-.46-2.9-.2-3.91.81-1 1.01-1.26 2.52-.8 3.91C2.88 9.34 2 10.57 2 12s.88 2.66 2.19 3.34c-.46 1.39-.2 2.9.81 3.91 1.01 1 2.52 1.26 3.91.8C9.34 21.12 10.57 22 12 22s2.66-.88 3.34-2.19c1.39.46 2.9.2 3.91-.81 1-1.01 1.26-2.52.8-3.91C21.12 14.66 22.25 13.43 22.25 12z"/></svg>
+        </div>
+        <div class="tc-tagline">The world's most used AI — try GPT-5 with a Plus subscription.</div>
+      </div>
+      <span class="tc-cta">Visit tool →</span>
+    </a>
+
+    <h3>3. Extended thinking mode</h3>
+    <p>Toggle "Extended thinking" in the model selector and GPT-5 will reason for up to 30 minutes before responding. This is overkill for most tasks, but for hard problems — debugging a thorny bug, architecting a new system, planning a complex content strategy — it produces noticeably better output. The downside is wait time and cost: extended thinking burns through your message quota faster.</p>
+
+    <h2 id="benchmarks">Benchmark results</h2>
+    <p>OpenAI published the official benchmark numbers, but we wanted to verify with our own tests. Here are the headline results from the most important academic benchmarks:</p>
+
+    <ul>
+      <li><strong>MMLU (general reasoning):</strong> GPT-5 scored 91.4%, up from 88.7% for GPT-4o. Claude 4 leads slightly at 91.9%.</li>
+      <li><strong>HumanEval (code):</strong> GPT-5 hit 96.2% — a substantial jump from GPT-4o's 90.2%. Best-in-class for coding tasks.</li>
+      <li><strong>MATH (mathematical reasoning):</strong> 84.7% versus GPT-4o's 76.6%. Massive improvement on multi-step math.</li>
+      <li><strong>GPQA (graduate-level science):</strong> 73.1% — the first model to break 70% on this notoriously hard benchmark.</li>
+    </ul>
+
+    <blockquote>The MATH improvement is the most surprising. GPT-4o frequently slipped up on multi-step problems requiring careful tracking of variables. GPT-5 handles them with the same kind of step-by-step rigor a competent mathematician would use.</blockquote>
+
+    <h2 id="use-cases">Use cases where GPT-5 excels</h2>
+    <p>After two weeks of hands-on testing across our team — engineers, marketers, researchers, and writers — here are the workflows where GPT-5 noticeably outperforms its predecessor:</p>
+
+    <ol>
+      <li><strong>Codebase-wide refactoring.</strong> Paste your entire repo, describe the change, and GPT-5 produces a complete, working refactor with explanations. We did this for a 12,000-line TypeScript project. It worked first try.</li>
+      <li><strong>Research synthesis.</strong> Drop in 5–10 papers and ask GPT-5 to find common threads, contradictions, or gaps. Output quality matches what a graduate research assistant would produce in days.</li>
+      <li><strong>Multi-step planning.</strong> Project plans, content calendars, technical roadmaps — GPT-5 thinks several steps ahead and catches dependencies GPT-4o would miss.</li>
+      <li><strong>Data analysis on long files.</strong> Upload a 100MB CSV and GPT-5 can run analyses across the whole file without chunking. Charts and SQL output are noticeably better too.</li>
+    </ol>
+
+    <h2 id="pricing">Pricing and access</h2>
+    <p>GPT-5 is rolling out in three tiers:</p>
+    <ul>
+      <li><strong>ChatGPT Plus ($20/month):</strong> Full GPT-5 access with daily message limits, 1M context, extended thinking, web browsing, file uploads.</li>
+      <li><strong>ChatGPT Pro ($200/month):</strong> Unlimited GPT-5 messages, priority access during peak times, longer extended thinking sessions, access to research preview features.</li>
+      <li><strong>API:</strong> $15 per million input tokens, $60 per million output tokens. Pricier than GPT-4o, but you're paying for the better model.</li>
+    </ul>
+    <p>If you're a heavy user, Pro is worth it — we ran out of Plus messages within 90 minutes on day one. For most people, Plus is plenty.</p>
+
+    <h2 id="vs-claude">GPT-5 vs Claude 4</h2>
+    <p>Anthropic's <strong>Claude 4</strong> launched the same week, and the comparison is closer than the benchmark numbers suggest. Here's our honest take after running both side-by-side:</p>
+    <ul>
+      <li><strong>Writing quality:</strong> Claude 4 still edges out GPT-5 for nuanced, long-form prose. GPT-5 is more "correct" but reads slightly more mechanical.</li>
+      <li><strong>Code:</strong> GPT-5 wins by a wide margin on complex multi-file tasks. Claude 4 is competitive for short snippets.</li>
+      <li><strong>Reasoning:</strong> Roughly tied. Claude 4's extended thinking is more transparent (you can see the reasoning trace); GPT-5's is faster.</li>
+      <li><strong>Personality:</strong> Subjective, but most of our team prefers Claude's tone for back-and-forth conversation.</li>
+    </ul>
+    <p>If you only pay for one, GPT-5 is the safer pick — it's stronger on more tasks. If you can afford both ($40/month total), that's what we'd recommend.</p>
+
+    <h2>The verdict</h2>
+    <p>GPT-5 is the new default. The 1M context window alone justifies the upgrade for anyone who works with large amounts of text or code. The reasoning improvements are real and measurable. And while Claude 4 remains slightly ahead on certain writing tasks, GPT-5 is now the most capable general-purpose AI on the market.</p>
+
+    <p>If you've been on the fence about a ChatGPT Plus subscription, this is the moment. And if you build with AI APIs, plan to migrate to GPT-5 soon — your output quality will jump in a way users will notice.</p>
+
+    <!-- Tags -->
+    <div class="article-tags">
+      <span class="atag">GPT-5</span>
+      <span class="atag">OpenAI</span>
+      <span class="atag">ChatGPT</span>
+      <span class="atag">LLMs</span>
+      <span class="atag">AI Reviews</span>
+      <span class="atag">Guides</span>
+      <span class="atag">Claude 4</span>
+    </div>
+
+    <!-- Share -->
+    <div class="share-row">
+      <div class="share-label">Share this article</div>
+      <div class="share-btns">
+        <a class="share-btn" title="X / Twitter"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25z"/></svg></a>
+        <a class="share-btn" title="LinkedIn"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452z"/></svg></a>
+        <a class="share-btn" title="Facebook"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+        <a class="share-btn" title="Copy link"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a>
+      </div>
+    </div>
+
+    <!-- Author bio -->
+    <div class="author-bio">
+      <div class="ab-av">AJ</div>
+      <div class="ab-body">
+        <div class="ab-name">Alex Johnson <svg width="14" height="14" viewBox="0 0 24 24" fill="#1D9BF0"><path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91-1.01-1-2.52-1.26-3.91-.8C14.66 2.88 13.43 2 12 2s-2.66.88-3.34 2.19c-1.39-.46-2.9-.2-3.91.81-1 1.01-1.26 2.52-.8 3.91C2.88 9.34 2 10.57 2 12s.88 2.66 2.19 3.34c-.46 1.39-.2 2.9.81 3.91 1.01 1 2.52 1.26 3.91.8C9.34 21.12 10.57 22 12 22s2.66-.88 3.34-2.19c1.39.46 2.9.2 3.91-.81 1-1.01 1.26-2.52.8-3.91C21.12 14.66 22.25 13.43 22.25 12z"/></svg></div>
+        <div class="ab-role">Senior Editor · Writes about AI tools, infrastructure, and the people building them.</div>
+        <div class="ab-text">Alex has been covering AI for 6 years and previously led product at two YC-backed startups. He tests every tool he writes about for at least a week.</div>
+        <div class="ab-socials">
+          <a class="ab-soc" title="X"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25z"/></svg></a>
+          <a class="ab-soc" title="LinkedIn"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452z"/></svg></a>
+          <a class="ab-soc" title="Website">🌐</a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+
+    <!-- Table of Contents -->
+    <div class="sb-card">
+      <div class="sb-header">In this article</div>
+      <div class="sb-body">
+        <div class="toc-list">
+          <div class="toc-item active" onclick="jumpTo('whats-new',this)">What's new in GPT-5</div>
+          <div class="toc-item sub" onclick="jumpTo('whats-new',this)">1M token context</div>
+          <div class="toc-item sub" onclick="jumpTo('whats-new',this)">Native web access</div>
+          <div class="toc-item sub" onclick="jumpTo('whats-new',this)">Extended thinking</div>
+          <div class="toc-item" onclick="jumpTo('benchmarks',this)">Benchmark results</div>
+          <div class="toc-item" onclick="jumpTo('use-cases',this)">Use cases</div>
+          <div class="toc-item" onclick="jumpTo('pricing',this)">Pricing & access</div>
+          <div class="toc-item" onclick="jumpTo('vs-claude',this)">GPT-5 vs Claude 4</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tools mentioned -->
+    <div class="sb-card">
+      <div class="sb-header">Tools in this article<a class="sb-header-link" href="index.html">All →</a></div>
+      <div class="sb-body" style="padding:8px 18px;">
+        <a class="tool-item" href="tool.html">
+          <div class="ti-logo"><img src="https://www.google.com/s2/favicons?domain=chat.openai.com&sz=64" alt="ChatGPT"/></div>
+          <div class="ti-info"><div class="ti-name" style="display:inline-flex;align-items:center;">ChatGPT<svg style="flex-shrink:0;margin-left:3px" width="11" height="11" viewBox="0 0 24 24" fill="#1D9BF0"><path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91-1.01-1-2.52-1.26-3.91-.8C14.66 2.88 13.43 2 12 2s-2.66.88-3.34 2.19c-1.39-.46-2.9-.2-3.91.81-1 1.01-1.26 2.52-.8 3.91C2.88 9.34 2 10.57 2 12s.88 2.66 2.19 3.34c-.46 1.39-.2 2.9.81 3.91 1.01 1 2.52 1.26 3.91.8C9.34 21.12 10.57 22 12 22s2.66-.88 3.34-2.19c1.39.46 2.9.2 3.91-.81 1-1.01 1.26-2.52.8-3.91C21.12 14.66 22.25 13.43 22.25 12z"/><path d="M9 12l2 2.5 4.5-5" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div><div class="ti-cat">AI Chat · OpenAI</div></div>
+          <span class="ti-free">Free</span>
+        </a>
+        <a class="tool-item" href="tool.html">
+          <div class="ti-logo"><img src="https://www.google.com/s2/favicons?domain=claude.ai&sz=64" alt="Claude"/></div>
+          <div class="ti-info"><div class="ti-name" style="display:inline-flex;align-items:center;">Claude 4<svg style="flex-shrink:0;margin-left:3px" width="11" height="11" viewBox="0 0 24 24" fill="#1D9BF0"><path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91-1.01-1-2.52-1.26-3.91-.8C14.66 2.88 13.43 2 12 2s-2.66.88-3.34 2.19c-1.39-.46-2.9-.2-3.91.81-1 1.01-1.26 2.52-.8 3.91C2.88 9.34 2 10.57 2 12s.88 2.66 2.19 3.34c-.46 1.39-.2 2.9.81 3.91 1.01 1 2.52 1.26 3.91.8C9.34 21.12 10.57 22 12 22s2.66-.88 3.34-2.19c1.39.46 2.9.2 3.91-.81 1-1.01 1.26-2.52.8-3.91C21.12 14.66 22.25 13.43 22.25 12z"/><path d="M9 12l2 2.5 4.5-5" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div><div class="ti-cat">AI Chat · Anthropic</div></div>
+          <span class="ti-free">Free</span>
+        </a>
+        <a class="tool-item" href="tool.html">
+          <div class="ti-logo"><img src="https://www.google.com/s2/favicons?domain=perplexity.ai&sz=64" alt="Perplexity"/></div>
+          <div class="ti-info"><div class="ti-name" style="display:inline-flex;align-items:center;">Perplexity<svg style="flex-shrink:0;margin-left:3px" width="11" height="11" viewBox="0 0 24 24" fill="#1D9BF0"><path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91-1.01-1-2.52-1.26-3.91-.8C14.66 2.88 13.43 2 12 2s-2.66.88-3.34 2.19c-1.39-.46-2.9-.2-3.91.81-1 1.01-1.26 2.52-.8 3.91C2.88 9.34 2 10.57 2 12s.88 2.66 2.19 3.34c-.46 1.39-.2 2.9.81 3.91 1.01 1 2.52 1.26 3.91.8C9.34 21.12 10.57 22 12 22s2.66-.88 3.34-2.19c1.39.46 2.9.2 3.91-.81 1-1.01 1.26-2.52.8-3.91C21.12 14.66 22.25 13.43 22.25 12z"/><path d="M9 12l2 2.5 4.5-5" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div><div class="ti-cat">AI Search</div></div>
+          <span class="ti-free">Free</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Trending posts -->
+    <div class="sb-card">
+      <div class="sb-header">Trending on the blog<a class="sb-header-link" href="blog.html">All →</a></div>
+      <div class="sb-body" style="padding:8px 18px;">
+        <a class="trending-item" href="#">
+          <div class="tr-num"><span>1</span></div>
+          <div class="tr-info">
+            <div class="tr-title">ChatGPT vs Claude 4: the definitive comparison</div>
+            <div class="tr-meta">12 min · 22.1K views</div>
+          </div>
+        </a>
+        <a class="trending-item" href="#">
+          <div class="tr-num"><span>2</span></div>
+          <div class="tr-info">
+            <div class="tr-title">10 best free AI image generators in 2026</div>
+            <div class="tr-meta">7 min · 14.8K views</div>
+          </div>
+        </a>
+        <a class="trending-item" href="#">
+          <div class="tr-num"><span>3</span></div>
+          <div class="tr-info">
+            <div class="tr-title">The complete guide to AI writing tools</div>
+            <div class="tr-meta">18 min · 9.2K views</div>
+          </div>
+        </a>
+        <a class="trending-item" href="#">
+          <div class="tr-num"><span>4</span></div>
+          <div class="tr-info">
+            <div class="tr-title">Cursor vs GitHub Copilot: 3 months later</div>
+            <div class="tr-meta">11 min · 8.7K views</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- AI News -->
+    <div class="sb-card">
+      <div class="sb-header">From AI News<a class="sb-header-link" href="news.html">All →</a></div>
+      <div class="sb-body" style="padding:8px 18px;">
+        <a class="news-item" href="news.html">
+          <div class="ni-source"><img src="https://www.google.com/s2/favicons?domain=openai.com&sz=32"/>OpenAI · 2h ago</div>
+          <div class="ni-title">GPT-5 rolls out to all ChatGPT Plus users</div>
+          <div class="ni-time">Breaking</div>
+        </a>
+        <a class="news-item" href="news.html">
+          <div class="ni-source"><img src="https://www.google.com/s2/favicons?domain=deepmind.google&sz=32"/>Google DeepMind · 4h ago</div>
+          <div class="ni-title">Gemini 2.5 launches with multimodal upgrades</div>
+          <div class="ni-time">Research</div>
+        </a>
+        <a class="news-item" href="news.html">
+          <div class="ni-source"><img src="https://www.google.com/s2/favicons?domain=anthropic.com&sz=32"/>Anthropic · 6h ago</div>
+          <div class="ni-title">Claude 4 brings extended thinking mode</div>
+          <div class="ni-time">Product</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Newsletter -->
+    <div class="sb-nl">
+      <div class="sb-nl-eyebrow">Newsletter · 28k subscribers</div>
+      <div class="sb-nl-title">Weekly AI insights, in your inbox.</div>
+      <div class="sb-nl-sub">Every Tuesday — guides, reviews, and the AI tools we tested this week.</div>
+      <input class="sb-nl-input" type="email" placeholder="your@email.com"/>
+      <button class="sb-nl-btn">Subscribe for free →</button>
+    </div>
+
+    <!-- Browse Categories -->
+    <div class="sb-card">
+      <div class="sb-header">Browse categories<a class="sb-header-link" href="categories.html">All 48 →</a></div>
+      <div class="sb-body">
+        <div class="cat-links">
+          <a class="cat-link" href="categories.html">✍️ Writing</a>
+          <a class="cat-link" href="categories.html">💻 Code</a>
+          <a class="cat-link" href="categories.html">🎨 Image AI</a>
+          <a class="cat-link" href="categories.html">🎬 Video</a>
+          <a class="cat-link" href="marketing.html">📈 Marketing</a>
+          <a class="cat-link" href="categories.html">🎵 Audio</a>
+          <a class="cat-link" href="categories.html">📊 Analytics</a>
+          <a class="cat-link" href="categories.html">🤖 AI Agents</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Related posts -->
+    <div class="sb-card">
+      <div class="sb-header">Keep reading</div>
+      <div class="sb-body" style="padding:8px 18px;">
+        <a class="rel-item" href="#">
+          <div class="rel-img" style="background:linear-gradient(135deg,#1a0533,#4c1d95);"><div class="rel-img-text">ChatGPT vs Claude</div></div>
+          <div class="rel-body">
+            <div class="rel-tag">Comparison</div>
+            <div class="rel-title">ChatGPT vs Claude 4 in 2026</div>
+          </div>
+        </a>
+        <a class="rel-item" href="#">
+          <div class="rel-img" style="background:linear-gradient(135deg,#022c22,#065f46);"><div class="rel-img-text">Prompts</div></div>
+          <div class="rel-body">
+            <div class="rel-tag">Guide</div>
+            <div class="rel-title">The best prompt engineering techniques</div>
+          </div>
+        </a>
+        <a class="rel-item" href="#">
+          <div class="rel-img" style="background:linear-gradient(135deg,#1c1917,#7c3a20);"><div class="rel-img-text">Claude 4</div></div>
+          <div class="rel-body">
+            <div class="rel-tag">Tutorial</div>
+            <div class="rel-title">How to use Claude 4 extended thinking</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Submit your tool CTA -->
+    <div class="sb-cta">
+      <div class="sb-cta-title">Built an AI tool?<br/>Get discovered.</div>
+      <div class="sb-cta-text">Reach 50,000+ AI users every month. Submit your tool to AI Tools Set.</div>
+      <a href="submit.html" class="sb-cta-btn">Submit a Tool →</a>
+    </div>
+
+  </aside>
+</div>
+
+<!-- RELATED ARTICLES -->
+<div class="below-section">
+  <div class="below-inner">
+    <div class="below-head">
+      <div>
+        <div class="below-eyebrow">Continue reading</div>
+        <div class="below-title">Related articles</div>
+      </div>
+      <a href="blog.html" class="below-link">All articles →</a>
+    </div>
+    <div class="related-grid">
+      <a class="related-card" href="#">
+        <div class="rc-img" style="background:linear-gradient(135deg,#1a0533,#4c1d95);"><div class="rc-img-text">vs Claude</div></div>
+        <div class="rc-body">
+          <div class="rc-tag">Comparison · 12 min</div>
+          <div class="rc-title">ChatGPT vs Claude 4 in 2026: which AI should you use?</div>
+          <div class="rc-meta"><div class="rc-av">SP</div>Sarah Park · May 1</div>
+        </div>
+      </a>
+      <a class="related-card" href="#">
+        <div class="rc-img" style="background:linear-gradient(135deg,#0f172a,#1e3a5f);"><div class="rc-img-text">Cursor</div></div>
+        <div class="rc-body">
+          <div class="rc-tag">Comparison · 11 min</div>
+          <div class="rc-title">Cursor vs GitHub Copilot: an honest comparison after 3 months</div>
+          <div class="rc-meta"><div class="rc-av">DM</div>Dev Mehta · Apr 22</div>
+        </div>
+      </a>
+      <a class="related-card" href="#">
+        <div class="rc-img" style="background:linear-gradient(135deg,#022c22,#065f46);"><div class="rc-img-text">Prompts</div></div>
+        <div class="rc-body">
+          <div class="rc-tag">Guide · 10 min</div>
+          <div class="rc-title">The best prompt engineering techniques in 2026</div>
+          <div class="rc-meta"><div class="rc-av">AJ</div>Alex Johnson · Apr 10</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- COMMENTS -->
+<div class="comments-section">
+  <div class="comments-inner">
+    <div class="cs-head">
+      <div class="cs-title">Comments (42)</div>
+    </div>
+    <div class="comment-form">
+      <textarea class="cf-textarea" placeholder="Share your thoughts on GPT-5…"></textarea>
+      <div class="cf-row">
+        <div class="cf-hint">Be kind. Markdown supported.</div>
+        <button class="cf-submit">Post comment</button>
+      </div>
+    </div>
+    <div class="comment">
+      <div class="com-av" style="background:#dbeafe;color:#1d4ed8;">JM</div>
+      <div class="com-body">
+        <div class="com-top"><div class="com-name">James Mitchell</div><div class="com-meta">Software Engineer · 2 days ago</div></div>
+        <div class="com-text">The 1M context window is a game-changer. I pasted our entire monorepo (650K tokens) and asked GPT-5 to find security issues. It found three real bugs we'd missed in code review. Worth the upgrade.</div>
+        <div class="com-actions">
+          <div class="com-action">▲ Like · 38</div>
+          <div class="com-action">💬 Reply</div>
+        </div>
+      </div>
+    </div>
+    <div class="comment">
+      <div class="com-av" style="background:#fce7f3;color:#db2777;">SP</div>
+      <div class="com-body">
+        <div class="com-top"><div class="com-name">Sarah Park</div><div class="com-meta">Content Strategist · 1 day ago</div></div>
+        <div class="com-text">Agreed on Claude 4 being slightly better for writing. I run both side-by-side now for marketing copy — GPT-5 for outlines and structure, Claude 4 for the actual prose. Best of both worlds.</div>
+        <div class="com-actions">
+          <div class="com-action">▲ Like · 24</div>
+          <div class="com-action">💬 Reply</div>
+        </div>
+      </div>
+    </div>
+    <div class="comment">
+      <div class="com-av" style="background:#d1fae5;color:#059669;">AR</div>
+      <div class="com-body">
+        <div class="com-top"><div class="com-name">Alex Rivera</div><div class="com-meta">Startup Founder · 18h ago</div></div>
+        <div class="com-text">Pro tier is overkill unless you're hitting limits multiple times a day. I'd recommend most people start with Plus and upgrade only if you actually run out.</div>
+        <div class="com-actions">
+          <div class="com-action">▲ Like · 17</div>
+          <div class="com-action">💬 Reply</div>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:20px;">
+      <button style="font-family:var(--font);font-size:13px;font-weight:700;color:var(--blue);background:var(--blue-soft);border:1.5px solid rgba(0,82,255,.15);padding:10px 22px;border-radius:var(--r-pill);">Load 39 more comments</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo"><div class="logo-mark"><svg viewBox="0 0 14 14" width="14" height="14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1.2" fill="white"/><rect x="8" y="1" width="5" height="5" rx="1.2" fill="white" opacity=".5"/><rect x="1" y="8" width="5" height="5" rx="1.2" fill="white" opacity=".5"/><rect x="8" y="8" width="5" height="5" rx="1.2" fill="white"/></svg></div>AI Tools Set</div>
+        <div class="footer-desc">The cleanest AI tools directory. Curated, categorized, and updated every day.</div>
+      </div>
+      <div class="fc"><div class="fc-title">Explore</div><a href="index.html">All Tools</a><a href="categories.html">Categories</a><a href="news.html">AI News</a><a href="blog.html">Blog</a></div>
+      <div class="fc"><div class="fc-title">Company</div><a href="#">About</a><a href="blog.html">Blog</a><a href="submit.html">Submit Tool</a><a href="#">Advertise</a></div>
+      <div class="fc"><div class="fc-title">Legal</div><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Cookies</a><a href="#">Contact</a></div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2026 AI Tools Set. All rights reserved.</div>
+      <div class="footer-links"><a href="#">Twitter / X</a><a href="#">LinkedIn</a><a href="#">YouTube</a></div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Reading progress bar
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+  document.getElementById('progress').style.width = pct + '%';
+});
+
+// TOC jump + active
+function jumpTo(id, el){
+  document.querySelectorAll('.toc-item').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  const target = document.getElementById(id);
+  if (target) {
+    const y = target.getBoundingClientRect().top + window.scrollY - 90;
+    window.scrollTo({top:y, behavior:'smooth'});
+  }
+}
+
+// Auto-highlight TOC based on scroll
+const sectionIds = ['whats-new','benchmarks','use-cases','pricing','vs-claude'];
+window.addEventListener('scroll', () => {
+  const scrolled = window.scrollY + 120;
+  let activeId = null;
+  for (const id of sectionIds) {
+    const el = document.getElementById(id);
+    if (el && el.offsetTop <= scrolled) activeId = id;
+  }
+  if (activeId) {
+    document.querySelectorAll('.toc-item').forEach(x => x.classList.remove('active'));
+    const tocBtn = document.querySelector(`.toc-item[onclick*="${activeId}"]`);
+    if (tocBtn) tocBtn.classList.add('active');
+  }
+});
+</script>
+</body>
+</html>

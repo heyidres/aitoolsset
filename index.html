@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Tools Set — Find the Best AI Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --blue:#0052ff;--blue-h:#578bfa;--blue-soft:rgba(0,82,255,.08);
+  --white:#fff;--bg:#f8f9fa;--surface:#eef0f3;
+  --cream:#FBF8F1;--mint:#F1F7F3;--lavender:#F4F2FA;--sand:#F6F2EC;
+  --near-black:#0F172A;--dark-card:#1E293B;--dark-border:rgba(255,255,255,.07);
+  --text:#0a0b0d;--text-2:#5b616e;--text-3:#9aa0ae;
+  --border:rgba(91,97,110,.18);--border-2:rgba(91,97,110,.28);
+  --green:#16a34a;--green-bg:#f0fdf4;--green-border:#bbf7d0;
+  --r-sm:6px;--r:12px;--r-lg:20px;--r-pill:100px;
+  --font:'Manrope',sans-serif;--font-body:'DM Sans',sans-serif;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 4px 16px rgba(0,0,0,.08);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font-body);background:var(--white);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.5;}
+a{color:inherit;text-decoration:none;}
+button{cursor:pointer;border:none;background:none;font-family:inherit;color:inherit;}
+img{display:block;max-width:100%;}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.nav-inner{max-width:1280px;margin:0 auto;padding:0 36px;height:58px;display:flex;align-items:center;gap:0;}
+.logo{font-family:var(--font);font-size:16px;font-weight:800;letter-spacing:-.4px;color:var(--text);display:flex;align-items:center;gap:8px;margin-right:36px;flex-shrink:0;}
+.logo-mark{width:26px;height:26px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-mark svg{width:14px;height:14px;}
+.nav-links{display:flex;align-items:center;gap:2px;flex:1;}
+.nav-links a{font-family:var(--font);font-size:13.5px;font-weight:600;color:var(--text-2);padding:5px 12px;border-radius:var(--r-pill);transition:color .12s,background .12s;}
+.nav-links a:hover{color:var(--text);background:var(--surface);}
+.nav-right{display:flex;align-items:center;gap:8px;}
+.nav-ghost{font-family:var(--font);font-size:13.5px;font-weight:600;color:var(--text-2);padding:7px 16px;border-radius:var(--r-pill);transition:color .12s,background .12s;}
+.nav-ghost:hover{background:var(--surface);color:var(--text);}
+.nav-primary{font-family:var(--font);font-size:13.5px;font-weight:700;color:#fff;background:var(--blue);padding:8px 20px;border-radius:var(--r-pill);transition:background .15s;}
+.nav-primary:hover{background:var(--blue-h);}
+
+/* ── HERO ── */
+.hero{background:var(--near-black);padding:0 36px;overflow:hidden;position:relative;}
+.hero-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;min-height:580px;padding:80px 0;}
+.hero-bg-glow{position:absolute;top:-200px;right:-100px;width:700px;height:700px;background:radial-gradient(circle,rgba(0,82,255,.25) 0%,transparent 65%);pointer-events:none;}
+.hero-bg-glow2{position:absolute;bottom:-200px;left:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(87,139,250,.15) 0%,transparent 65%);pointer-events:none;}
+.hero-tag{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:var(--r-pill);padding:5px 14px;font-family:var(--font);font-size:12px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.05em;text-transform:uppercase;margin-bottom:24px;}
+.hero-tag-dot{width:6px;height:6px;border-radius:50%;background:var(--blue-h);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.hero h1{font-family:var(--font);font-size:clamp(44px,4.5vw,68px);font-weight:900;line-height:1.00;letter-spacing:-2.5px;color:#fff;margin-bottom:20px;}
+.hero h1 .accent{color:var(--blue-h);}
+.hero-type-wrap{display:inline;color:var(--blue-h);}
+#hero-typewriter{border-right:2px solid var(--blue-h);padding-right:2px;}
+.hero-sub{font-size:17px;color:rgba(255,255,255,.55);line-height:1.65;max-width:480px;margin-bottom:36px;}
+.hero-search{position:relative;margin-bottom:28px;}
+.hero-search-bar{width:100%;height:54px;border:1.5px solid rgba(255,255,255,.15);border-radius:var(--r-pill);background:rgba(255,255,255,.06);font-family:var(--font-body);font-size:15px;color:#fff;padding:0 140px 0 50px;outline:none;backdrop-filter:blur(10px);transition:border-color .15s,background .15s;}
+.hero-search-bar::placeholder{color:rgba(255,255,255,.3);}
+.hero-search-bar:focus{border-color:var(--blue);background:rgba(255,255,255,.1);}
+.hero-search-icon{position:absolute;left:17px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.35);pointer-events:none;}
+.hero-search-btn{position:absolute;right:5px;top:50%;transform:translateY(-50%);background:var(--blue);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;padding:9px 22px;border-radius:var(--r-pill);transition:background .12s;letter-spacing:.02em;}
+.hero-search-btn:hover{background:var(--blue-h);}
+.hero-pills{display:flex;gap:6px;flex-wrap:wrap;}
+.hero-pill{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);padding:5px 13px;border-radius:var(--r-pill);cursor:pointer;transition:all .12s;}
+.hero-pill:hover{border-color:var(--blue);color:var(--blue-h);background:rgba(0,82,255,.12);}
+.hero-stats{display:flex;gap:0;margin-top:40px;border-top:1px solid rgba(255,255,255,.08);padding-top:32px;}
+.hero-stat{flex:1;border-right:1px solid rgba(255,255,255,.08);}
+.hero-stat:last-child{border-right:none;}
+.hero-stat-num{font-family:var(--font);font-size:28px;font-weight:900;letter-spacing:-1px;color:#fff;line-height:1;}
+.hero-stat-label{font-size:13px;color:rgba(255,255,255,.35);margin-top:4px;}
+
+/* logo mosaic */
+.hero-right{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-content:center;}
+.mosaic-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:background .15s,border-color .2s,transform .2s;text-align:center;}
+.mosaic-card:hover{background:rgba(255,255,255,.1);border-color:rgba(0,82,255,.5);transform:translateY(-3px);}
+.mosaic-card.featured{background:rgba(0,82,255,.15);border-color:rgba(0,82,255,.4);}
+.mosaic-logo{width:40px;height:40px;border-radius:10px;overflow:hidden;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mosaic-logo img{width:100%;height:100%;object-fit:cover;}
+.mosaic-name{font-family:var(--font);font-size:11px;font-weight:700;color:rgba(255,255,255,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;}
+.mosaic-cat{font-size:10px;color:rgba(255,255,255,.3);}
+.mosaic-saves{font-size:10.5px;font-weight:700;color:var(--blue-h);}
+
+/* ── TRUSTED BY ── */
+.trusted-by{background:var(--white);border-bottom:1px solid var(--border);padding:0 0;}
+.tb-inner{max-width:100%;display:flex;align-items:center;height:52px;overflow:hidden;position:relative;}
+.tb-inner::before,.tb-inner::after{content:'';position:absolute;top:0;bottom:0;width:120px;z-index:2;pointer-events:none;}
+.tb-inner::before{left:0;background:linear-gradient(to right,var(--white),transparent);}
+.tb-inner::after{right:0;background:linear-gradient(to left,var(--white),transparent);}
+.tb-label{font-family:var(--font);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);white-space:nowrap;padding:0 32px;flex-shrink:0;}
+.tb-track-wrap{flex:1;overflow:hidden;}
+.tb-track{display:flex;align-items:center;gap:48px;width:max-content;animation:ticker 28s linear infinite;}
+.tb-track:hover{animation-play-state:paused;}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.tb-logo{display:flex;align-items:center;gap:8px;flex-shrink:0;opacity:.45;transition:opacity .2s;cursor:default;filter:grayscale(1);}
+.tb-logo:hover{opacity:.75;filter:grayscale(0);}
+.tb-logo img{height:20px;width:20px;object-fit:contain;display:block;border-radius:4px;}
+.tb-logo span{font-family:var(--font);font-size:13px;font-weight:700;color:var(--text-2);white-space:nowrap;}
+
+/* ── FILTER BAR ── */
+.filter-bar{background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:58px;z-index:100;}
+.filter-bar-inner{max-width:1280px;margin:0 auto;padding:0 36px;height:52px;display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none;}
+.filter-bar-inner::-webkit-scrollbar{display:none;}
+.f-pill{font-family:var(--font);font-size:13px;font-weight:600;color:var(--text-2);padding:6px 16px;border-radius:var(--r-pill);border:1.5px solid var(--border);background:var(--white);cursor:pointer;transition:all .12s;white-space:nowrap;flex-shrink:0;}
+.f-pill:hover,.f-pill.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+/* ── SECTION WRAPPER ── */
+.page{max-width:1280px;margin:0 auto;padding:0 36px;}
+.section{padding:64px 0;border-bottom:1px solid var(--border);}
+.sh{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;}
+.sh-left{}
+.sh-eyebrow{font-family:var(--font);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);margin-bottom:6px;}
+.sh-title{font-family:var(--font);font-size:28px;font-weight:800;letter-spacing:-.8px;line-height:1.1;}
+.sh-sub{font-size:14px;color:var(--text-2);margin-top:4px;}
+.sh-link{font-size:13.5px;font-weight:600;color:var(--blue);transition:color .12s;display:flex;align-items:center;gap:4px;}
+.sh-link:hover{color:var(--blue-h);}
+
+/* ── TOOL CARD GRID ── */
+.tool-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.tool-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:20px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .15s;position:relative;display:flex;flex-direction:column;}
+.tool-card:hover{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,82,255,.07),var(--shadow);transform:translateY(-2px);}
+.tc-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;}
+.tc-logo{width:46px;height:46px;border-radius:11px;overflow:hidden;background:var(--surface);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.tc-logo img{width:100%;height:100%;object-fit:cover;}
+.tc-logo-fallback{font-family:var(--font);font-size:15px;font-weight:800;color:var(--text-2);}
+.tc-meta{flex:1;min-width:0;}
+.tc-name{font-family:var(--font);font-size:15px;font-weight:800;letter-spacing:-.3px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tc-cat{font-size:12px;color:var(--text-3);font-weight:500;}
+.tc-actions{display:flex;gap:6px;margin-left:auto;flex-shrink:0;}
+.tc-btn{width:30px;height:30px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s;color:var(--text-3);}
+.tc-btn:hover{background:var(--surface);color:var(--text);}
+.tc-btn.saved{color:#ef4444;}
+.tc-btn.voted{color:var(--blue);}
+.tc-desc{font-size:13px;color:var(--text-2);line-height:1.55;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:14px;}
+.tc-footer{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.tc-tag{font-size:11px;font-weight:600;color:var(--text-2);padding:3px 9px;border-radius:var(--r-pill);border:1px solid var(--border);background:var(--white);}
+.tc-free{font-size:11px;font-weight:700;color:var(--green);padding:3px 9px;border-radius:var(--r-pill);border:1px solid var(--green-border);background:var(--green-bg);}
+.tc-saves{font-size:11.5px;font-weight:600;color:var(--text-3);margin-left:auto;display:flex;align-items:center;gap:3px;}
+.tc-visit{margin-left:auto;font-family:var(--font);font-size:12px;font-weight:700;color:var(--blue);background:var(--blue-soft);padding:5px 12px;border-radius:var(--r-pill);border:1px solid rgba(0,82,255,.15);opacity:0;transition:opacity .15s;pointer-events:none;}
+.tool-card:hover .tc-visit{opacity:1;pointer-events:all;}
+.tool-card:hover .tc-saves{display:none;}
+
+/* ── DARK SECTION ── */
+.dark-section{background:var(--near-black);padding:64px 36px;}
+.dark-inner{max-width:1280px;margin:0 auto;}
+.dark-sh{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px;}
+.dark-title{font-family:var(--font);font-size:28px;font-weight:800;letter-spacing:-.8px;color:#fff;}
+.dark-sub{font-size:14px;color:rgba(255,255,255,.35);margin-top:5px;}
+.dark-link{font-size:13.5px;font-weight:600;color:var(--blue-h);}
+
+/* ── TRENDING GRID ── */
+.trend-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.trend-card{background:var(--dark-card);border:1px solid var(--dark-border);border-radius:var(--r-lg);padding:20px;cursor:pointer;transition:background .15s,border-color .15s,transform .15s;}
+.trend-card:hover{background:#243044;border-color:rgba(0,82,255,.35);transform:translateY(-2px);}
+.trc-top{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.trc-logo{width:38px;height:38px;border-radius:9px;overflow:hidden;background:rgba(255,255,255,.08);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.trc-logo img{width:100%;height:100%;object-fit:cover;}
+.trc-name{font-family:var(--font);font-size:14.5px;font-weight:800;color:#fff;margin-bottom:2px;}
+.trc-cat{font-size:11.5px;color:rgba(255,255,255,.3);}
+.trc-desc{font-size:12.5px;color:rgba(255,255,255,.45);line-height:1.5;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.trc-footer{display:flex;align-items:center;gap:6px;}
+.trc-tag{font-size:11px;font-weight:600;color:rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.1);padding:3px 8px;border-radius:var(--r-pill);}
+.trc-up{font-size:12px;font-weight:800;color:#4ade80;margin-left:auto;}
+
+/* ── USE-CASE SECTIONS ── */
+.usecase-section{padding:72px 36px;border-bottom:1px solid var(--border);}
+.usecase-inner{max-width:1280px;margin:0 auto;}
+.usecase-grid{display:grid;grid-template-columns:320px 1fr;gap:56px;align-items:start;}
+.usecase-left{}
+.usecase-badge{display:inline-flex;align-items:center;gap:6px;background:var(--blue-soft);border:1px solid rgba(0,82,255,.15);border-radius:var(--r-pill);padding:5px 13px;font-family:var(--font);font-size:12px;font-weight:700;color:var(--blue);letter-spacing:.04em;margin-bottom:16px;}
+.usecase-title{font-family:var(--font);font-size:32px;font-weight:900;letter-spacing:-1px;line-height:1.1;margin-bottom:14px;}
+.usecase-desc{font-size:14.5px;color:var(--text-2);line-height:1.65;margin-bottom:24px;}
+.usecase-tools{display:flex;flex-direction:column;gap:0;}
+.usecase-tool{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.usecase-tool:last-child{border-bottom:none;}
+.usecase-tool:hover .ut-name{color:var(--blue);}
+.ut-logo{width:32px;height:32px;border-radius:7px;overflow:hidden;background:var(--surface);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.ut-logo img{width:100%;height:100%;object-fit:cover;}
+.ut-name{font-family:var(--font);font-size:13.5px;font-weight:700;transition:color .12s;}
+.ut-tag{font-size:11px;color:var(--text-3);margin-left:auto;}
+.usecase-right{}
+.usecase-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.uc-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden;cursor:pointer;transition:border-color .15s,transform .15s;}
+.uc-card:hover{border-color:var(--blue);transform:translateY(-2px);}
+.uc-card-img{height:120px;background:var(--near-black);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.uc-card-img-inner{font-family:var(--font);font-size:32px;font-weight:900;letter-spacing:-1px;opacity:.25;color:#fff;}
+.uc-card-body{padding:14px 16px;}
+.uc-card-name{font-family:var(--font);font-size:14px;font-weight:800;margin-bottom:4px;}
+.uc-card-desc{font-size:12px;color:var(--text-2);line-height:1.45;}
+
+/* ── CAT SECTION (dark) ── */
+.cat-grid-dark{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.cat-card-dark{background:var(--dark-card);border:1px solid var(--dark-border);border-radius:var(--r);padding:20px 18px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .15s,border-color .15s;}
+.cat-card-dark:hover{background:#243044;border-color:rgba(0,82,255,.4);}
+.cat-name-dark{font-family:var(--font);font-size:14.5px;font-weight:700;color:#fff;margin-bottom:3px;}
+.cat-count-dark{font-size:12px;color:rgba(255,255,255,.3);}
+.cat-arrow{font-size:18px;color:rgba(255,255,255,.15);transition:color .15s;}
+.cat-card-dark:hover .cat-arrow{color:var(--blue-h);}
+
+/* ── POPULAR TABLE ── */
+.pop-table{display:flex;flex-direction:column;}
+.pop-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.pop-row:last-child{border-bottom:none;}
+.pop-row:hover .pop-name{color:var(--blue);}
+.pop-rank{font-family:var(--font);font-size:13px;font-weight:700;color:var(--text-3);width:20px;text-align:center;flex-shrink:0;}
+.pop-logo{width:38px;height:38px;border-radius:9px;overflow:hidden;background:var(--surface);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.pop-logo img{width:100%;height:100%;object-fit:cover;}
+.pop-info{flex:1;min-width:0;}
+.pop-name{font-family:var(--font);font-size:14px;font-weight:700;margin-bottom:2px;transition:color .12s;}
+.pop-desc{font-size:12px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pop-tags{display:flex;gap:5px;flex-shrink:0;}
+.pop-saves{font-size:12px;color:var(--text-3);font-weight:600;flex-shrink:0;text-align:right;width:60px;}
+
+/* ── NEWS + BLOG SECTIONS ── */
+.home-news-section{padding:64px 36px;border-bottom:1px solid var(--border);background:var(--cream);}
+.home-blog-section{padding:64px 36px;border-bottom:1px solid var(--border);background:var(--lavender);}
+.hn-inner{max-width:1280px;margin:0 auto;}
+.hn-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+.hn-title{font-family:var(--font);font-size:26px;font-weight:900;letter-spacing:-.8px;}
+.hn-sub{font-size:13.5px;color:var(--text-2);margin-top:4px;}
+.hn-link{font-family:var(--font);font-size:13.5px;font-weight:700;color:var(--blue);display:flex;align-items:center;gap:4px;transition:color .12s;flex-shrink:0;}
+.hn-link:hover{color:var(--blue-h);}
+/* news feed row */
+.news-feed-row{display:grid;grid-template-columns:1fr 1fr;gap:0;background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;}
+.nf-main{border-right:1px solid var(--border);cursor:pointer;transition:background .12s;}
+.nf-main:hover{background:#fafafa;}
+.nf-img{height:200px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.nf-img-inner{font-family:var(--font);font-size:44px;font-weight:900;letter-spacing:-2px;opacity:.13;color:#fff;}
+.nf-breaking{position:absolute;top:12px;left:12px;background:#ef4444;color:#fff;font-family:var(--font);font-size:10px;font-weight:800;padding:3px 9px;border-radius:var(--r-pill);letter-spacing:.05em;text-transform:uppercase;}
+.nf-body{padding:20px 22px;}
+.nf-source{font-family:var(--font);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--blue);margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+.nf-source img{width:13px;height:13px;border-radius:3px;}
+.nf-title{font-family:var(--font);font-size:17px;font-weight:800;letter-spacing:-.4px;line-height:1.25;margin-bottom:8px;color:var(--text);}
+.nf-main:hover .nf-title{color:var(--blue);}
+.nf-excerpt{font-size:13px;color:var(--text-2);line-height:1.55;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.nf-meta{font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.nf-tool-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
+.nf-tool-chip{display:flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-pill);padding:3px 9px;font-size:11.5px;font-weight:600;color:var(--text-2);}
+.nf-tool-chip img{width:13px;height:13px;border-radius:3px;}
+/* news side list */
+.nf-side{display:flex;flex-direction:column;}
+.nf-side-item{display:flex;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border);cursor:pointer;align-items:flex-start;transition:background .12s;}
+.nf-side-item:last-child{border-bottom:none;}
+.nf-side-item:hover{background:#fafafa;}
+.nf-side-item:hover .nfs-title{color:var(--blue);}
+.nfs-img{width:68px;height:52px;border-radius:8px;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.nfs-img-inner{font-family:var(--font);font-size:14px;font-weight:900;opacity:.2;color:#fff;}
+.nfs-source{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--blue);margin-bottom:4px;}
+.nfs-title{font-family:var(--font);font-size:13px;font-weight:700;letter-spacing:-.1px;line-height:1.35;color:var(--text);transition:color .12s;margin-bottom:4px;}
+.nfs-meta{font-size:11px;color:var(--text-3);}
+/* blog cards row */
+.blog-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.hb-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;cursor:pointer;transition:border-color .15s,transform .15s,box-shadow .15s;display:flex;flex-direction:column;}
+.hb-card:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:0 0 0 3px var(--blue-soft);}
+.hb-img{height:152px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+.hb-img-inner{font-family:var(--font);font-size:32px;font-weight:900;letter-spacing:-1.5px;opacity:.13;color:#fff;}
+.hb-body{padding:18px;flex:1;display:flex;flex-direction:column;}
+.hb-tag{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;}
+.hb-title{font-family:var(--font);font-size:14.5px;font-weight:800;letter-spacing:-.3px;line-height:1.3;margin-bottom:8px;color:var(--text);flex:1;}
+.hb-card:hover .hb-title{color:var(--blue);}
+.hb-footer{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-3);margin-top:auto;}
+.hb-av{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--font);font-size:8px;font-weight:800;}
+.hb-author{font-weight:600;color:var(--text-2);}
+
+/* ── CTA ── */
+.cta-section{background:var(--near-black);padding:100px 36px;text-align:center;}
+.cta-inner{max-width:600px;margin:0 auto;}
+.cta-eyebrow{font-family:var(--font);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--blue-h);margin-bottom:20px;}
+.cta-h2{font-family:var(--font);font-size:clamp(40px,4vw,60px);font-weight:900;letter-spacing:-2px;line-height:1.00;color:#fff;margin-bottom:16px;}
+.cta-p{font-size:17px;color:rgba(255,255,255,.45);line-height:1.65;margin-bottom:40px;}
+.cta-btns{display:flex;gap:12px;justify-content:center;}
+.btn-white{font-family:var(--font);font-size:15px;font-weight:700;color:var(--text);background:#fff;padding:14px 32px;border-radius:var(--r-pill);transition:transform .12s,box-shadow .15s;}
+.btn-white:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,.25);}
+.btn-outline-w{font-family:var(--font);font-size:15px;font-weight:600;color:rgba(255,255,255,.7);border:1.5px solid rgba(255,255,255,.2);padding:14px 32px;border-radius:var(--r-pill);transition:border-color .12s,color .12s;}
+.btn-outline-w:hover{border-color:rgba(255,255,255,.5);color:#fff;}
+
+/* ── FOOTER ── */
+footer{background:var(--near-black);border-top:1px solid var(--dark-border);padding:60px 36px 36px;}
+.footer-inner{max-width:1280px;margin:0 auto;}
+.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px;}
+.footer-logo{font-family:var(--font);font-size:15px;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.footer-desc{font-size:13.5px;color:rgba(255,255,255,.3);line-height:1.65;max-width:220px;}
+.fc-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.25);margin-bottom:14px;}
+.fc a{display:block;font-size:13.5px;color:rgba(255,255,255,.45);margin-bottom:9px;transition:color .12s;}
+.fc a:hover{color:#fff;}
+.footer-bottom{border-top:1px solid var(--dark-border);padding-top:22px;display:flex;justify-content:space-between;align-items:center;}
+.footer-copy{font-size:12.5px;color:rgba(255,255,255,.2);}
+.footer-socials{display:flex;gap:14px;}
+.footer-socials a{font-size:12.5px;color:rgba(255,255,255,.25);transition:color .12s;}
+.footer-socials a:hover{color:rgba(255,255,255,.7);}
+
+/* ── VERIFIED BADGE ── */
+.tc-verified{display:inline-flex;align-items:center;cursor:help;position:relative;}
+.tc-verified svg{display:block;}
+.tc-verified-tip{position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);background:var(--near-black);color:#fff;font-size:11.5px;font-weight:500;padding:6px 10px;border-radius:8px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:30;}
+.tc-verified-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--near-black);}
+.tc-verified:hover .tc-verified-tip{opacity:1;}
+
+/* ── DEAL BADGE ── */
+.deal-ribbon{position:absolute;top:12px;left:0;background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;font-family:var(--font);font-size:10.5px;font-weight:800;padding:4px 10px 4px 12px;border-radius:0 var(--r-pill) var(--r-pill) 0;display:flex;align-items:center;gap:5px;letter-spacing:.01em;box-shadow:0 2px 8px rgba(239,68,68,.35);z-index:5;}
+.deal-ribbon svg{flex-shrink:0;}
+.deal-tooltip{position:absolute;top:calc(100% + 6px);left:0;background:var(--near-black);color:#fff;font-size:11.5px;font-weight:500;padding:6px 10px;border-radius:8px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:30;}
+.deal-tooltip::before{content:'';position:absolute;bottom:100%;left:14px;border:5px solid transparent;border-bottom-color:var(--near-black);}
+.deal-ribbon:hover .deal-tooltip{opacity:1;}
+
+/* ── TWEAKS ── */
+#tweaks-panel{display:none;position:fixed;bottom:20px;right:20px;width:260px;background:var(--near-black);border:1px solid rgba(255,255,255,.12);border-radius:var(--r-lg);box-shadow:0 16px 48px rgba(0,0,0,.6);padding:20px;z-index:9999;}
+#tweaks-panel h3{font-family:var(--font);font-size:13px;font-weight:800;color:#fff;margin-bottom:16px;}
+.trow{margin-bottom:14px;}
+.tlbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:8px;display:block;}
+.topts{display:flex;gap:6px;flex-wrap:wrap;}
+.topt{font-family:var(--font);font-size:12px;font-weight:600;color:rgba(255,255,255,.4);padding:5px 12px;border-radius:var(--r-pill);border:1px solid rgba(255,255,255,.1);cursor:pointer;transition:all .12s;background:none;}
+.topt.active,.topt:hover{background:var(--blue);color:#fff;border-color:var(--blue);}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <div class="logo-mark"><svg viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1.2" fill="white"/><rect x="8" y="1" width="5" height="5" rx="1.2" fill="white" opacity=".5"/><rect x="1" y="8" width="5" height="5" rx="1.2" fill="white" opacity=".5"/><rect x="8" y="8" width="5" height="5" rx="1.2" fill="white"/></svg></div>
+      AI Tools Set
+    </a>
+    <div class="nav-links">
+      <a href="#">Browse</a><a href="#">Categories</a><a href="#">New</a><a href="#">Top Rated</a><a href="#">Blog</a>
+    </div>
+    <div class="nav-right">
+      <button class="nav-ghost">Sign in</button>
+      <button class="nav-primary">Submit a Tool</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-glow"></div>
+  <div class="hero-bg-glow2"></div>
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-tag"><span class="hero-tag-dot"></span>2,400+ tools · Updated daily</div>
+      <h1>The only AI<br/>directory you<br/><span class="accent" id="hero-typewriter">ever need.</span></h1>
+      <p class="hero-sub">Discover, compare, and save the best AI tools — curated for writers, coders, designers, and teams.</p>
+      <div class="hero-search">
+        <svg class="hero-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="hero-search-bar" type="text" placeholder='Search — "image generator", "coding assistant", "video AI"…'/>
+        <button class="hero-search-btn">Search</button>
+      </div>
+      <div class="hero-pills">
+        <span class="hero-pill">✦ Image AI</span>
+        <span class="hero-pill">✦ Code assistant</span>
+        <span class="hero-pill">✦ Video tools</span>
+        <span class="hero-pill">✦ Writing</span>
+        <span class="hero-pill">✦ Free only</span>
+        <span class="hero-pill">✦ New today</span>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="hero-stat-num">2,400+</div><div class="hero-stat-label">AI tools</div></div>
+        <div class="hero-stat" style="padding-left:28px;"><div class="hero-stat-num">48</div><div class="hero-stat-label">Categories</div></div>
+        <div class="hero-stat" style="padding-left:28px;"><div class="hero-stat-num">50k+</div><div class="hero-stat-label">Monthly users</div></div>
+        <div class="hero-stat" style="padding-left:28px;"><div class="hero-stat-num">12k</div><div class="hero-stat-label">Reviews</div></div>
+      </div>
+    </div>
+    <div class="hero-right" id="mosaic"></div>
+  </div>
+</section>
+
+<!-- TRUSTED BY -->
+<div class="trusted-by">
+  <div class="tb-inner">
+    <div class="tb-label">Trusted by teams at</div>
+    <div class="tb-track-wrap">
+      <div class="tb-track" id="tb-track"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <div class="filter-bar-inner">
+    <button class="f-pill active" data-filter="all">All Tools</button>
+    <button class="f-pill" data-filter="writing">Writing</button>
+    <button class="f-pill" data-filter="image">Image</button>
+    <button class="f-pill" data-filter="video">Video</button>
+    <button class="f-pill" data-filter="code">Code</button>
+    <button class="f-pill" data-filter="audio">Audio</button>
+    <button class="f-pill" data-filter="productivity">Productivity</button>
+    <button class="f-pill" data-filter="research">Research</button>
+    <button class="f-pill" data-filter="design">Design</button>
+    <button class="f-pill" data-filter="marketing">Marketing</button>
+    <button class="f-pill" data-filter="free">🟢 Free only</button>
+  </div>
+</div>
+
+<!-- FEATURED TOOLS -->
+<div class="page" style="background:var(--white);">
+  <div class="section">
+    <div class="sh">
+      <div class="sh-left">
+        <div class="sh-eyebrow">Editor's picks</div>
+        <div class="sh-title">Featured AI Tools</div>
+      </div>
+      <a href="#" class="sh-link">Browse all 2,400+ tools →</a>
+    </div>
+    <div class="tool-grid" id="tool-grid"></div>
+  </div>
+</div>
+
+<!-- DARK — TRENDING -->
+<div class="dark-section">
+  <div class="dark-inner">
+    <div class="dark-sh">
+      <div>
+        <div class="dark-title">🔥 Trending this week</div>
+        <div class="dark-sub">Tools gaining the most traction in the last 7 days</div>
+      </div>
+      <a href="#" class="dark-link">See all trending →</a>
+    </div>
+    <div class="trend-grid" id="trend-grid"></div>
+  </div>
+</div>
+
+<!-- USE CASE: For Writers -->
+<div class="usecase-section" style="background:var(--mint);">
+  <div class="usecase-inner">
+    <div class="usecase-grid">
+      <div class="usecase-left">
+        <div class="usecase-badge">✦ For Writers</div>
+        <div class="usecase-title">Write better,<br/>publish faster.</div>
+        <div class="usecase-desc">From blog posts to screenplays — the best AI writing tools to supercharge your workflow.</div>
+        <div class="usecase-tools">
+          <div class="usecase-tool"><div class="ut-logo"><img src="https://www.google.com/s2/favicons?domain=chat.openai.com&sz=64" onerror="this.style.display='none'"/></div><div class="ut-name">ChatGPT</div><span class="ut-tag">Free</span></div>
+          <div class="usecase-tool"><div class="ut-logo"><img src="https://www.google.com/s2/favicons?domain=claude.ai&sz=64" onerror="this.style.display='none'"/></div><div class="ut-name">Claude</div><span class="ut-tag">Free tier</span></div>
+          <div class="usecase-tool"><div class="ut-logo"><img src="https://www.google.com/s2/favicons?domain=jasper.ai&sz=64" onerror="this.style.display='none'"/></div><div class="ut-name">Jasper AI</div><span class="ut-tag">Paid</span></div>
+          <div class="usecase-tool"><div class="ut-logo"><img src="https://www.google.com/s2/favicons?domain=copy.ai&sz=64" onerror="this.style.display='none'"/></div><div class="ut-name">Copy.ai</div><span class="ut-tag">Free tier</span></div>
+        </div>
+      </div>
+      <div class="usecase-right">
+        <div class="usecase-cards">
+          <div class="uc-card"><div class="uc-card-img" style="background:linear-gradient(135deg,#1e3a5f,#0052ff);"><div class="uc-card-img-inner">GPT</div></div><div class="uc-card-body"><div class="uc-card-name">Long-form writing</div><div class="uc-card-desc">Articles, reports, and in-depth content at scale</div></div></div>
+          <div class="uc-card"><div class="uc-card-img" style="background:linear-gradient(135deg,#1a1a2e,#7c3aed);"><div class="uc-card-img-inner">SEO</div></div><div class="uc-card-body"><div class="uc-card-name">SEO content</div><div class="uc-card-desc">Rank-ready blog posts with AI keyword integration</div></div></div>
+          <div class="uc-card"><div class="uc-card-img" style="background:linear-gradient(135deg,#0f2027,#203a43);"><div class="uc-card-img-inner">📧</div></div><div class="uc-card-body"><div class="uc-card-name">Email copy</div><div class="uc-card-desc">Subject lines, sequences, and cold outreach</div></div></div>
+          <div class="uc-card"><div class="uc-card-img" style="background:linear-gradient(135deg,#1e3c72,#2a5298);"><div class="uc-card-img-inner">✍️</div></div><div class="uc-card-body"><div class="uc-card-name">Social media</div><div class="uc-card-desc">Threads, tweets, and LinkedIn posts in seconds</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- USE CASE: For Developers -->
+<div class="usecase-section" style="background:var(--sand);">
+  <div class="usecase-inner">
+    <div class="usecase-grid">
+      <div class="usecase-right" style="order:1;">
+        <div class="usecase-cards">
+          <div class="uc-card"><div class="uc-card-img" style="background:linear-gradient(135deg,#0a0a0a,#1a1a2e);"><div class="uc-card-img-inner">IDE</div></div><div class="uc-card-body"><div class="uc-card-name">AI coding IDEs</div><div class="uc-card-desc">Write, debug, and deploy with AI assistance</div></div></div>
+          <div class="uc-card"><div class="uc-card-img" style="background:linear-gradient(135deg,#0f172a,#1e3a5f);"><div class="uc-card-img-inner">API</div></div><div class="uc-card-body"><div class="uc-card-name">API tools</div><div class="uc-card-desc">Integrate AI into your apps in minutes</div></div></div>
+          <div class="uc-card"><div class="uc-card-img" style="background:linear-gradient(135deg,#1a0533,#4c1d95);"><div class="uc-card-img-inner">UI</div></div><div class="uc-card-body"><div class="uc-card-name">UI generation</div><div class="uc-card-desc">From prompt to production React in seconds</div></div></div>
+          <div class="uc-card"><div class="uc-card-img" style="background:linear-gradient(135deg,#022c22,#065f46);"><div class="uc-card-img-inner">🐛</div></div><div class="uc-card-body"><div class="uc-card-name">Code review</div><div class="uc-card-desc">AI-powered bug detection and refactoring</div></div></div>
+        </div>
+      </div>
+      <div class="usecase-left" style="order:2;">
+        <div class="usecase-badge">✦ For Developers</div>
+        <div class="usecase-title">Code smarter,<br/>ship faster.</div>
+        <div class="usecase-desc">AI tools that write, review, and deploy code — from autocomplete to full-stack generation.</div>
+        <div class="usecase-tools">
+          <div class="usecase-tool"><div class="ut-logo"><img src="https://www.google.com/s2/favicons?domain=cursor.sh&sz=64" onerror="this.style.display='none'"/></div><div class="ut-name">Cursor</div><span class="ut-tag">Free tier</span></div>
+          <div class="usecase-tool"><div class="ut-logo"><img src="https://www.google.com/s2/favicons?domain=v0.dev&sz=64" onerror="this.style.display='none'"/></div><div class="ut-name">v0 by Vercel</div><span class="ut-tag">Free tier</span></div>
+          <div class="usecase-tool"><div class="ut-logo"><img src="https://www.google.com/s2/favicons?domain=bolt.new&sz=64" onerror="this.style.display='none'"/></div><div class="ut-name">Bolt.new</div><span class="ut-tag">Free tier</span></div>
+          <div class="usecase-tool"><div class="ut-logo"><img src="https://www.google.com/s2/favicons?domain=github.com&sz=64" onerror="this.style.display='none'"/></div><div class="ut-name">GitHub Copilot</div><span class="ut-tag">Paid</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DARK — CATEGORIES -->
+<div class="dark-section">
+  <div class="dark-inner">
+    <div class="dark-sh">
+      <div>
+        <div class="dark-title">All Categories</div>
+        <div class="dark-sub">Find tools by what you need to do</div>
+      </div>
+      <a href="#" class="dark-link">View all 48 →</a>
+    </div>
+    <div class="cat-grid-dark">
+      <div class="cat-card-dark"><div><div class="cat-name-dark">Writing & Editing</div><div class="cat-count-dark">318 tools</div></div><div class="cat-arrow">›</div></div>
+      <div class="cat-card-dark"><div><div class="cat-name-dark">Image Generation</div><div class="cat-count-dark">241 tools</div></div><div class="cat-arrow">›</div></div>
+      <div class="cat-card-dark"><div><div class="cat-name-dark">Video</div><div class="cat-count-dark">206 tools</div></div><div class="cat-arrow">›</div></div>
+      <div class="cat-card-dark"><div><div class="cat-name-dark">Code & Developer</div><div class="cat-count-dark">222 tools</div></div><div class="cat-arrow">›</div></div>
+      <div class="cat-card-dark"><div><div class="cat-name-dark">Marketing</div><div class="cat-count-dark">231 tools</div></div><div class="cat-arrow">›</div></div>
+      <div class="cat-card-dark"><div><div class="cat-name-dark">Productivity</div><div class="cat-count-dark">657 tools</div></div><div class="cat-arrow">›</div></div>
+      <div class="cat-card-dark"><div><div class="cat-name-dark">Audio & Music</div><div class="cat-count-dark">165 tools</div></div><div class="cat-arrow">›</div></div>
+      <div class="cat-card-dark"><div><div class="cat-name-dark">Research & Data</div><div class="cat-count-dark">187 tools</div></div><div class="cat-arrow">›</div></div>
+      <div class="cat-card-dark"><div><div class="cat-name-dark">Design & Creative</div><div class="cat-count-dark">194 tools</div></div><div class="cat-arrow">›</div></div>
+      <div class="cat-card-dark"><div><div class="cat-name-dark">Business & Finance</div><div class="cat-count-dark">198 tools</div></div><div class="cat-arrow">›</div></div>
+      <div class="cat-card-dark"><div><div class="cat-name-dark">Education</div><div class="cat-count-dark">129 tools</div></div><div class="cat-arrow">›</div></div>
+      <div class="cat-card-dark"><div><div class="cat-name-dark">Automation</div><div class="cat-count-dark">499 tools</div></div><div class="cat-arrow">›</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- WHITE — MOST POPULAR TABLE -->
+<div class="page" style="background:var(--white);">
+  <div class="section">
+    <div class="sh">
+      <div class="sh-left">
+        <div class="sh-eyebrow">Community picks</div>
+        <div class="sh-title">Most Popular</div>
+        <div class="sh-sub">Ranked by weekly saves across all users</div>
+      </div>
+      <a href="#" class="sh-link">Full rankings →</a>
+    </div>
+    <div class="pop-table" id="pop-table"></div>
+  </div>
+</div>
+
+<!-- NEWS SECTION -->
+<div class="home-news-section">
+  <div class="hn-inner">
+    <div class="hn-header">
+      <div>
+        <div class="hn-title">Latest AI News</div>
+        <div class="hn-sub">From official sources — updated daily</div>
+      </div>
+      <a href="news.html" class="hn-link">View full news feed →</a>
+    </div>
+    <div class="news-feed-row">
+      <!-- Main story -->
+      <div class="nf-main" onclick="window.location.href='news.html'">
+        <div class="nf-img" style="background:linear-gradient(135deg,#0f172a,#1e3a5f);">
+          <div class="nf-img-inner">GPT-5</div>
+          <div class="nf-breaking">Breaking</div>
+        </div>
+        <div class="nf-body">
+          <div class="nf-source"><img src="https://www.google.com/s2/favicons?domain=openai.com&sz=32" alt="OpenAI" onerror="this.style.display='none'"/>OpenAI · Product Launch</div>
+          <div class="nf-title">OpenAI launches GPT-5 with 1M token context and real-time reasoning</div>
+          <div class="nf-excerpt">The next generation of OpenAI's flagship model brings a 10x larger context window, improved reasoning, and native real-time web access without plugins.</div>
+          <div class="nf-meta"><span>2 hours ago</span><span>·</span><span>5 min read</span></div>
+          <div class="nf-tool-chips">
+            <div class="nf-tool-chip"><img src="https://www.google.com/s2/favicons?domain=chat.openai.com&sz=32" alt="ChatGPT" onerror="this.style.display='none'"/>ChatGPT</div>
+          </div>
+        </div>
+      </div>
+      <!-- Side stories -->
+      <div class="nf-side">
+        <div class="nf-side-item" onclick="window.location.href='news.html'">
+          <div class="nfs-img" style="background:linear-gradient(135deg,#0a3d62,#1a6bb5);"><div class="nfs-img-inner">Gem</div></div>
+          <div>
+            <div class="nfs-source">Google DeepMind · Research</div>
+            <div class="nfs-title">DeepMind releases Gemini 2.5 with new multimodal capabilities</div>
+            <div class="nfs-meta">4 hours ago · 3 min read</div>
+          </div>
+        </div>
+        <div class="nf-side-item" onclick="window.location.href='news.html'">
+          <div class="nfs-img" style="background:linear-gradient(135deg,#1c1917,#7c3a20);"><div class="nfs-img-inner">Cla</div></div>
+          <div>
+            <div class="nfs-source">Anthropic · Product Launch</div>
+            <div class="nfs-title">Claude 4 launches with extended thinking and computer use 2.0</div>
+            <div class="nfs-meta">6 hours ago · 4 min read</div>
+          </div>
+        </div>
+        <div class="nf-side-item" onclick="window.location.href='news.html'">
+          <div class="nfs-img" style="background:linear-gradient(135deg,#0d1117,#6d28d9);"><div class="nfs-img-inner">Sora</div></div>
+          <div>
+            <div class="nfs-source">OpenAI · Video AI</div>
+            <div class="nfs-title">Sora 2.0 now supports 4K output and 5-minute video generation</div>
+            <div class="nfs-meta">6 hours ago · 2 min read</div>
+          </div>
+        </div>
+        <div class="nf-side-item" onclick="window.location.href='news.html'">
+          <div class="nfs-img" style="background:linear-gradient(135deg,#1a0a00,#b45309);"><div class="nfs-img-inner">Mixtral</div></div>
+          <div>
+            <div class="nfs-source">Mistral AI · Research</div>
+            <div class="nfs-title">Mixtral 9x22B open-sourced — GPT-4 level at 3x lower cost</div>
+            <div class="nfs-meta">10 hours ago · 3 min read</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BLOG SECTION -->
+<div class="home-blog-section">
+  <div class="hn-inner">
+    <div class="hn-header">
+      <div>
+        <div class="hn-title">From the Blog</div>
+        <div class="hn-sub">Guides, reviews, and deep dives — written by humans</div>
+      </div>
+      <a href="blog.html" class="hn-link">View all articles →</a>
+    </div>
+    <div class="blog-row">
+      <div class="hb-card" onclick="window.location.href='blog.html'">
+        <div class="hb-img" style="background:linear-gradient(135deg,#0f172a,#1e3a5f);"><div class="hb-img-inner">GPT-5</div></div>
+        <div class="hb-body">
+          <div class="hb-tag" style="color:#0052ff;">Guide</div>
+          <div class="hb-title">GPT-5 complete guide: everything you need to know</div>
+          <div class="hb-footer"><div class="hb-av" style="background:#dbeafe;color:#1d4ed8;">AJ</div><span class="hb-author">Alex Johnson</span><span>·</span><span>May 4</span><span>·</span><span>8 min</span></div>
+        </div>
+      </div>
+      <div class="hb-card" onclick="window.location.href='blog.html'">
+        <div class="hb-img" style="background:linear-gradient(135deg,#1a0533,#4c1d95);"><div class="hb-img-inner">vs</div></div>
+        <div class="hb-body">
+          <div class="hb-tag" style="color:#7c3aed;">Comparison</div>
+          <div class="hb-title">ChatGPT vs Claude 4 in 2026: which AI wins?</div>
+          <div class="hb-footer"><div class="hb-av" style="background:#fce7f3;color:#db2777;">SP</div><span class="hb-author">Sarah Park</span><span>·</span><span>May 1</span><span>·</span><span>12 min</span></div>
+        </div>
+      </div>
+      <div class="hb-card" onclick="window.location.href='blog.html'">
+        <div class="hb-img" style="background:linear-gradient(135deg,#022c22,#065f46);"><div class="hb-img-inner">Tools</div></div>
+        <div class="hb-body">
+          <div class="hb-tag" style="color:#059669;">Roundup</div>
+          <div class="hb-title">The 7 best free AI tools for marketers in 2026</div>
+          <div class="hb-footer"><div class="hb-av" style="background:#d1fae5;color:#059669;">PN</div><span class="hb-author">Priya Nair</span><span>·</span><span>Apr 25</span><span>·</span><span>9 min</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="cta-inner">
+    <div class="cta-eyebrow">For Builders</div>
+    <div class="cta-h2">Built an AI tool?<br/>Get discovered.</div>
+    <div class="cta-p">Reach 50,000+ AI practitioners, developers, and early adopters. Submit your tool and get in front of the right audience.</div>
+    <div class="cta-btns">
+      <button class="btn-white">Submit a Tool →</button>
+      <button class="btn-outline-w">Learn about featuring</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">
+          <div class="logo-mark"><svg viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1.2" fill="white"/><rect x="8" y="1" width="5" height="5" rx="1.2" fill="white" opacity=".5"/><rect x="1" y="8" width="5" height="5" rx="1.2" fill="white" opacity=".5"/><rect x="8" y="8" width="5" height="5" rx="1.2" fill="white"/></svg></div>
+          AI Tools Set
+        </div>
+        <div class="footer-desc">The cleanest AI tools directory. Curated, categorized, and updated every day.</div>
+      </div>
+      <div class="fc"><div class="fc-title">Explore</div><a href="#">All Tools</a><a href="#">Categories</a><a href="#">Trending</a><a href="#">New Arrivals</a><a href="#">Top Rated</a></div>
+      <div class="fc"><div class="fc-title">Company</div><a href="#">About</a><a href="#">Blog</a><a href="#">Submit Tool</a><a href="#">Advertise</a><a href="#">Newsletter</a></div>
+      <div class="fc"><div class="fc-title">Legal</div><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Cookies</a><a href="#">Contact</a></div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2026 AI Tools Set. All rights reserved.</div>
+      <div class="footer-socials"><a href="#">Twitter / X</a><a href="#">LinkedIn</a><a href="#">YouTube</a></div>
+    </div>
+  </div>
+</footer>
+
+<!-- TWEAKS -->
+<div id="tweaks-panel">
+  <h3>Tweaks</h3>
+  <div class="trow"><span class="tlbl">Accent</span><div class="topts"><button class="topt active" data-blue="#0052ff" data-hover="#578bfa">Blue</button><button class="topt" data-blue="#7C3AED" data-hover="#8B5CF6">Violet</button><button class="topt" data-blue="#059669" data-hover="#10B981">Green</button></div></div>
+  <div class="trow"><span class="tlbl">Dark</span><div class="topts"><button class="topt active" data-dark="#0F172A" data-dcard="#1E293B">Navy</button><button class="topt" data-dark="#0a0b0d" data-dcard="#282b31">Black</button><button class="topt" data-dark="#1C1917" data-dcard="#292524">Stone</button></div></div>
+  <div class="trow"><span class="tlbl">Cards</span><div class="topts"><button class="topt active" data-layout="grid">Grid</button><button class="topt" data-layout="list">List</button></div></div>
+</div>
+
+<script>
+// ── DATA ──
+const TOOLS = [
+  {id:'chatgpt',name:'ChatGPT',domain:'chat.openai.com',cat:'chat',tags:['Chat','Writing'],desc:'The world\'s leading AI for writing, coding, brainstorming, and creative tasks. Trusted by millions globally.',saves:6338,free:true,trending:false,featured:true,trendPct:null,link:'tool.html',verified:true,deal:null},
+  {id:'midjourney',name:'Midjourney',domain:'midjourney.com',cat:'image',tags:['Image'],desc:'Transform text descriptions into breathtaking imagery. The gold standard for AI art generation.',saves:3887,free:false,trending:true,featured:true,trendPct:184,link:'tool.html',verified:true,deal:{label:'20% off annual',expires:'May 15'}},
+  {id:'claude',name:'Claude',domain:'claude.ai',cat:'chat',tags:['Chat','Writing'],desc:'Anthropic\'s thoughtful AI for nuanced reasoning, long-context analysis, and safe, helpful responses.',saves:2807,free:true,trending:false,featured:true,trendPct:null,link:'tool.html',verified:true,deal:null},
+  {id:'perplexity',name:'Perplexity',domain:'perplexity.ai',cat:'research',tags:['Search','Research'],desc:'AI-powered search engine that finds, summarizes, and cites trustworthy information in real time.',saves:1317,free:true,trending:false,featured:true,trendPct:null,link:'tool.html',verified:true,deal:{label:'3 months free Pro',expires:'May 31'}},
+  {id:'cursor',name:'Cursor',domain:'cursor.sh',cat:'code',tags:['Code'],desc:'The AI-first IDE. Write, debug, and refactor code with an AI that understands your entire codebase.',saves:1289,free:true,trending:true,featured:true,trendPct:121,link:'tool.html',verified:true,deal:null},
+  {id:'runway',name:'Runway',domain:'runwayml.com',cat:'video',tags:['Video'],desc:'Professional-grade AI video generation, editing, and visual effects for filmmakers and creators.',saves:741,free:false,trending:false,featured:true,trendPct:null,link:'tool.html',verified:false,deal:{label:'50% off first month',expires:'May 5'}},
+  {id:'suno',name:'Suno',domain:'suno.ai',cat:'audio',tags:['Audio','Music'],desc:'Create full-length, radio-quality songs from a text prompt. Lyrics, melody, and mastering — all AI.',saves:698,free:true,trending:true,featured:true,trendPct:197,link:'tool.html',verified:true,deal:null},
+  {id:'elevenlabs',name:'ElevenLabs',domain:'elevenlabs.io',cat:'audio',tags:['Voice','Audio'],desc:'Ultra-realistic AI voice cloning and text-to-speech in 32 languages. Industry-leading voice AI.',saves:612,free:true,trending:false,featured:true,trendPct:null,link:'tool.html',verified:true,deal:{label:'30% off Starter plan',expires:'Jun 1'}},
+  {id:'v0',name:'v0 by Vercel',domain:'v0.dev',cat:'code',tags:['Code','Design'],desc:'Generate production-ready React + Tailwind UI components from natural language descriptions.',saves:589,free:true,trending:true,featured:false,trendPct:156,link:'tool.html',verified:false,deal:null},
+  {id:'gemini',name:'Google Gemini',domain:'gemini.google.com',cat:'chat',tags:['Chat','Research'],desc:'Google\'s multimodal AI for reasoning across text, images, audio, video, and code simultaneously.',saves:1177,free:true,trending:false,featured:false,trendPct:null,link:'tool.html',verified:true,deal:null},
+  {id:'ideogram',name:'Ideogram v3',domain:'ideogram.ai',cat:'image',tags:['Image'],desc:'Typography-first image generation. Perfect text rendering inside images — best-in-class for design.',saves:441,free:true,trending:true,featured:false,trendPct:284,link:'tool.html',verified:false,deal:{label:'Free Pro trial — 7 days',expires:'May 20'}},
+  {id:'kling',name:'Kling AI 2.0',domain:'klingai.com',cat:'video',tags:['Video'],desc:'High-fidelity video generation from images and text with physics-accurate motion and cinematic quality.',saves:388,free:false,trending:true,featured:false,trendPct:197,link:'tool.html',verified:false,deal:null},
+];
+
+const TRENDING = TOOLS.filter(t=>t.trending).slice(0,4);
+const POPULAR = [...TOOLS].sort((a,b)=>b.saves-a.saves).slice(0,8);
+
+// ── LOGO HELPER ──
+function logoImg(domain,fallback,size=40){
+  return `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" alt="${fallback}" style="width:${size}px;height:${size}px;object-fit:cover;" onerror="this.parentElement.innerHTML='<span class=tc-logo-fallback>${fallback.charAt(0)}</span>'"/>`;
+}
+
+// ── SAVED / VOTED STATE ──
+let saved = new Set(JSON.parse(localStorage.getItem('ats-saved')||'[]'));
+let votes = JSON.parse(localStorage.getItem('ats-votes')||'{}');
+function persistState(){
+  localStorage.setItem('ats-saved',JSON.stringify([...saved]));
+  localStorage.setItem('ats-votes',JSON.stringify(votes));
+}
+
+// ── RENDER TOOL CARDS ──
+function renderCards(filter='all'){
+  const grid = document.getElementById('tool-grid');
+  const tools = TOOLS.filter(t=>{
+    if(filter==='all') return t.featured;
+    if(filter==='free') return t.free;
+    return t.cat===filter || t.tags.map(x=>x.toLowerCase()).includes(filter);
+  }).slice(0,9);
+  grid.innerHTML = tools.map(t=>{
+    const isSaved = saved.has(t.id);
+    return `
+    <div class="tool-card" data-id="${t.id}">
+      ${t.deal ? `<div class="deal-ribbon">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+        ${t.deal.label}
+        <span class="deal-tooltip">Expires ${t.deal.expires}</span>
+      </div>` : ''}
+      <div class="tc-top">
+        <div class="tc-logo">${logoImg(t.domain,t.name)}</div>
+        <div class="tc-meta">
+          <div class="tc-name" style="display:flex;align-items:center;gap:5px;">
+            ${t.name}
+            ${t.verified ? `<span class="tc-verified">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91-1.01-1-2.52-1.26-3.91-.8C14.66 2.88 13.43 2 12 2s-2.66.88-3.34 2.19c-1.39-.46-2.9-.2-3.91.81-1 1.01-1.26 2.52-.8 3.91C2.88 9.34 2 10.57 2 12s.88 2.66 2.19 3.34c-.46 1.39-.2 2.9.81 3.91 1.01 1 2.52 1.26 3.91.8C9.34 21.12 10.57 22 12 22s2.66-.88 3.34-2.19c1.39.46 2.9.2 3.91-.81 1-1.01 1.26-2.52.8-3.91C21.12 14.66 22.25 13.43 22.25 12z" fill="#1D9BF0"/><path d="M9 12l2 2.5 4.5-5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="tc-verified-tip">Verified by AI Tools Set team</span>
+            </span>` : ''}
+          </div>
+          <div class="tc-cat">${t.tags[0]}</div>
+        </div>
+        <div class="tc-actions">
+          <button class="tc-btn ${isSaved?'saved':''}" data-action="save" data-id="${t.id}" title="${isSaved?'Unsave':'Save'}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="${isSaved?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </button>
+          <button class="tc-btn ${(votes[t.id]||0)>0?'voted':''}" data-action="vote" data-id="${t.id}" title="Upvote">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+          </button>
+          <button class="tc-btn" data-action="share" data-id="${t.id}" title="Copy link">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="tc-desc">${t.desc}</div>
+      <div class="tc-footer">
+        ${t.free?'<span class="tc-free">Free</span>':''}
+        ${t.tags.map(x=>`<span class="tc-tag">${x}</span>`).join('')}
+        ${t.deal ? `<span style="font-size:11px;font-weight:700;color:#f97316;background:#fff7ed;border:1px solid #fed7aa;padding:3px 8px;border-radius:var(--r-pill);">🏷️ Deal</span>` : ''}
+        <span class="tc-saves">♥ ${t.saves.toLocaleString()}</span>
+        <a href="${t.link}" class="tc-visit">Visit tool →</a>
+      </div>
+    </div>`;
+  }).join('');
+
+  // bind card actions
+  grid.querySelectorAll('[data-action]').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      const {action,id} = btn.dataset;
+      if(action==='save'){
+        if(saved.has(id)) saved.delete(id); else saved.add(id);
+        persistState(); renderCards(filter);
+      } else if(action==='vote'){
+        votes[id]=(votes[id]||0)>0?0:1;
+        persistState(); renderCards(filter);
+      } else if(action==='share'){
+        navigator.clipboard?.writeText(location.href+'#'+id);
+        btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+        setTimeout(()=>renderCards(filter),1500);
+      }
+    });
+  });
+
+  grid.querySelectorAll('.tool-card').forEach(card=>{
+    card.addEventListener('click',()=>{
+      const t=TOOLS.find(x=>x.id===card.dataset.id);
+      if(t) window.location.href=t.link;
+    });
+  });
+}
+
+// ── RENDER TRENDING ──
+function renderTrending(){
+  document.getElementById('trend-grid').innerHTML = TRENDING.map(t=>`
+    <div class="trend-card" onclick="window.location.href='${t.link}'">
+      <div class="trc-top">
+        <div class="trc-logo">${logoImg(t.domain,t.name,38)}</div>
+        <div><div class="trc-name">${t.name}</div><div class="trc-cat">${t.tags[0]}</div></div>
+      </div>
+      <div class="trc-desc">${t.desc}</div>
+      <div class="trc-footer">
+        ${t.tags.map(x=>`<span class="trc-tag">${x}</span>`).join('')}
+        ${t.free?'<span class="trc-tag">Free</span>':''}
+        <span class="trc-up">↑${t.trendPct}%</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── RENDER POPULAR TABLE ──
+function renderPopular(){
+  document.getElementById('pop-table').innerHTML = POPULAR.map((t,i)=>`
+    <div class="pop-row" onclick="window.location.href='${t.link}'">
+      <div class="pop-rank">${i+1}</div>
+      <div class="pop-logo">${logoImg(t.domain,t.name,38)}</div>
+      <div class="pop-info">
+        <div class="pop-name">${t.name}</div>
+        <div class="pop-desc">${t.desc}</div>
+      </div>
+      <div class="pop-tags">${t.tags.map(x=>`<span class="tc-tag">${x}</span>`).join('')}${t.free?'<span class="tc-free">Free</span>':''}</div>
+      <div class="pop-saves">${t.saves.toLocaleString()} saves</div>
+    </div>
+  `).join('');
+}
+
+// ── RENDER MOSAIC ──
+function renderMosaic(){
+  const mosaic = document.getElementById('mosaic');
+  const all = [...TOOLS].sort(()=>Math.random()-.5);
+  mosaic.innerHTML = all.map((t,i)=>`
+    <div class="mosaic-card ${i<2?'featured':''}" onclick="window.location.href='${t.link}'">
+      <div class="mosaic-logo">${logoImg(t.domain,t.name,40)}</div>
+      <div class="mosaic-name">${t.name}</div>
+      <div class="mosaic-cat">${t.tags[0]}</div>
+      ${t.trending&&t.trendPct?`<div class="mosaic-saves">↑${t.trendPct}%</div>`:`<div class="mosaic-saves">♥ ${(t.saves/1000).toFixed(1)}k</div>`}
+    </div>
+  `).join('');
+}
+
+// ── TYPEWRITER ──
+const phrases = ['ever need.','writing.','coding.','image creation.','your workflow.','every task.'];
+let pi=0,ci=0,deleting=false;
+const tw = document.getElementById('hero-typewriter');
+function type(){
+  const phrase = phrases[pi];
+  if(!deleting){
+    tw.textContent = phrase.slice(0,ci+1);
+    ci++;
+    if(ci===phrase.length){ deleting=true; setTimeout(type,2200); return; }
+  } else {
+    tw.textContent = phrase.slice(0,ci-1);
+    ci--;
+    if(ci===0){ deleting=false; pi=(pi+1)%phrases.length; }
+  }
+  setTimeout(type, deleting?60:100);
+}
+setTimeout(type, 1000);
+
+// ── FILTER PILLS ──
+document.querySelectorAll('.f-pill').forEach(p=>{
+  p.addEventListener('click',()=>{
+    document.querySelectorAll('.f-pill').forEach(x=>x.classList.remove('active'));
+    p.classList.add('active');
+    renderCards(p.dataset.filter);
+  });
+});
+
+// ── TWEAKS ──
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "blue": "#0052ff",
+  "blueHover": "#578bfa",
+  "dark": "#0F172A",
+  "darkCard": "#1E293B"
+}/*EDITMODE-END*/;
+function applyTweaks(s){
+  const r=document.documentElement;
+  r.style.setProperty('--blue',s.blue||TWEAK_DEFAULTS.blue);
+  r.style.setProperty('--blue-h',s.blueHover||TWEAK_DEFAULTS.blueHover);
+  r.style.setProperty('--near-black',s.dark||TWEAK_DEFAULTS.dark);
+  r.style.setProperty('--dark-card',s.darkCard||TWEAK_DEFAULTS.darkCard);
+}
+applyTweaks(TWEAK_DEFAULTS);
+document.querySelectorAll('[data-blue]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-blue]').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  const s={blue:b.dataset.blue,blueHover:b.dataset.hover}; applyTweaks(s);
+  window.parent.postMessage({type:'__edit_mode_set_keys',edits:s},'*');
+}));
+document.querySelectorAll('[data-dark]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-dark]').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  const s={dark:b.dataset.dark,darkCard:b.dataset.dcard}; applyTweaks(s);
+  window.parent.postMessage({type:'__edit_mode_set_keys',edits:s},'*');
+}));
+window.addEventListener('message',e=>{
+  if(e.data?.type==='__activate_edit_mode') document.getElementById('tweaks-panel').style.display='block';
+  if(e.data?.type==='__deactivate_edit_mode') document.getElementById('tweaks-panel').style.display='none';
+});
+window.parent.postMessage({type:'__edit_mode_available'},'*');
+
+// ── TRUSTED BY LOGOS ──
+const TB_LOGOS = [
+  {name:'Google',    domain:'google.com'},
+  {name:'Microsoft', domain:'microsoft.com'},
+  {name:'Shopify',   domain:'shopify.com'},
+  {name:'Stripe',    domain:'stripe.com'},
+  {name:'Notion',    domain:'notion.so'},
+  {name:'Figma',     domain:'figma.com'},
+  {name:'Vercel',    domain:'vercel.com'},
+  {name:'Airbnb',    domain:'airbnb.com'},
+  {name:'Atlassian', domain:'atlassian.com'},
+  {name:'HubSpot',   domain:'hubspot.com'},
+  {name:'Salesforce',domain:'salesforce.com'},
+  {name:'Harvard',   domain:'harvard.edu'},
+];
+function buildTrack(){
+  const track = document.getElementById('tb-track');
+  const items = [...TB_LOGOS, ...TB_LOGOS];
+  track.innerHTML = items.map(l=>`
+    <div class="tb-logo">
+      <img src="https://www.google.com/s2/favicons?domain=${l.domain}&sz=64" alt="${l.name}"
+        onerror="this.style.display='none'"/>
+      <span>${l.name}</span>
+    </div>
+  `).join('');
+}
+buildTrack();
+
+// ── INIT ──
+renderMosaic();
+renderCards('all');
+renderTrending();
+renderPopular();
+</script>
+</body>
+</html>

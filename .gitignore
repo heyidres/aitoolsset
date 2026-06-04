@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+.env*.local
+.env
+!.env.example
+/drizzle/migrations
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+
+# User-uploaded files (dev-only — prod uses Vercel Blob)
+/public/uploads
+
+# Vercel CLI artifacts
+.vercel
