@@ -453,6 +453,28 @@ export const glossaryTerms = pgTable(
   })
 );
 
+// ── Site pages (About / Privacy / Terms / Contact / custom) ─
+export const sitePages = pgTable(
+  "site_page",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    slug: text("slug").notNull().unique(),
+    title: text("title").notNull(),
+    deck: text("deck"), // optional subtitle shown under the title
+    coverImageUrl: text("cover_image_url"),
+    body: text("body").notNull().default(""), // HTML from rich text editor
+    status: text("status").notNull().default("draft"), // draft | published
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    seoTitle: text("seo_title"),
+    seoDescription: text("seo_description"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    statusIdx: index("site_page_status_idx").on(t.status),
+  })
+);
+
 // ── Audit log (basic) ───────────────────────────────────────
 export const auditLog = pgTable("audit_log", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),

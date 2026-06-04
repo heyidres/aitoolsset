@@ -16,6 +16,7 @@ import {
   getAllCategories,
   getPublishedBlogPosts,
   getAllGlossaryTerms,
+  getPublishedSitePages,
 } from "@/lib/cms";
 
 export const revalidate = 21600; // 6 hours
@@ -129,5 +130,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
-  return [...staticRoutes, ...toolUrls, ...categoryUrls, ...blogUrls, ...glossaryUrls];
+  // Editor-managed pages from the Pages CMS
+  const cmsPages = await getPublishedSitePages().catch(() => []);
+  const pageUrls: MetadataRoute.Sitemap = cmsPages.map((p) => ({
+    url: `${BASE}/${p.slug}`,
+    lastModified: p.updatedAt,
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
+
+  return [...staticRoutes, ...toolUrls, ...categoryUrls, ...blogUrls, ...glossaryUrls, ...pageUrls];
 }

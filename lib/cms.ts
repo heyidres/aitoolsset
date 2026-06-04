@@ -19,7 +19,7 @@
 
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "./db";
-import { tools, categories, blogPosts, deals, glossaryTerms, reviews, users, savedTools } from "./db/schema";
+import { tools, categories, blogPosts, deals, glossaryTerms, reviews, users, savedTools, sitePages } from "./db/schema";
 
 // ── Types ────────────────────────────────────────────────────
 export type CmsSocials = {
@@ -634,6 +634,97 @@ export async function getUserById(id: string): Promise<CmsUser | null> {
     .limit(1);
   return row ? { ...row, role: row.role as CmsUser["role"] } : null;
 }
+
+// ─────────────────────────────────────────────────────────────
+//  Site pages (About / Privacy / Terms / Contact / custom)
+// ─────────────────────────────────────────────────────────────
+export type CmsSitePage = {
+  id: string;
+  slug: string;
+  title: string;
+  deck: string | null;
+  coverImageUrl: string | null;
+  body: string;
+  status: "draft" | "published";
+  publishedAt: Date | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+function toCmsSitePage(row: typeof sitePages.$inferSelect): CmsSitePage {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    deck: row.deck,
+    coverImageUrl: row.coverImageUrl,
+    body: row.body,
+    status: row.status as CmsSitePage["status"],
+    publishedAt: row.publishedAt,
+    seoTitle: row.seoTitle,
+    seoDescription: row.seoDescription,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+export async function getAllSitePages(): Promise<CmsSitePage[]> {
+  const rows = await db.select().from(sitePages).orderBy(desc(sitePages.createdAt));
+  return rows.map(toCmsSitePage);
+}
+
+export async function getPublishedSitePages(): Promise<CmsSitePage[]> {
+  const rows = await db
+    .select()
+    .from(sitePages)
+    .where(eq(sitePages.status, "published"))
+    .orderBy(asc(sitePages.title));
+  return rows.map(toCmsSitePage);
+}
+
+export async function getSitePageBySlug(slug: string): Promise<CmsSitePage | null> {
+  const [row] = await db.select().from(sitePages).where(eq(sitePages.slug, slug)).limit(1);
+  return row ? toCmsSitePage(row) : null;
+}
+
+export async function getSitePageById(id: string): Promise<CmsSitePage | null> {
+  const [row] = await db.select().from(sitePages).where(eq(sitePages.id, id)).limit(1);
+  return row ? toCmsSitePage(row) : null;
+}
+
+/**
+ * Top-level slugs the app already routes to. The Pages CMS
+ * refuses to create a page with one of these slugs so the
+ * catch-all route never shadows core functionality.
+ */
+export const RESERVED_PAGE_SLUGS = new Set<string>([
+  "admin",
+  "api",
+  "tools",
+  "ai-tools",
+  "blog",
+  "news",
+  "deals",
+  "glossary",
+  "categories",
+  "submit",
+  "leaderboard",
+  "images",
+  "saved",
+  "search",
+  "u",
+  "sitemap.xml",
+  "robots.txt",
+  "opengraph-image",
+  "favicon.ico",
+  "uploads",
+  "trending",
+  "new",
+  "top-rated",
+  "newsletter",
+]);
 
 /** Convert a free-text name into a URL-safe slug. */
 export function slugify(input: string): string {

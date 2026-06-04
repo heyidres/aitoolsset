@@ -4,7 +4,8 @@
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} - %{size_download} bytes\\\\n\" http://localhost:3000/categories)",
       "Bash(curl -s -o /dev/null -w \"blog/gpt-5 HTTP %{http_code} - %{size_download} bytes\\\\n\" \"http://localhost:3000/blog/gpt-5-complete-guide\")",
       "Bash(npm run *)",
-      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('hex'\\)\\)\")"
+      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('hex'\\)\\)\")",
+      "Bash(npx tsc *)"
     ]
   }
 }
