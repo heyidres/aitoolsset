@@ -46,8 +46,9 @@ async function load(slug: string): Promise<Loaded | null> {
   };
 }
 
-export default async function ToolOgImage({ params }: { params: { slug: string } }) {
-  const data = await load(params.slug);
+export default async function ToolOgImage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const data = await load(slug);
 
   if (!data) {
     return new ImageResponse(
@@ -196,7 +197,7 @@ export default async function ToolOgImage({ params }: { params: { slug: string }
         >
           <div>{data.domain}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            aitoolsset.com/tools/{params.slug}
+            aitoolsset.com/tools/{slug}
           </div>
         </div>
       </div>

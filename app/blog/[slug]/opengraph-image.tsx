@@ -14,10 +14,11 @@ export const contentType = "image/png";
 
 const LEGACY_SLUG = "gpt-5-complete-guide";
 
-export default async function BlogOgImage({ params }: { params: { slug: string } }) {
-  const post = params.slug === LEGACY_SLUG ? null : await getBlogPostBySlug(params.slug).catch(() => null);
+export default async function BlogOgImage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = slug === LEGACY_SLUG ? null : await getBlogPostBySlug(slug).catch(() => null);
 
-  const title = post?.title ?? (params.slug === LEGACY_SLUG ? "GPT-5 Complete Guide" : "AI Tools Set Blog");
+  const title = post?.title ?? (slug === LEGACY_SLUG ? "GPT-5 Complete Guide" : "AI Tools Set Blog");
   const deck = post?.deck ?? "Hands-on AI tool reviews, comparisons, and guides.";
   const category = post?.category ?? "Article";
   const author = post?.author ?? "AI Tools Set Research Team";
