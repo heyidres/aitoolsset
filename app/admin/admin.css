@@ -111,9 +111,9 @@
 }
 .adm-sb-logo-sub {
   font-size: 10.5px;
-  color: rgba(255, 255, 255, .4);
-  font-weight: 600;
-  letter-spacing: .04em;
+  color: rgba(255, 255, 255, .6);
+  font-weight: 700;
+  letter-spacing: .06em;
   text-transform: uppercase;
 }
 
@@ -121,11 +121,11 @@
 .adm-sb-group { margin-bottom: 18px; }
 .adm-sb-group-title {
   font-family: var(--font);
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 10.5px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: .09em;
-  color: rgba(255, 255, 255, .3);
+  letter-spacing: .1em;
+  color: rgba(255, 255, 255, .55);
   padding: 0 10px;
   margin-bottom: 8px;
 }
@@ -135,7 +135,7 @@
   gap: 11px;
   padding: 9px 10px;
   border-radius: var(--r);
-  color: rgba(255, 255, 255, .6);
+  color: rgba(255, 255, 255, .82);
   font-family: var(--font);
   font-size: 13.5px;
   font-weight: 600;
@@ -144,21 +144,23 @@
   text-align: left;
   margin-bottom: 1px;
 }
-.adm-sb-item:hover { background: rgba(255, 255, 255, .05); color: #fff; }
+.adm-sb-item:hover { background: rgba(255, 255, 255, .08); color: #fff; }
 .adm-sb-item.active { background: var(--blue); color: #fff; }
-.adm-sb-item svg { flex-shrink: 0; }
+.adm-sb-item svg { flex-shrink: 0; opacity: .9; }
+.adm-sb-item:hover svg,
+.adm-sb-item.active svg { opacity: 1; }
 .adm-sb-item .adm-badge {
   margin-left: auto;
   font-size: 10.5px;
   font-weight: 800;
-  background: rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .18);
   color: #fff;
   padding: 1px 7px;
   border-radius: var(--r-pill);
   min-width: 20px;
   text-align: center;
 }
-.adm-sb-item.active .adm-badge { background: rgba(255, 255, 255, .25); }
+.adm-sb-item.active .adm-badge { background: rgba(255, 255, 255, .3); }
 .adm-sb-item .adm-badge.alert { background: var(--amber); color: #fff; }
 
 .adm-sb-foot { padding: 14px; border-top: 1px solid var(--sidebar-border); flex-shrink: 0; }
@@ -189,7 +191,7 @@
 }
 .adm-sb-user-av img { width: 100%; height: 100%; object-fit: cover; }
 .adm-sb-user-name { font-family: var(--font); font-size: 13px; font-weight: 700; color: #fff; line-height: 1.2; }
-.adm-sb-user-role { font-size: 11px; color: rgba(255, 255, 255, .4); }
+.adm-sb-user-role { font-size: 11px; color: rgba(255, 255, 255, .6); }
 
 /* main */
 .adm-main { min-width: 0; display: flex; flex-direction: column; }
