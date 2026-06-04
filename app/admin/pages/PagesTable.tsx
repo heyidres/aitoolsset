@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { StatusPill } from "../_components/admin-ui";
-import { deleteSitePage } from "./_actions";
+import { deleteSitePage, publishAllDraftPages } from "./_actions";
 import type { CmsSitePage } from "@/lib/cms";
 
 type Tab = "all" | "published" | "draft";
@@ -37,11 +37,28 @@ export function PagesTable({ rows }: { rows: CmsSitePage[] }) {
     return r;
   }, [rows, tab, q]);
 
+  const [bulkPending, bulkStart] = useTransition();
+  const [bulkMsg, setBulkMsg] = useState<string | null>(null);
+
   const handleDelete = (id: string, title: string) => {
     if (!confirm(`Delete "${title}"?`)) return;
     setPendingId(id);
     start(async () => {
       try { await deleteSitePage(id); router.refresh(); } finally { setPendingId(null); }
+    });
+  };
+
+  const publishAll = () => {
+    if (!confirm(`Publish all ${counts.draft} draft page${counts.draft === 1 ? "" : "s"} now?`)) return;
+    setBulkMsg(null);
+    bulkStart(async () => {
+      try {
+        const r = await publishAllDraftPages();
+        setBulkMsg(`Published ${r.published.length}: ${r.published.join(", ")}`);
+        router.refresh();
+      } catch (e) {
+        setBulkMsg(e instanceof Error ? e.message : "Failed");
+      }
     });
   };
 
@@ -57,11 +74,27 @@ export function PagesTable({ rows }: { rows: CmsSitePage[] }) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
           <input type="text" placeholder="Search pages…" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
+        {counts.draft > 0 && (
+          <button
+            type="button"
+            onClick={publishAll}
+            disabled={bulkPending}
+            className="adm-btn-sm ghost"
+            style={{ padding: "7px 14px", color: "var(--green)", borderColor: "var(--green-border)" }}
+          >
+            {bulkPending ? "Publishing…" : `✓ Publish all ${counts.draft} draft${counts.draft === 1 ? "" : "s"}`}
+          </button>
+        )}
         <Link href="/admin/pages/new" className="adm-btn-sm primary">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
           New Page
         </Link>
       </div>
+      {bulkMsg && (
+        <div style={{ padding: "10px 20px", fontSize: 12.5, fontWeight: 600, color: "var(--green)", background: "var(--green-bg)", borderBottom: "1px solid var(--green-border)" }}>
+          {bulkMsg}
+        </div>
+      )}
       <div className="adm-panel-body flush">
         <table className="adm-tbl">
           <thead><tr><th>Title</th><th>URL</th><th>Updated</th><th>Status</th><th /></tr></thead>

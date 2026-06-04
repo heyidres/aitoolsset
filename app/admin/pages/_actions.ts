@@ -322,6 +322,33 @@ const DEFAULT_PAGES = [
   },
 ];
 
+/**
+ * Bulk-publish every page currently in draft. Sets publishedAt
+ * to now if it wasn't already set. Returns the slugs published.
+ */
+export async function publishAllDraftPages(): Promise<{ published: string[] }> {
+  await requireEditor();
+  const drafts = await db
+    .select({ id: sitePages.id, slug: sitePages.slug, publishedAt: sitePages.publishedAt })
+    .from(sitePages)
+    .where(eq(sitePages.status, "draft"));
+
+  const now = new Date();
+  for (const d of drafts) {
+    await db
+      .update(sitePages)
+      .set({
+        status: "published",
+        publishedAt: d.publishedAt ?? now,
+        updatedAt: now,
+      })
+      .where(eq(sitePages.id, d.id));
+    revalidatePath(`/${d.slug}`);
+  }
+  revalidatePath("/admin/pages");
+  return { published: drafts.map((d) => d.slug) };
+}
+
 export type SeedResult = { created: string[]; skipped: string[] };
 
 /**
