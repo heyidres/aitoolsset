@@ -197,7 +197,7 @@ export default async function ToolOgImage({ params }: { params: Promise<{ slug: 
         >
           <div>{data.domain}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            aitoolsset.com/tools/{slug}
+            aitoolsset.com/ai-tool/{slug}
           </div>
         </div>
       </div>

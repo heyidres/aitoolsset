@@ -14,7 +14,7 @@ export function CategoriesGrid() {
               Find tools by what you need to do
             </div>
           </div>
-          <Link href="/categories" className="text-[13.5px] font-semibold" style={{ color: "var(--blue-h)" }}>
+          <Link href="/ai-tools" className="text-[13.5px] font-semibold" style={{ color: "var(--blue-h)" }}>
             View all 48 →
           </Link>
         </div>
@@ -23,7 +23,7 @@ export function CategoriesGrid() {
           {CATEGORIES.map((c) => (
             <Link
               key={c.name}
-              href="/categories"
+              href="/ai-tools"
               className="cat-card-hover rounded p-5 cursor-pointer flex items-center justify-between"
             >
               <div>

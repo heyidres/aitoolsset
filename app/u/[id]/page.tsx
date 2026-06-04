@@ -140,7 +140,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                 >
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <Link
-                      href={`/tools/${r.toolSlug}`}
+                      href={`/ai-tool/${r.toolSlug}`}
                       className="font-display font-extrabold transition-colors hover:text-blue"
                       style={{ fontSize: 16, color: "var(--text)" }}
                     >

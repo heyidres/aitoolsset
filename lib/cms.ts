@@ -702,13 +702,16 @@ export async function getSitePageById(id: string): Promise<CmsSitePage | null> {
 export const RESERVED_PAGE_SLUGS = new Set<string>([
   "admin",
   "api",
+  // Tool detail (singular) + legacy plural redirect target
+  "ai-tool",
   "tools",
+  // Categories landing (new) + legacy redirect target
   "ai-tools",
+  "categories",
   "blog",
   "news",
   "deals",
   "glossary",
-  "categories",
   "submit",
   "leaderboard",
   "images",

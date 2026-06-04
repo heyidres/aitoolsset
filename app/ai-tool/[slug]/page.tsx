@@ -105,7 +105,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     openGraph: {
       title: `${tool.name} — AI Tools Set`,
       description: tool.desc,
-      url: `https://aitoolsset.com/tools/${tool.id}`,
+      url: `https://aitoolsset.com/ai-tool/${tool.id}`,
     },
   };
 }
@@ -130,7 +130,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
             Home
           </Link>
           <span style={{ color: "var(--border-2)" }}>›</span>
-          <Link href="/categories" className="transition-colors hover:text-blue" style={{ color: "var(--text-3)" }}>
+          <Link href="/ai-tools" className="transition-colors hover:text-blue" style={{ color: "var(--text-3)" }}>
             {detail.category}
           </Link>
           <span style={{ color: "var(--border-2)" }}>›</span>

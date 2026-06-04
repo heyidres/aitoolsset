@@ -26,7 +26,7 @@ export function CategoryHero({ categoryName, count }: Props) {
         <Breadcrumb
           items={[
             { label: "Home", href: "/" },
-            { label: "AI Tools", href: "/categories" },
+            { label: "AI Tools", href: "/ai-tools" },
             { label: categoryName },
           ]}
           theme="dark"

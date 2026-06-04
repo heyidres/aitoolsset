@@ -29,7 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${BASE}/`, lastModified: now, changeFrequency: "daily", priority: 1.0 },
-    { url: `${BASE}/categories`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${BASE}/ai-tools`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${BASE}/blog`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
     { url: `${BASE}/deals`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
     { url: `${BASE}/glossary`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
@@ -47,7 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (toolSlugs.has(t.slug)) continue;
     toolSlugs.add(t.slug);
     toolUrls.push({
-      url: `${BASE}/tools/${t.slug}`,
+      url: `${BASE}/ai-tool/${t.slug}`,
       lastModified: t.updatedAt,
       changeFrequency: "weekly",
       priority: 0.8,
@@ -57,7 +57,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (toolSlugs.has(t.id)) continue;
     toolSlugs.add(t.id);
     toolUrls.push({
-      url: `${BASE}/tools/${t.id}`,
+      url: `${BASE}/ai-tool/${t.id}`,
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.7,

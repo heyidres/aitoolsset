@@ -316,7 +316,7 @@ export function GlossaryClient({ glossaryOverride }: { glossaryOverride?: Glossa
                         ))}
                         {t.tool && (
                           <Link
-                            href={`/tools/${slugifyTerm(t.tool.name)}`}
+                            href={`/ai-tool/${slugifyTerm(t.tool.name)}`}
                             className="ml-auto inline-flex items-center gap-[5px] font-display text-[11.5px] font-bold transition-colors hover:text-blue-h"
                             style={{ color: "var(--blue)" }}
                           >

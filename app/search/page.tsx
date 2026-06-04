@@ -133,7 +133,7 @@ function NoResults({ query }: { query: string }) {
       <p style={{ color: "var(--text-2)", fontSize: 14, marginBottom: 18 }}>
         Try a broader keyword or browse by category.
       </p>
-      <Link href="/categories" className="font-display text-sm font-bold px-5 py-3 rounded-pill inline-block" style={{ background: "var(--blue)", color: "#fff" }}>
+      <Link href="/ai-tools" className="font-display text-sm font-bold px-5 py-3 rounded-pill inline-block" style={{ background: "var(--blue)", color: "#fff" }}>
         Browse all 48 categories →
       </Link>
     </div>

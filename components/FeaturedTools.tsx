@@ -61,7 +61,7 @@ export function FeaturedTools({ toolsOverride }: { toolsOverride?: Tool[] } = {}
                 </h2>
               </div>
               <Link
-                href="/categories"
+                href="/ai-tools"
                 className="text-[13.5px] font-semibold transition-colors flex items-center gap-1"
                 style={{ color: "var(--blue)" }}
               >

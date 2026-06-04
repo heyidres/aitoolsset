@@ -490,7 +490,7 @@ function PostCard({
             {post.tools.map((t) => (
               <Link
                 key={t.name}
-                href={`/tools/${t.name.toLowerCase().replace(/\s+/g, "-")}`}
+                href={`/ai-tool/${t.name.toLowerCase().replace(/\s+/g, "-")}`}
                 onClick={(e) => e.stopPropagation()}
                 className="post-tool-chip"
               >

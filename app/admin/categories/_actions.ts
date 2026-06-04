@@ -60,7 +60,7 @@ export async function createCategory(fd: FormData) {
   if (existing) throw new Error(`A category with slug "${input.slug}" already exists`);
   await db.insert(categories).values(values(input));
   revalidatePath("/admin/categories");
-  revalidatePath("/categories");
+  revalidatePath("/ai-tools");
   redirect("/admin/categories");
 }
 
@@ -71,7 +71,7 @@ export async function updateCategory(id: string, fd: FormData) {
   if (conflict && conflict.id !== id) throw new Error(`A different category already has slug "${input.slug}"`);
   await db.update(categories).set({ ...values(input), updatedAt: new Date() }).where(eq(categories.id, id));
   revalidatePath("/admin/categories");
-  revalidatePath("/categories");
+  revalidatePath("/ai-tools");
   redirect("/admin/categories");
 }
 
@@ -79,5 +79,5 @@ export async function deleteCategory(id: string) {
   await requireEditor();
   await db.delete(categories).where(eq(categories.id, id));
   revalidatePath("/admin/categories");
-  revalidatePath("/categories");
+  revalidatePath("/ai-tools");
 }

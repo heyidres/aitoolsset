@@ -6,8 +6,8 @@ const COLUMNS = [
   {
     title: "Explore",
     links: [
-      { href: "/categories", label: "All Tools" },
-      { href: "/categories", label: "Categories" },
+      { href: "/ai-tools", label: "All Tools" },
+      { href: "/ai-tools", label: "Categories" },
       { href: "/trending", label: "Trending" },
       { href: "/new", label: "New Arrivals" },
       { href: "/top-rated", label: "Top Rated" },

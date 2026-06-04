@@ -29,7 +29,7 @@ export function RelatedSlider({ category }: { category: string }) {
           <div className="font-display font-extrabold" style={{ fontSize: 24, letterSpacing: "-.6px" }}>
             Related {category} Tools
           </div>
-          <Link href="/categories" className="font-display text-[13.5px] font-bold" style={{ color: "var(--blue)" }}>
+          <Link href="/ai-tools" className="font-display text-[13.5px] font-bold" style={{ color: "var(--blue)" }}>
             View all →
           </Link>
         </div>
@@ -52,7 +52,7 @@ export function RelatedSlider({ category }: { category: string }) {
             {RELATED.map((t) => (
               <Link
                 key={t.name}
-                href={`/tools/${t.name.toLowerCase().replace(/\s+/g, "-")}`}
+                href={`/ai-tool/${t.name.toLowerCase().replace(/\s+/g, "-")}`}
                 className="tc-hover bg-white rounded-lg p-[18px] cursor-pointer flex-shrink-0"
                 style={{ minWidth: 200, maxWidth: 200 }}
               >

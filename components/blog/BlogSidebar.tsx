@@ -78,7 +78,7 @@ export function BlogSidebar() {
         {TOOLS_IN_ARTICLE.map((t, i) => (
           <Link
             key={t.slug}
-            href={`/tools/${t.slug}`}
+            href={`/ai-tool/${t.slug}`}
             className="group flex items-center gap-[10px] py-[9px] cursor-pointer"
             style={{ borderBottom: i < TOOLS_IN_ARTICLE.length - 1 ? "1px solid var(--border)" : "none" }}
           >
@@ -180,7 +180,7 @@ export function BlogSidebar() {
         </button>
       </div>
 
-      <Card header="Browse categories" headerLink={{ label: "All 48 →", href: "/categories" }}>
+      <Card header="Browse categories" headerLink={{ label: "All 48 →", href: "/ai-tools" }}>
         <div className="flex flex-wrap gap-[6px]">
           {CATEGORIES.map((c) => (
             <Link

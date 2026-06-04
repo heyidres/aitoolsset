@@ -176,7 +176,7 @@ export function ToolsTable({ rows }: { rows: Row[] }) {
                         </svg>
                       </Link>
                       <a
-                        href={`/tools/${t.slug}`}
+                        href={`/ai-tool/${t.slug}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="adm-ra-btn go"

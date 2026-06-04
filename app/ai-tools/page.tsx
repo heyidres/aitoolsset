@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     title: "Browse AI Tools by Category — AI Tools Set",
     description: "48 categories. 2,400+ tools. Find the right AI for any task.",
     type: "website",
-    url: "https://aitoolsset.com/categories",
+    url: "https://aitoolsset.com/ai-tools",
   },
 };
 

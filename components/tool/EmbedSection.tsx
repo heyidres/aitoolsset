@@ -6,7 +6,7 @@ import { favicon } from "@/lib/tools";
 export function EmbedSection({ tool }: { tool: Tool }) {
   const [copied, setCopied] = useState(false);
 
-  const code = `<a href="https://aitoolsset.com/tools/${tool.id}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e8e8e4;border-radius:10px;padding:8px 14px;font-family:sans-serif;text-decoration:none;"><img src="https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32" style="width:20px;height:20px;border-radius:5px;"/><span style="font-size:11px;color:#9aa0ae;display:block;line-height:1;">Featured on</span><span style="font-size:13px;font-weight:700;color:#0a0b0d;">AI Tools Set</span></a>`;
+  const code = `<a href="https://aitoolsset.com/ai-tool/${tool.id}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e8e8e4;border-radius:10px;padding:8px 14px;font-family:sans-serif;text-decoration:none;"><img src="https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32" style="width:20px;height:20px;border-radius:5px;"/><span style="font-size:11px;color:#9aa0ae;display:block;line-height:1;">Featured on</span><span style="font-size:13px;font-weight:700;color:#0a0b0d;">AI Tools Set</span></a>`;
 
   const copy = () => {
     if (typeof navigator !== "undefined" && navigator.clipboard) {

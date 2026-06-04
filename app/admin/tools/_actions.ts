@@ -167,7 +167,7 @@ export async function createTool(formData: FormData) {
   await db.insert(tools).values(valuesFromInput(input));
 
   revalidatePath("/admin/tools");
-  revalidatePath(`/tools/${input.slug}`);
+  revalidatePath(`/ai-tool/${input.slug}`);
   revalidatePath("/");
   redirect("/admin/tools");
 }
@@ -192,7 +192,7 @@ export async function updateTool(id: string, formData: FormData) {
     .where(eq(tools.id, id));
 
   revalidatePath("/admin/tools");
-  revalidatePath(`/tools/${input.slug}`);
+  revalidatePath(`/ai-tool/${input.slug}`);
   revalidatePath("/");
   redirect("/admin/tools");
 }

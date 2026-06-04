@@ -106,7 +106,7 @@ export async function submitReview(formData: FormData): Promise<SubmitReviewResu
 
     // Bust caches
     const [t] = await db.select({ slug: tools.slug }).from(tools).where(eq(tools.id, input.toolId)).limit(1);
-    if (t) revalidatePath(`/tools/${t.slug}`);
+    if (t) revalidatePath(`/ai-tool/${t.slug}`);
     return { ok: true };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -130,7 +130,7 @@ export async function deleteOwnReview(reviewId: string): Promise<{ ok: true } | 
   await db.delete(reviews).where(eq(reviews.id, reviewId));
 
   const [t] = await db.select({ slug: tools.slug }).from(tools).where(eq(tools.id, row.toolId)).limit(1);
-  if (t) revalidatePath(`/tools/${t.slug}`);
+  if (t) revalidatePath(`/ai-tool/${t.slug}`);
   return { ok: true };
 }
 

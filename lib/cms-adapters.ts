@@ -106,7 +106,7 @@ export function cmsToolToLegacy(t: CmsTool): Tool {
     trending: false,
     featured: t.featured,
     trendPct: null,
-    link: `/tools/${t.slug}`,
+    link: `/ai-tool/${t.slug}`,
     verified: t.verified,
     deal: t.deal,
   };

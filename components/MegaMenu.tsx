@@ -128,11 +128,11 @@ export const PANELS: Panel[] = [
       {
         title: "By Pricing",
         links: [
-          { label: "Free tools", href: "/categories", count: "412" },
-          { label: "Freemium", href: "/categories", count: "1,184" },
-          { label: "Paid", href: "/categories", count: "628" },
+          { label: "Free tools", href: "/ai-tools", count: "412" },
+          { label: "Freemium", href: "/ai-tools", count: "1,184" },
+          { label: "Paid", href: "/ai-tools", count: "628" },
           { label: "On sale 🔥", href: "/deals", count: "34" },
-          { label: "All 48 categories →", href: "/categories" },
+          { label: "All 48 categories →", href: "/ai-tools" },
         ],
       },
     ],
@@ -143,7 +143,7 @@ export const PANELS: Panel[] = [
       title: "Tool of the week",
       desc: "ChatGPT now runs on GPT-5 — 1M token context, real-time reasoning, and native web access.",
       ctaLabel: "View tool →",
-      ctaHref: "/tools/chatgpt",
+      ctaHref: "/ai-tool/chatgpt",
     },
   },
   {
@@ -173,7 +173,7 @@ export const PANELS: Panel[] = [
         links: [
           { label: "Model Leaderboard", href: "/leaderboard" },
           { label: "Methodology", href: "/leaderboard/methodology" },
-          { label: "Browse Categories", href: "/categories" },
+          { label: "Browse Categories", href: "/ai-tools" },
           { label: "Submit a Tool", href: "/submit" },
         ],
       },
@@ -213,11 +213,11 @@ export const PANELS: Panel[] = [
       {
         title: "By Role",
         links: [
-          { label: "For Writers", href: "/categories" },
-          { label: "For Developers", href: "/categories" },
-          { label: "For Marketers", href: "/categories" },
-          { label: "For Founders", href: "/categories" },
-          { label: "For Designers", href: "/categories" },
+          { label: "For Writers", href: "/ai-tools" },
+          { label: "For Developers", href: "/ai-tools" },
+          { label: "For Marketers", href: "/ai-tools" },
+          { label: "For Founders", href: "/ai-tools" },
+          { label: "For Designers", href: "/ai-tools" },
         ],
       },
     ],

@@ -58,7 +58,7 @@ export function ToolSidebar({ tool, detail }: { tool: Tool; detail: ToolDetail }
           {detail.alternatives.map((alt, i) => (
             <Link
               key={alt.name}
-              href={`/tools/${alt.name.toLowerCase().replace(/\s+/g, "-")}`}
+              href={`/ai-tool/${alt.name.toLowerCase().replace(/\s+/g, "-")}`}
               className="group flex items-center gap-[10px] py-[9px] cursor-pointer"
               style={{ borderBottom: i < detail.alternatives.length - 1 ? "1px solid var(--border)" : "none" }}
             >

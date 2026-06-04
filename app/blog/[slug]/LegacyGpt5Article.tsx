@@ -191,7 +191,7 @@ export default function LegacyGpt5Article() {
 
           {/* Tool callout */}
           <Link
-            href="/tools/chatgpt"
+            href="/ai-tool/chatgpt"
             className="tc-hover flex gap-[14px] items-center bg-white rounded-lg p-[18px] my-7 cursor-pointer"
           >
             <div
