@@ -18,7 +18,6 @@
  *  and let the next tick finish.
  */
 
-import { NextResponse } from "next/server";
 import { inArray } from "drizzle-orm";
 import { desc } from "drizzle-orm";
 import { db } from "@/lib/db";
@@ -99,9 +98,11 @@ export async function GET(req: Request) {
         system,
         messages,
       });
-      const text = res.content
-        .filter((b) => b.type === "text")
-        .map((b) => b.text)
+      // Anthropic's ContentBlock union (text | tool_use | ...) trips up
+      // type narrowing via .filter — cast through the lenient shape.
+      const text = (res.content as Array<{ type: string; text?: string }>)
+        .filter((b) => b.type === "text" && typeof b.text === "string")
+        .map((b) => b.text as string)
         .join("");
       // Strip ```json fences if Claude adds them despite the prompt
       const json = text.replace(/^```(?:json)?\s*/i, "").replace(/```$/i, "").trim();
