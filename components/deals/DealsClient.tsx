@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Favicon } from "../Favicon";
 import { DEALS, DEAL_FILTERS, type Deal } from "@/lib/deals";
+import { VerifiedBadge } from "../VerifiedBadge";
 
 const FAQS = [
   { q: "Are these deals legit?", a: "Yes. Every code on this page is manually tested by our team within 24 hours before going live, and re-checked every week. If a deal stops working, it's removed within hours." },
@@ -537,11 +538,7 @@ function DealCard({ deal, onCopy, copied }: { deal: Deal; onCopy: (code: string)
           <div>
             <div className="font-display font-black flex items-center gap-[5px]" style={{ fontSize: 16, letterSpacing: "-.3px" }}>
               {deal.tool}
-              {deal.verified && (
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style={{ color: "var(--blue)" }}>
-                  <path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91-1.01-1-2.52-1.26-3.91-.8C14.66 2.88 13.43 2 12 2s-2.66.88-3.34 2.19c-1.39-.46-2.9-.2-3.91.81-1 1.01-1.26 2.52-.8 3.91C2.88 9.34 2 10.57 2 12s.88 2.66 2.19 3.34c-.46 1.39-.2 2.9.81 3.91 1.01 1 2.52 1.26 3.91.8C9.34 21.12 10.57 22 12 22s2.66-.88 3.34-2.19c1.39.46 2.9.2 3.91-.81 1-1.01 1.26-2.52.8-3.91C21.12 14.66 22.25 13.43 22.25 12z" />
-                </svg>
-              )}
+              {deal.verified && <VerifiedBadge />}
             </div>
             <div className="text-[11.5px]" style={{ color: "var(--text-3)" }}>
               {deal.cat.charAt(0).toUpperCase() + deal.cat.slice(1)}
