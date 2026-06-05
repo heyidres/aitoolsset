@@ -20,6 +20,7 @@ import { notFound } from "next/navigation";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { getSitePageBySlug, RESERVED_PAGE_SLUGS, type CmsSitePage } from "@/lib/cms";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -104,7 +105,7 @@ function SitePageRenderer({ page }: { page: CmsSitePage }) {
 
       <section className="px-9 py-14 section-pad-x">
         <div className="max-w-[760px] mx-auto">
-          <article className="tool-prose" dangerouslySetInnerHTML={{ __html: page.body }} />
+          <article className="tool-prose" dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.body) }} />
         </div>
       </section>
 

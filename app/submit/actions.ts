@@ -9,9 +9,12 @@
 "use server";
 
 import { z } from "zod";
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { toolSubmissions } from "@/lib/db/schema";
+import { limit } from "@/lib/rate-limit";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 const SubmissionInput = z.object({
   plan: z.enum(["free", "featured", "enterprise"]).default("free"),
@@ -33,6 +36,21 @@ export type SubmitToolResult =
   | { ok: false; error: string };
 
 export async function submitTool(formData: FormData): Promise<SubmitToolResult> {
+  // Rate limit by IP — 3 submissions/hour stops spam.
+  const hdrs = await headers();
+  const ip = hdrs.get("x-forwarded-for")?.split(",")[0].trim() ?? hdrs.get("x-real-ip") ?? "unknown";
+  const rl = limit("submit-tool-action", ip, 3, 60 * 60 * 1000);
+  if (!rl.success) {
+    return { ok: false, error: `Too many submissions. Try again at ${new Date(rl.resetAt).toLocaleTimeString()}.` };
+  }
+
+  // Turnstile bot check (no-op when not configured).
+  const turnstileToken = (formData.get("turnstileToken") as string) ?? "";
+  const verified = await verifyTurnstile(turnstileToken, ip);
+  if (!verified) {
+    return { ok: false, error: "Bot check failed. Refresh the page and try again." };
+  }
+
   let parsed;
   try {
     parsed = SubmissionInput.parse({

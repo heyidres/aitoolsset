@@ -26,6 +26,7 @@ import { db } from "@/lib/db";
 import { tools } from "@/lib/db/schema";
 import { slugify } from "@/lib/cms";
 import { autofillToolDetail, type AutofillResult } from "@/lib/tool-ai-fill";
+import { logAdmin } from "@/lib/audit";
 
 async function requireEditor() {
   const session = await auth();
@@ -165,6 +166,7 @@ export async function createTool(formData: FormData) {
   if (existing) throw new Error(`A tool with slug "${input.slug}" already exists`);
 
   await db.insert(tools).values(valuesFromInput(input));
+  await logAdmin("tool.create", `tool:${input.slug}`, { name: input.name, status: input.status });
 
   revalidatePath("/admin/tools");
   revalidatePath(`/ai-tool/${input.slug}`);
@@ -191,6 +193,7 @@ export async function updateTool(id: string, formData: FormData) {
     .set({ ...valuesFromInput(input), updatedAt: new Date() })
     .where(eq(tools.id, id));
 
+  await logAdmin("tool.update", `tool:${id}`, { slug: input.slug, status: input.status });
   revalidatePath("/admin/tools");
   revalidatePath(`/ai-tool/${input.slug}`);
   revalidatePath("/");
@@ -200,7 +203,9 @@ export async function updateTool(id: string, formData: FormData) {
 // ── DELETE ───────────────────────────────────────────────────
 export async function deleteTool(id: string) {
   await requireEditor();
+  const [row] = await db.select({ slug: tools.slug }).from(tools).where(eq(tools.id, id)).limit(1);
   await db.delete(tools).where(eq(tools.id, id));
+  await logAdmin("tool.delete", `tool:${id}`, { slug: row?.slug });
   revalidatePath("/admin/tools");
   revalidatePath("/");
 }

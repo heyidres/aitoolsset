@@ -17,6 +17,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
@@ -27,6 +28,8 @@ import {
   savedTools,
   newsletterSubscribers,
 } from "@/lib/db/schema";
+import { limit } from "@/lib/rate-limit";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 async function requireUser() {
   const session = await auth();
@@ -177,6 +180,21 @@ const SubscribeInput = z.object({
 export type SubscribeResult = { ok: true; alreadySubscribed?: boolean } | { ok: false; error: string };
 
 export async function subscribeNewsletter(formData: FormData): Promise<SubscribeResult> {
+  // Rate limit by IP: 5 signups per 10 min kills bulk enumeration.
+  const hdrs = await headers();
+  const ip = hdrs.get("x-forwarded-for")?.split(",")[0].trim() ?? hdrs.get("x-real-ip") ?? "unknown";
+  const rl = limit("newsletter-action", ip, 5, 10 * 60 * 1000);
+  if (!rl.success) {
+    return { ok: false, error: "Too many requests. Try again in a few minutes." };
+  }
+
+  // Turnstile bot check (no-op when not configured).
+  const turnstileToken = (formData.get("turnstileToken") as string) ?? "";
+  const verified = await verifyTurnstile(turnstileToken, ip);
+  if (!verified) {
+    return { ok: false, error: "Bot check failed. Refresh and retry." };
+  }
+
   let input;
   try {
     input = SubscribeInput.parse({

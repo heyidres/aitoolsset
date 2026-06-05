@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { toolSubmissions, tools } from "@/lib/db/schema";
 import { slugify } from "@/lib/cms";
+import { logAdmin } from "@/lib/audit";
 
 async function requireEditor() {
   const session = await auth();
@@ -79,6 +80,7 @@ export async function approveSubmission(submissionId: string) {
     })
     .where(eq(toolSubmissions.id, submissionId));
 
+  await logAdmin("submission.approve", `submission:${submissionId}`, { toolId: newTool.id, slug });
   revalidatePath("/admin/submissions");
   revalidatePath("/admin/tools");
   revalidatePath("/admin");
@@ -97,6 +99,7 @@ export async function rejectSubmission(submissionId: string, reason?: string) {
     })
     .where(eq(toolSubmissions.id, submissionId));
 
+  await logAdmin("submission.reject", `submission:${submissionId}`, { reason });
   revalidatePath("/admin/submissions");
   revalidatePath("/admin");
 }

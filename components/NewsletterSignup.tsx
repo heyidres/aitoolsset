@@ -13,6 +13,7 @@
 
 import { useState, useTransition } from "react";
 import { subscribeNewsletter } from "@/lib/user-actions";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 type Variant = "light" | "dark" | "inline";
 
@@ -116,6 +117,7 @@ export function NewsletterSignup({
         >
           {pending ? "…" : status === "ok" ? "Subscribed ✓" : "Subscribe"}
         </button>
+        <TurnstileWidget siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} />
       </form>
 
       {status === "ok" && (

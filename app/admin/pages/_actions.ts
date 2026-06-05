@@ -8,6 +8,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { sitePages } from "@/lib/db/schema";
 import { slugify, RESERVED_PAGE_SLUGS } from "@/lib/cms";
+import { logAdmin } from "@/lib/audit";
 
 async function requireEditor() {
   const session = await auth();
@@ -73,6 +74,7 @@ export async function createSitePage(fd: FormData) {
   const [existing] = await db.select({ id: sitePages.id }).from(sitePages).where(eq(sitePages.slug, input.slug)).limit(1);
   if (existing) throw new Error(`A page with slug "${input.slug}" already exists`);
   await db.insert(sitePages).values(values(input));
+  await logAdmin("page.create", `page:${input.slug}`, { title: input.title, status: input.status });
   revalidatePath("/admin/pages");
   revalidatePath(`/${input.slug}`);
   redirect("/admin/pages");
@@ -85,6 +87,7 @@ export async function updateSitePage(id: string, fd: FormData) {
   const [conflict] = await db.select({ id: sitePages.id }).from(sitePages).where(eq(sitePages.slug, input.slug)).limit(1);
   if (conflict && conflict.id !== id) throw new Error(`A different page already has slug "${input.slug}"`);
   await db.update(sitePages).set({ ...values(input), updatedAt: new Date() }).where(eq(sitePages.id, id));
+  await logAdmin("page.update", `page:${id}`, { slug: input.slug, status: input.status });
   revalidatePath("/admin/pages");
   revalidatePath(`/${input.slug}`);
   redirect("/admin/pages");
@@ -94,6 +97,7 @@ export async function deleteSitePage(id: string) {
   await requireEditor();
   const [row] = await db.select({ slug: sitePages.slug }).from(sitePages).where(eq(sitePages.id, id)).limit(1);
   await db.delete(sitePages).where(eq(sitePages.id, id));
+  await logAdmin("page.delete", `page:${id}`, { slug: row?.slug });
   if (row) revalidatePath(`/${row.slug}`);
   revalidatePath("/admin/pages");
 }

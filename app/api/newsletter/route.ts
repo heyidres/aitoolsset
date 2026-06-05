@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { newsletterSubscribers } from "@/lib/db/schema";
 import { ok, fail, parseBody } from "@/lib/api";
+import { limit, clientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -17,6 +18,13 @@ const SubscribeSchema = z.object({
  * email here (TODO: wire Resend).
  */
 export async function POST(req: Request) {
+  // 5 signups per 10 min per IP. Generous for legit forms but
+  // kills bulk-enumeration attempts.
+  const rl = limit("newsletter", clientIp(req), 5, 10 * 60 * 1000);
+  if (!rl.success) {
+    return fail("Too many requests. Try again in a few minutes.", 429);
+  }
+
   const body = await parseBody(req, SubscribeSchema);
   if (body instanceof Response) return body;
 

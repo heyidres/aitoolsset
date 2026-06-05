@@ -16,6 +16,7 @@ import { ReadingProgress } from "@/components/blog/ReadingProgress";
 import { BlogSidebar } from "@/components/blog/BlogSidebar";
 import { getBlogPostBySlug, type CmsBlogPost } from "@/lib/cms";
 import { JsonLd, articleJsonLd, breadcrumbJsonLd } from "@/lib/json-ld";
+import { sanitizeHtml } from "@/lib/sanitize";
 import LegacyGpt5Article, { LEGACY_METADATA } from "./LegacyGpt5Article";
 
 export const runtime = "nodejs";
@@ -197,7 +198,7 @@ function CmsPostRenderer({ post }: { post: CmsBlogPost }) {
       {/* Body + sidebar */}
       <section className="px-9 py-14 section-pad-x">
         <div className="max-w-page mx-auto grid grid-cols-[minmax(0,760px)_300px] gap-12 items-start">
-          <article className="tool-prose" dangerouslySetInnerHTML={{ __html: post.body }} />
+          <article className="tool-prose" dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.body) }} />
           <BlogSidebar />
         </div>
       </section>

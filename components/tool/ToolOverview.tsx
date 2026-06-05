@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { ToolDetail } from "@/lib/tool-detail";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 function renderMd(text: string) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -67,7 +68,7 @@ export function ToolOverview({
           // Editor-supplied HTML — rendered via the .tool-prose class for styling
           <div
             className="tool-prose"
-            dangerouslySetInnerHTML={{ __html: descriptionHtml! }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(descriptionHtml) }}
           />
         ) : (
           <div className="text-[15px] leading-[1.8] break-words" style={{ color: "var(--text-2)" }}>

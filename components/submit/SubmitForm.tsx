@@ -1,6 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { submitTool } from "@/app/submit/actions";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 const PLAN_OPTIONS = [
   { key: "free", name: "Free", price: "$0", desc: "Basic listing" },
@@ -244,6 +245,10 @@ export function SubmitForm() {
                   .
                 </CheckLabel>
               </FormGroup>
+            </div>
+
+            <div className="flex justify-center mt-6">
+              <TurnstileWidget siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} />
             </div>
 
             <div className="text-center mt-8">

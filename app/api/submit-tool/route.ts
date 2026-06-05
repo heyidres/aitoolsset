@@ -2,6 +2,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { toolSubmissions } from "@/lib/db/schema";
 import { ok, fail, parseBody } from "@/lib/api";
+import { limit, clientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -23,6 +24,16 @@ const SubmitSchema = z.object({
 });
 
 export async function POST(req: Request) {
+  // Public POST — rate limit by IP. 3 submissions per hour stops the
+  // most obvious abuse without blocking real founders.
+  const rl = limit("submit-tool", clientIp(req), 3, 60 * 60 * 1000);
+  if (!rl.success) {
+    return fail(
+      `Too many submissions. Try again at ${new Date(rl.resetAt).toLocaleTimeString()}.`,
+      429
+    );
+  }
+
   const body = await parseBody(req, SubmitSchema);
   if (body instanceof Response) return body;
 

@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { GLOSSARY, slugifyTerm, type GlossaryTerm } from "@/lib/glossary";
 import { Favicon } from "../Favicon";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 const CATEGORIES = [
   { key: "all", label: "All" },
@@ -286,7 +287,7 @@ export function GlossaryClient({ glossaryOverride }: { glossaryOverride?: Glossa
                           Copy link
                         </button>
                       </div>
-                      <p className="text-[15px] leading-[1.7] mb-[14px]" style={{ color: "var(--text)" }} dangerouslySetInnerHTML={{ __html: t.def }} />
+                      <p className="text-[15px] leading-[1.7] mb-[14px]" style={{ color: "var(--text)" }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(t.def) }} />
                       {t.example && (
                         <div
                           className="rounded-r p-[11px] px-4 mb-[14px]"

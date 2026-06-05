@@ -3,6 +3,7 @@ import type { NewsPost } from "@/lib/news";
 import { favicon } from "@/lib/tools";
 import { ReadingProgress } from "../blog/ReadingProgress";
 import { AiSummarize } from "./AiSummarize";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 function authorInitials(source: string): string {
   return source
@@ -198,7 +199,7 @@ export function NewsArticle({
           )}
 
           {bodyHtml ? (
-            <div dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+            <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(bodyHtml) }} />
           ) : (
             <>
               <p>{intro}</p>
