@@ -11,7 +11,5 @@ if (dsn) {
   Sentry.init({
     dsn,
     tracesSampleRate: 0.1,
-    // Capture unhandled rejections + uncaught exceptions
-    enableTracing: true,
   });
 }
