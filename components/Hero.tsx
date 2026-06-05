@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { HeroTypewriter } from "./HeroTypewriter";
 import { HeroMosaic } from "./HeroMosaic";
+import { getSlots } from "@/lib/site-content";
 
 const PILLS: Array<{ label: string; q: string }> = [
   { label: "✦ Image AI", q: "image" },
@@ -18,7 +19,17 @@ const STATS = [
   { num: "12k", label: "Reviews" },
 ];
 
-export function Hero() {
+export async function Hero() {
+  // Pull editable copy from the slot registry (overridable from
+  // /admin/site-content; defaults live in lib/site-content.ts).
+  const s = await getSlots([
+    "home.hero.eyebrow",
+    "home.hero.headline_lead",
+    "home.hero.headline_accent",
+    "home.hero.subhead",
+    "home.hero.search_placeholder",
+    "home.hero.search_button",
+  ]);
   return (
     <section
       className="relative overflow-hidden px-9 section-pad-x"
@@ -71,10 +82,10 @@ export function Hero() {
               letterSpacing: "-2.5px",
             }}
           >
-            The only AI<br />
-            directory you<br />
+            {s["home.hero.eyebrow"]}<br />
+            {s["home.hero.headline_lead"]}<br />
             <span style={{ color: "var(--blue-h)" }}>
-              <HeroTypewriter />
+              <HeroTypewriter fallback={s["home.hero.headline_accent"]} />
             </span>
           </h1>
 
@@ -82,7 +93,7 @@ export function Hero() {
             className="text-[17px] leading-[1.65] max-w-[480px] mb-9"
             style={{ color: "rgba(255,255,255,.55)" }}
           >
-            Discover, compare, and save the best AI tools — curated for writers, coders, designers, and teams.
+            {s["home.hero.subhead"]}
           </p>
 
           <form className="relative mb-7" role="search" action="/search" method="get">
@@ -104,7 +115,7 @@ export function Hero() {
             <input
               type="search"
               name="q"
-              placeholder='Search — "image generator", "coding assistant", "video AI"…'
+              placeholder={s["home.hero.search_placeholder"]}
               aria-label="Search AI tools"
               className="w-full h-[54px] rounded-pill text-[15px] text-white outline-none pl-[50px] pr-[140px] backdrop-blur-[10px] transition-colors placeholder:text-white/30 focus:border-[var(--blue)] focus:bg-white/10"
               style={{
@@ -117,7 +128,7 @@ export function Hero() {
               className="absolute right-[5px] top-1/2 -translate-y-1/2 font-display text-[13px] font-bold text-white px-[22px] py-[9px] rounded-pill tracking-[.02em] transition-colors hover:bg-blue-h"
               style={{ background: "var(--blue)" }}
             >
-              Search
+              {s["home.hero.search_button"]}
             </button>
           </form>
 

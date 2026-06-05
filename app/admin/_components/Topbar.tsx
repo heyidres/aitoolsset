@@ -26,6 +26,7 @@ const ROUTE_META: Record<string, RouteMeta> = {
   "/admin/deals": { title: "Deals", action: { label: "Add Deal", href: "/admin/deals/new" } },
   "/admin/glossary": { title: "Glossary", action: { label: "Add Term", href: "/admin/glossary/new" } },
   "/admin/pages": { title: "Pages", action: { label: "New Page", href: "/admin/pages/new" } },
+  "/admin/site-content": { title: "Site content" },
   "/admin/reviews": { title: "Reviews" },
   "/admin/users": { title: "Users" },
   "/admin/analytics": { title: "Analytics" },

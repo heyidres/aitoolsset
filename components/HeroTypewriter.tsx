@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 
-const PHRASES = ["ever need.", "writing.", "coding.", "image creation.", "your workflow.", "every task."];
+const REST = ["writing.", "coding.", "image creation.", "your workflow.", "every task."];
 
-export function HeroTypewriter() {
+export function HeroTypewriter({ fallback = "ever need." }: { fallback?: string } = {}) {
+  const PHRASES = [fallback, ...REST];
   const [text, setText] = useState(PHRASES[0]);
   const stateRef = useRef({ pi: 0, ci: PHRASES[0].length, deleting: false });
 

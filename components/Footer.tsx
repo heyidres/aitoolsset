@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LogoMark } from "./Logo";
 import { NewsletterSignup } from "./NewsletterSignup";
+import { getSlots } from "@/lib/site-content";
 
 const COLUMNS = [
   {
@@ -34,7 +35,13 @@ const COLUMNS = [
   },
 ];
 
-export function Footer() {
+export async function Footer() {
+  const s = await getSlots([
+    "footer.tagline",
+    "footer.newsletter_title",
+    "footer.newsletter_sub",
+    "footer.copyright",
+  ]);
   return (
     <footer
       className="px-9 pt-[60px] pb-9 section-pad-x"
@@ -48,14 +55,14 @@ export function Footer() {
               AI Tools Set
             </div>
             <div className="text-[13.5px] leading-[1.65] max-w-[260px] mb-5" style={{ color: "rgba(255,255,255,.3)" }}>
-              The cleanest AI tools directory. Curated, categorized, and updated every day.
+              {s["footer.tagline"]}
             </div>
             <div style={{ maxWidth: 320 }}>
               <NewsletterSignup
                 source="footer"
                 variant="dark"
-                headline="The weekly digest"
-                sub="The best new AI tools, deals, and articles — every Friday. No spam, no ads."
+                headline={s["footer.newsletter_title"]}
+                sub={s["footer.newsletter_sub"]}
               />
             </div>
           </div>
@@ -82,7 +89,7 @@ export function Footer() {
           style={{ borderTop: "1px solid var(--dark-border)" }}
         >
           <div className="text-[12.5px]" style={{ color: "rgba(255,255,255,.2)" }}>
-            © 2026 AI Tools Set. All rights reserved.
+            {s["footer.copyright"]}
           </div>
           <div className="flex gap-[14px]">
             {["Twitter / X", "LinkedIn", "YouTube"].map((s) => (

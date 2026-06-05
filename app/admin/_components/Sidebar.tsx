@@ -95,6 +95,12 @@ const Icon = {
       <line x1="9" y1="17" x2="15" y2="17" />
     </svg>
   ),
+  SiteContent: () => (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+    </svg>
+  ),
   Users: () => (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -188,6 +194,7 @@ export function Sidebar({ counts, user }: { counts: SidebarCounts; user: Sidebar
           {item("/admin/deals", "Deals", Icon.Deals)}
           {item("/admin/glossary", "Glossary", Icon.Glossary)}
           {item("/admin/pages", "Pages", Icon.Pages)}
+          {item("/admin/site-content", "Site content", Icon.SiteContent)}
         </div>
 
         <div className="adm-sb-group">

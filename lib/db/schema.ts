@@ -475,6 +475,25 @@ export const sitePages = pgTable(
   })
 );
 
+// ── Site content slots (editable per-page copy) ─────────────
+// Each row is a single named slot — e.g. ("home", "hero_headline")
+// — whose `value` overrides the code-side default registered in
+// lib/site-content.ts. Sparse table: only rows where the editor
+// actually changed something exist.
+export const siteSections = pgTable(
+  "site_section",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    slotKey: text("slot_key").notNull().unique(), // e.g. "home.hero.headline"
+    value: text("value").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedBy: text("updated_by").references(() => users.id, { onDelete: "set null" }),
+  },
+  (t) => ({
+    keyIdx: index("site_section_key_idx").on(t.slotKey),
+  })
+);
+
 // ── Audit log (basic) ───────────────────────────────────────
 export const auditLog = pgTable("audit_log", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
