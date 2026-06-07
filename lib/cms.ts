@@ -727,6 +727,12 @@ export const RESERVED_PAGE_SLUGS = new Set<string>([
   "new",
   "top-rated",
   "newsletter",
+  // Static editorial pages (own React routes — must not be shadowed)
+  "about",
+  "contact",
+  "privacy",
+  "terms",
+  "cookies",
 ]);
 
 /** Convert a free-text name into a URL-safe slug. */
