@@ -104,19 +104,28 @@ export function ToolHeader({
             </div>
             {badges.length > 0 && (
               <div className="flex items-center gap-[7px] flex-wrap mb-3">
-                {badges.map((b, i) => (
-                  <span
-                    key={b}
-                    className="text-[11.5px] font-bold px-[10px] py-1 rounded-pill"
-                    style={
-                      i === 0
-                        ? { color: "var(--green)", background: "var(--green-bg)", border: "1px solid var(--green-border)" }
-                        : { color: "var(--text-2)", background: "var(--surface)", border: "1px solid var(--border)" }
-                    }
-                  >
-                    {b}
-                  </span>
-                ))}
+                {badges.map((b, i) =>
+                  // Index 0 = pricing pill (Free / Free tier available / Paid) — non-clickable status badge.
+                  // Index 1+ = tags — clickable links to search results for that tag.
+                  i === 0 ? (
+                    <span
+                      key={b}
+                      className="text-[11.5px] font-bold px-[10px] py-1 rounded-pill"
+                      style={{ color: "var(--green)", background: "var(--green-bg)", border: "1px solid var(--green-border)" }}
+                    >
+                      {b}
+                    </span>
+                  ) : (
+                    <Link
+                      key={b}
+                      href={`/search?q=${encodeURIComponent(b)}`}
+                      className="text-[11.5px] font-bold px-[10px] py-1 rounded-pill transition-colors hover:border-blue hover:text-blue"
+                      style={{ color: "var(--text-2)", background: "var(--surface)", border: "1px solid var(--border)" }}
+                    >
+                      {b}
+                    </Link>
+                  )
+                )}
               </div>
             )}
             {socials.length > 0 && (

@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { ToolHeader, type ToolHeaderOverrides } from "@/components/tool/ToolHeader";
 import { ToolTabs } from "@/components/tool/ToolTabs";
 import { ToolOverview, type ToolOverviewOverrides } from "@/components/tool/ToolOverview";
-import { ToolSidebar } from "@/components/tool/ToolSidebar";
+import { ToolSidebar, type ToolSidebarOverrides } from "@/components/tool/ToolSidebar";
 import { ToolReviews } from "@/components/tool/ToolReviews";
 import { EmbedSection } from "@/components/tool/EmbedSection";
 import { RelatedSlider } from "@/components/tool/RelatedSlider";
@@ -28,6 +28,7 @@ type FindToolResult =
       descriptionHtml?: string;
       headerOverrides?: ToolHeaderOverrides;
       overviewOverrides?: ToolOverviewOverrides;
+      sidebarOverrides?: ToolSidebarOverrides;
       /** Postgres tool id — only set when the tool comes from CMS. */
       cmsToolId?: string;
       /** Real DB reviews adapted to the legacy shape. Only set when CMS. */
@@ -75,6 +76,45 @@ function buildOverviewOverrides(t: CmsTool): ToolOverviewOverrides {
   };
 }
 
+function buildSidebarOverrides(t: CmsTool): ToolSidebarOverrides {
+  // Quick Info — assembled from whichever editorial fields the editor
+  // (or AI auto-fill) actually populated. Skip any row that's null/empty
+  // so the panel never lies. The Website row is rendered separately by
+  // ToolSidebar; we don't include it here.
+  const quickInfo: NonNullable<ToolSidebarOverrides["quickInfo"]> = [];
+
+  if (t.madeBy) quickInfo.push({ label: "Made by", val: t.madeBy });
+
+  const pricingLabel =
+    t.pricing === "free" ? "Free" : t.pricing === "freemium" ? "Free + Paid" : "Paid";
+  quickInfo.push({ label: "Pricing", val: pricingLabel, cls: "green" });
+
+  if (t.startingPrice) quickInfo.push({ label: "Starts at", val: t.startingPrice, cls: "green" });
+  if (t.launched) quickInfo.push({ label: "Launched", val: t.launched });
+  if (t.weeklyUsers) quickInfo.push({ label: "Weekly users", val: t.weeklyUsers });
+
+  if (t.hasApi !== null) quickInfo.push({
+    label: "API",
+    val: t.hasApi ? "Available" : "Not available",
+    cls: t.hasApi ? "green" : undefined,
+  });
+  if (t.mobileApp) quickInfo.push({ label: "Mobile app", val: t.mobileApp, cls: "green" });
+  if (t.browserExtension !== null) quickInfo.push({
+    label: "Browser ext.",
+    val: t.browserExtension ? "Yes" : "No",
+    cls: t.browserExtension ? "green" : undefined,
+  });
+  quickInfo.push({
+    label: "Last updated",
+    val: t.updatedAt.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+  });
+
+  return {
+    quickInfo,
+    tags: t.tags.length > 0 ? t.tags : undefined,
+  };
+}
+
 async function findTool(slug: string): Promise<FindToolResult> {
   const hardcoded = TOOLS.find((t) => t.id === slug);
   if (hardcoded) return { tool: hardcoded };
@@ -86,6 +126,7 @@ async function findTool(slug: string): Promise<FindToolResult> {
     descriptionHtml: cms.description,
     headerOverrides: buildHeaderOverrides(cms),
     overviewOverrides: buildOverviewOverrides(cms),
+    sidebarOverrides: buildSidebarOverrides(cms),
     cmsToolId: cms.id,
     reviewsOverride: cmsReviews.map(cmsReviewToLegacy),
   };
@@ -115,7 +156,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
   const { slug } = await params;
   const [found, session] = await Promise.all([findTool(slug), auth()]);
   if (!found) notFound();
-  const { tool, descriptionHtml, headerOverrides, overviewOverrides, cmsToolId, reviewsOverride } = found;
+  const { tool, descriptionHtml, headerOverrides, overviewOverrides, sidebarOverrides, cmsToolId, reviewsOverride } = found;
   const detail = DEFAULT_TOOL_DETAIL;
   const currentUser = session?.user
     ? { id: session.user.id, name: session.user.name ?? null, image: session.user.image ?? null }
@@ -152,8 +193,20 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
           </Link>
           <span style={{ color: "var(--border-2)" }}>›</span>
           <Link href="/ai-tools" className="transition-colors hover:text-blue" style={{ color: "var(--text-3)" }}>
-            {detail.category}
+            AI Tools
           </Link>
+          {tool.cat && (
+            <>
+              <span style={{ color: "var(--border-2)" }}>›</span>
+              <Link
+                href={`/ai-tools/${tool.cat}`}
+                className="transition-colors hover:text-blue capitalize"
+                style={{ color: "var(--text-3)" }}
+              >
+                {tool.cat.replace(/-/g, " ")}
+              </Link>
+            </>
+          )}
           <span style={{ color: "var(--border-2)" }}>›</span>
           <span className="font-semibold" style={{ color: "var(--text-2)" }}>
             {tool.name}
@@ -211,7 +264,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
           <ToolOverview name={tool.name} detail={detail} descriptionHtml={descriptionHtml} overrides={overviewOverrides} />
         </div>
 
-        <ToolSidebar tool={tool} detail={detail} />
+        <ToolSidebar tool={tool} detail={detail} overrides={sidebarOverrides} />
       </div>
 
       <EmbedSection tool={tool} />

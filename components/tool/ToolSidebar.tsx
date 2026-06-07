@@ -3,7 +3,24 @@ import { Favicon } from "../Favicon";
 import type { Tool } from "@/lib/tools";
 import type { ToolDetail } from "@/lib/tool-detail";
 
-export function ToolSidebar({ tool, detail }: { tool: Tool; detail: ToolDetail }) {
+export type ToolSidebarOverrides = {
+  /** Full replacement for the Quick Info row list. */
+  quickInfo?: Array<{ label: string; val: string; cls?: "green" | "blue" }>;
+  /** Override for the tag pills shown in the Tags card. */
+  tags?: string[];
+};
+
+export function ToolSidebar({
+  tool,
+  detail,
+  overrides,
+}: {
+  tool: Tool;
+  detail: ToolDetail;
+  overrides?: ToolSidebarOverrides;
+}) {
+  const quickInfo = overrides?.quickInfo ?? detail.quickInfo;
+  const tags = overrides?.tags ?? detail.tags;
   return (
     <aside className="flex flex-col gap-4 sticky min-w-0 w-full tool-sidebar" style={{ top: 110 }}>
       {/* Quick Info */}
@@ -12,11 +29,11 @@ export function ToolSidebar({ tool, detail }: { tool: Tool; detail: ToolDetail }
           Quick Info
         </div>
         <div className="px-[18px] py-4">
-          {detail.quickInfo.map((row, i) => (
+          {quickInfo.map((row, i) => (
             <div
               key={row.label}
               className="flex items-center justify-between py-2 text-[13px]"
-              style={{ borderBottom: i < detail.quickInfo.length - 1 ? "1px solid var(--border)" : "none" }}
+              style={{ borderBottom: i < quickInfo.length - 1 ? "1px solid var(--border)" : "none" }}
             >
               <span className="font-medium" style={{ color: "var(--text-3)" }}>
                 {row.label}
@@ -98,14 +115,15 @@ export function ToolSidebar({ tool, detail }: { tool: Tool; detail: ToolDetail }
         </div>
         <div className="px-[18px] py-4">
           <div className="flex flex-wrap gap-[6px]">
-            {detail.tags.map((t) => (
-              <span
+            {tags.map((t) => (
+              <Link
                 key={t}
+                href={`/search?q=${encodeURIComponent(t)}`}
                 className="text-[11.5px] font-semibold px-[10px] py-1 rounded-pill cursor-pointer transition-colors hover:border-blue hover:text-blue"
                 style={{ color: "var(--text-2)", border: "1px solid var(--border)" }}
               >
                 {t}
-              </span>
+              </Link>
             ))}
           </div>
         </div>
