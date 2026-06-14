@@ -20,6 +20,8 @@ import { RichTextEditor } from "../_components/RichTextEditor";
 import { autofillTool } from "./_actions";
 import type { AutofillResult } from "@/lib/tool-ai-fill";
 
+type CategoryOption = { slug: string; name: string };
+
 type Socials = {
   x?: string | null;
   linkedin?: string | null;
@@ -104,11 +106,24 @@ export function ToolForm({
   initial = EMPTY,
   mode,
   action,
+  categoryOptions,
 }: {
   initial?: ToolFormValues;
   mode: "create" | "edit";
   action: (formData: FormData) => Promise<void>;
+  /**
+   * CMS-managed categories from /admin/categories. When empty
+   * (fresh install) the form falls back to the hardcoded ALL_CATS
+   * list so the user can still create a tool. The "Add a category"
+   * link in the empty state points them to the right place.
+   */
+  categoryOptions?: CategoryOption[];
 }) {
+  const cats: CategoryOption[] =
+    categoryOptions && categoryOptions.length > 0
+      ? categoryOptions
+      : ALL_CATS.map((c) => ({ slug: c.slug, name: c.name }));
+  const usingFallback = !categoryOptions || categoryOptions.length === 0;
   const [values, setValues] = useState<ToolFormValues>(initial);
   const [slugTouched, setSlugTouched] = useState(!!initial.slug);
   const [domainTouched, setDomainTouched] = useState(!!initial.domain);
@@ -272,7 +287,15 @@ export function ToolForm({
             </Row>
 
             <Row>
-              <Field label="Category" required>
+              <Field
+                label="Category"
+                required
+                hint={
+                  usingFallback
+                    ? "No CMS categories yet — showing default list. Add categories in /admin/categories to manage your own."
+                    : `${cats.length} categories available — manage at /admin/categories`
+                }
+              >
                 <select
                   name="category"
                   required
@@ -280,7 +303,7 @@ export function ToolForm({
                   onChange={(e) => update("category", e.target.value)}
                 >
                   <option value="">Choose…</option>
-                  {ALL_CATS.map((c) => (
+                  {cats.map((c) => (
                     <option key={c.slug} value={c.slug}>
                       {c.name}
                     </option>

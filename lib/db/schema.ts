@@ -367,6 +367,22 @@ export const categories = pgTable(
     popular: boolean("popular").notNull().default(false),
     orderIndex: integer("order_index").notNull().default(0),
     parentSlug: text("parent_slug"),
+
+    // Editorial fields used by the public category page
+    bannerImageUrl: text("banner_image_url"),
+    heroEyebrow: text("hero_eyebrow"), // e.g. "CATEGORY · IMAGE GENERATION"
+    heroTitle: text("hero_title"), // big headline
+    heroSubtitle: text("hero_subtitle"),
+    introHtml: text("intro_html"), // long-form intro prose (rich text)
+    seoTitle: text("seo_title"),
+    seoDescription: text("seo_description"),
+    /**
+     * Slugs of tools the editor has hand-picked as featured for this
+     * category. Rendered above the regular tools list on the public
+     * /ai-tools/<slug> page.
+     */
+    featuredToolSlugs: jsonb("featured_tool_slugs").$type<string[]>().notNull().default([]),
+
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

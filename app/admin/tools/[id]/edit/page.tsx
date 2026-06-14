@@ -5,7 +5,7 @@
  */
 
 import { notFound } from "next/navigation";
-import { getToolById } from "@/lib/cms";
+import { getToolById, getCategoryOptions } from "@/lib/cms";
 import { ToolForm, type ToolFormValues } from "../../ToolForm";
 import { updateTool } from "../../_actions";
 
@@ -14,7 +14,10 @@ export const dynamic = "force-dynamic";
 
 export default async function EditToolPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const tool = await getToolById(id);
+  const [tool, categoryOptions] = await Promise.all([
+    getToolById(id),
+    getCategoryOptions().catch(() => []),
+  ]);
   if (!tool) notFound();
 
   const initial: ToolFormValues = {
@@ -53,7 +56,7 @@ export default async function EditToolPage({ params }: { params: Promise<{ id: s
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-      <ToolForm mode="edit" initial={initial} action={action} />
+      <ToolForm mode="edit" initial={initial} action={action} categoryOptions={categoryOptions} />
     </div>
   );
 }

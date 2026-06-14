@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getAllCategories, getCategoryById } from "@/lib/cms";
+import { getAllCategories, getCategoryById, getToolOptionsByCategory } from "@/lib/cms";
 import { CategoryForm, type CategoryFormValues } from "../../CategoryForm";
 import { updateCategory } from "../../_actions";
 
@@ -11,6 +11,9 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
   const [cat, all] = await Promise.all([getCategoryById(id), getAllCategories()]);
   if (!cat) notFound();
 
+  // Tools currently in this category (used by the editor's-pick chooser)
+  const toolsInCategory = await getToolOptionsByCategory(cat.slug).catch(() => []);
+
   const initial: CategoryFormValues = {
     name: cat.name,
     slug: cat.slug,
@@ -20,6 +23,14 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
     popular: cat.popular,
     orderIndex: cat.orderIndex,
     parentSlug: cat.parentSlug ?? "",
+    bannerImageUrl: cat.bannerImageUrl ?? "",
+    heroEyebrow: cat.heroEyebrow ?? "",
+    heroTitle: cat.heroTitle ?? "",
+    heroSubtitle: cat.heroSubtitle ?? "",
+    introHtml: cat.introHtml ?? "",
+    seoTitle: cat.seoTitle ?? "",
+    seoDescription: cat.seoDescription ?? "",
+    featuredToolSlugs: cat.featuredToolSlugs,
   };
 
   const action = async (fd: FormData) => {
@@ -33,6 +44,7 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
       initial={initial}
       action={action}
       allCategories={all.filter((c) => c.id !== id).map((c) => ({ slug: c.slug, name: c.name }))}
+      toolsInCategory={toolsInCategory}
     />
   );
 }

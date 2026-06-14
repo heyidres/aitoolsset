@@ -212,6 +212,15 @@ export type CmsCategory = {
   popular: boolean;
   orderIndex: number;
   parentSlug: string | null;
+  // Editorial fields used by the public category page
+  bannerImageUrl: string | null;
+  heroEyebrow: string | null;
+  heroTitle: string | null;
+  heroSubtitle: string | null;
+  introHtml: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  featuredToolSlugs: string[];
   createdAt: Date;
   updatedAt: Date;
 };
@@ -227,6 +236,14 @@ function toCmsCategory(row: typeof categories.$inferSelect): CmsCategory {
     popular: row.popular,
     orderIndex: row.orderIndex,
     parentSlug: row.parentSlug,
+    bannerImageUrl: row.bannerImageUrl,
+    heroEyebrow: row.heroEyebrow,
+    heroTitle: row.heroTitle,
+    heroSubtitle: row.heroSubtitle,
+    introHtml: row.introHtml,
+    seoTitle: row.seoTitle,
+    seoDescription: row.seoDescription,
+    featuredToolSlugs: row.featuredToolSlugs,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -517,6 +534,27 @@ export async function getToolOptions(): Promise<Array<{ id: string; name: string
     .select({ id: tools.id, name: tools.name, slug: tools.slug })
     .from(tools)
     .orderBy(asc(tools.name));
+  return rows;
+}
+
+/** Tools currently assigned to a category — used by the picks UI. */
+export async function getToolOptionsByCategory(
+  categorySlug: string
+): Promise<Array<{ id: string; name: string; slug: string }>> {
+  const rows = await db
+    .select({ id: tools.id, name: tools.name, slug: tools.slug })
+    .from(tools)
+    .where(eq(tools.category, categorySlug))
+    .orderBy(asc(tools.name));
+  return rows;
+}
+
+/** Lightweight category lookups for the tool form dropdown. */
+export async function getCategoryOptions(): Promise<Array<{ slug: string; name: string }>> {
+  const rows = await db
+    .select({ slug: categories.slug, name: categories.name })
+    .from(categories)
+    .orderBy(asc(categories.orderIndex), asc(categories.name));
   return rows;
 }
 

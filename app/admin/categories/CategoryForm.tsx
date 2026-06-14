@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
+import { RichTextEditor } from "../_components/RichTextEditor";
 
 export type CategoryFormValues = {
   name: string;
@@ -12,6 +13,15 @@ export type CategoryFormValues = {
   popular: boolean;
   orderIndex: number;
   parentSlug: string;
+  // Editorial fields rendered on the public category page
+  bannerImageUrl: string;
+  heroEyebrow: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  introHtml: string;
+  seoTitle: string;
+  seoDescription: string;
+  featuredToolSlugs: string[];
 };
 
 const EMPTY: CategoryFormValues = {
@@ -23,6 +33,14 @@ const EMPTY: CategoryFormValues = {
   popular: false,
   orderIndex: 0,
   parentSlug: "",
+  bannerImageUrl: "",
+  heroEyebrow: "",
+  heroTitle: "",
+  heroSubtitle: "",
+  introHtml: "",
+  seoTitle: "",
+  seoDescription: "",
+  featuredToolSlugs: [],
 };
 
 function slugify(input: string): string {
@@ -34,22 +52,35 @@ export function CategoryForm({
   mode,
   action,
   allCategories,
+  toolsInCategory,
 }: {
   initial?: CategoryFormValues;
   mode: "create" | "edit";
   action: (fd: FormData) => Promise<void>;
   allCategories: Array<{ slug: string; name: string }>;
+  /** Tools currently assigned to this category — used by the editor's-pick chooser. */
+  toolsInCategory?: Array<{ id: string; name: string; slug: string }>;
 }) {
   const [values, setValues] = useState<CategoryFormValues>(initial);
   const [slugTouched, setSlugTouched] = useState(!!initial.slug);
   const [err, setErr] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const [introVersion, setIntroVersion] = useState(0);
 
   useEffect(() => {
     if (!slugTouched) setValues((v) => ({ ...v, slug: slugify(v.name) }));
   }, [values.name, slugTouched]);
 
   const u = <K extends keyof CategoryFormValues>(k: K, v: CategoryFormValues[K]) => setValues((s) => ({ ...s, [k]: v }));
+
+  const togglePick = (slug: string) => {
+    setValues((s) => {
+      const picks = new Set(s.featuredToolSlugs);
+      if (picks.has(slug)) picks.delete(slug);
+      else picks.add(slug);
+      return { ...s, featuredToolSlugs: Array.from(picks) };
+    });
+  };
 
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -69,9 +100,10 @@ export function CategoryForm({
   };
 
   return (
-    <form onSubmit={submit} className="adm-panel" style={{ padding: 28, maxWidth: 760 }}>
+    <form onSubmit={submit} className="adm-panel" style={{ padding: 28, maxWidth: 980 }}>
       <input type="hidden" name="popular" value={values.popular ? "on" : ""} />
       <input type="hidden" name="orderIndex" value={values.orderIndex} />
+      <input type="hidden" name="featuredToolSlugsJson" value={JSON.stringify(values.featuredToolSlugs)} />
 
       <Section title="Basics">
         <Field label="Name" required>
@@ -90,8 +122,8 @@ export function CategoryForm({
             <input type="text" name="color" maxLength={20} value={values.color} onChange={(e) => u("color", e.target.value)} placeholder="#FF8800" />
           </Field>
         </Row>
-        <Field label="Description" hint="Optional short blurb">
-          <textarea name="description" rows={3} value={values.description} onChange={(e) => u("description", e.target.value)} placeholder="What this category covers…" />
+        <Field label="Short description" hint="Used as a fallback subtitle. Keep under 200 chars.">
+          <textarea name="description" rows={2} maxLength={200} value={values.description} onChange={(e) => u("description", e.target.value)} placeholder="What this category covers…" />
         </Field>
         <Row>
           <Field label="Display order" hint="Lower numbers come first">
@@ -109,10 +141,88 @@ export function CategoryForm({
         <ToggleRow title="Popular" desc="Surface on the homepage categories rail" on={values.popular} onChange={(v) => u("popular", v)} />
       </Section>
 
+      <Section title="Public page hero">
+        <Field label="Banner image">
+          <BannerUpload value={values.bannerImageUrl} onChange={(v) => u("bannerImageUrl", v)} />
+        </Field>
+        <Field label="Eyebrow pill" hint='Tiny pill above the headline. e.g. "CATEGORY · IMAGE GENERATION"'>
+          <input type="text" name="heroEyebrow" maxLength={80} value={values.heroEyebrow} onChange={(e) => u("heroEyebrow", e.target.value)} placeholder="CATEGORY · IMAGE GENERATION" />
+        </Field>
+        <Field label="Headline" hint="Big H1. Falls back to a generated one if blank.">
+          <input type="text" name="heroTitle" maxLength={160} value={values.heroTitle} onChange={(e) => u("heroTitle", e.target.value)} placeholder="Best AI image generation tools for 2026, ranked & reviewed" />
+        </Field>
+        <Field label="Subhead" hint="Short paragraph under the headline.">
+          <textarea name="heroSubtitle" rows={3} maxLength={400} value={values.heroSubtitle} onChange={(e) => u("heroSubtitle", e.target.value)} placeholder="Hand-picked AI image generation software for SEO, content, ad copy…" />
+        </Field>
+      </Section>
+
+      <Section title="Intro prose">
+        <Field label="Intro body" hint="Long-form prose shown between the hero and the tools grid. Use H2/H3, bold/italic, links, lists.">
+          <RichTextEditor
+            key={`intro-${introVersion}`}
+            name="introHtml"
+            defaultValue={values.introHtml}
+            placeholder="What are AI image generation tools — and which ones are actually worth using in 2026?"
+          />
+        </Field>
+      </Section>
+
+      {mode === "edit" && toolsInCategory && toolsInCategory.length > 0 && (
+        <Section title={`Editor's picks (${values.featuredToolSlugs.length} selected)`}>
+          <div style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 12 }}>
+            Pick the tools that should be highlighted at the top of this category page. Click a chip to toggle.
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {toolsInCategory.map((t) => {
+              const isPicked = values.featuredToolSlugs.includes(t.slug);
+              return (
+                <button
+                  key={t.slug}
+                  type="button"
+                  onClick={() => togglePick(t.slug)}
+                  className="adm-btn-sm"
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: 12.5,
+                    background: isPicked ? "var(--blue)" : "var(--surface)",
+                    color: isPicked ? "#fff" : "var(--text)",
+                    border: `1.5px solid ${isPicked ? "var(--blue)" : "var(--border)"}`,
+                    borderRadius: 100,
+                    cursor: "pointer",
+                  }}
+                >
+                  {isPicked ? "★ " : ""}{t.name}
+                </button>
+              );
+            })}
+          </div>
+        </Section>
+      )}
+
+      <Section title="SEO (optional)">
+        <Field label="Meta title" hint="Defaults to the category name if blank. Max 60 chars.">
+          <input type="text" name="seoTitle" maxLength={60} value={values.seoTitle} onChange={(e) => u("seoTitle", e.target.value)} />
+        </Field>
+        <Field label="Meta description" hint="Max 160 chars">
+          <textarea name="seoDescription" rows={3} maxLength={160} value={values.seoDescription} onChange={(e) => u("seoDescription", e.target.value)} />
+        </Field>
+      </Section>
+
       <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
         <button type="submit" disabled={pending} className="adm-btn-sm primary" style={{ padding: "10px 18px", fontSize: 13 }}>
           {pending ? "Saving…" : mode === "create" ? "Create category" : "Save changes"}
         </button>
+        {mode === "edit" && values.slug && (
+          <a
+            href={`/ai-tools/${values.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="adm-btn-sm ghost"
+            style={{ padding: "10px 18px", fontSize: 13 }}
+          >
+            View on site ↗
+          </a>
+        )}
         <Link href="/admin/categories" className="adm-btn-sm ghost" style={{ padding: "10px 18px", fontSize: 13 }}>Cancel</Link>
       </div>
 
@@ -123,9 +233,74 @@ export function CategoryForm({
   );
 }
 
+function BannerUpload({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const handleFile = async (file: File) => {
+    setErr(null);
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error ?? `Upload failed (HTTP ${res.status})`);
+      onChange(json.url);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div>
+      <div style={{ width: "100%", aspectRatio: "1600 / 500", borderRadius: 10, border: "1.5px dashed var(--border)", background: "var(--bg)", overflow: "hidden", marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {value ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={value} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : (
+          <div style={{ color: "var(--text-3)", fontSize: 13 }}>No banner uploaded</div>
+        )}
+      </div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+        <label className="adm-btn-sm primary" style={{ cursor: "pointer", padding: "8px 14px" }}>
+          {uploading ? "Uploading…" : value ? "Replace banner" : "Upload banner"}
+          <input
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            disabled={uploading}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void handleFile(f);
+              e.target.value = "";
+            }}
+          />
+        </label>
+        {value && (
+          <button type="button" onClick={() => onChange("")} className="adm-btn-sm ghost" style={{ padding: "8px 14px", color: "var(--red)" }}>
+            Remove
+          </button>
+        )}
+      </div>
+      <input
+        type="url"
+        name="bannerImageUrl"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Or paste a URL: https://example.com/banner.jpg"
+        style={{ width: "100%", border: "1.5px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 13, background: "var(--white)", outline: "none" }}
+      />
+      {err && <div style={{ marginTop: 6, color: "var(--red)", fontSize: 12, fontWeight: 600 }}>{err}</div>}
+    </div>
+  );
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: 20 }}>
+    <div style={{ marginBottom: 22 }}>
       <div style={{ fontFamily: "var(--font-manrope)", fontSize: 11, fontWeight: 700, color: "var(--blue)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>{title}</div>
       {children}
     </div>

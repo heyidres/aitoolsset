@@ -8,12 +8,14 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { categories } from "@/lib/db/schema";
 import { slugify } from "@/lib/cms";
+import { ALL_CATS, POPULAR_CATS } from "@/lib/categories";
+import { logAdmin } from "@/lib/audit";
 
 async function requireEditor() {
   const session = await auth();
   if (!session?.user) throw new Error("Not signed in");
   if (session.user.role !== "admin" && session.user.role !== "editor") throw new Error("Not authorised");
-  return session;
+  return session.user;
 }
 
 const Input = z.object({
@@ -25,6 +27,15 @@ const Input = z.object({
   popular: z.string().optional(),
   orderIndex: z.string().optional().default("0"),
   parentSlug: z.string().optional().default(""),
+  // Editorial fields
+  bannerImageUrl: z.string().optional().default(""),
+  heroEyebrow: z.string().optional().default(""),
+  heroTitle: z.string().optional().default(""),
+  heroSubtitle: z.string().optional().default(""),
+  introHtml: z.string().optional().default(""),
+  seoTitle: z.string().optional().default(""),
+  seoDescription: z.string().optional().default(""),
+  featuredToolSlugsJson: z.string().optional().default(""),
 });
 
 function parse(fd: FormData) {
@@ -37,7 +48,26 @@ function parse(fd: FormData) {
     popular: (fd.get("popular") as string) ?? "",
     orderIndex: (fd.get("orderIndex") as string) ?? "0",
     parentSlug: (fd.get("parentSlug") as string) ?? "",
+    bannerImageUrl: (fd.get("bannerImageUrl") as string) ?? "",
+    heroEyebrow: (fd.get("heroEyebrow") as string) ?? "",
+    heroTitle: (fd.get("heroTitle") as string) ?? "",
+    heroSubtitle: (fd.get("heroSubtitle") as string) ?? "",
+    introHtml: (fd.get("introHtml") as string) ?? "",
+    seoTitle: (fd.get("seoTitle") as string) ?? "",
+    seoDescription: (fd.get("seoDescription") as string) ?? "",
+    featuredToolSlugsJson: (fd.get("featuredToolSlugsJson") as string) ?? "",
   });
+}
+
+function safeParseSlugs(raw: string): string[] {
+  if (!raw.trim()) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed.filter((s) => typeof s === "string");
+    return [];
+  } catch {
+    return [];
+  }
 }
 
 function values(i: z.infer<typeof Input>) {
@@ -50,6 +80,14 @@ function values(i: z.infer<typeof Input>) {
     popular: i.popular === "on" || i.popular === "true",
     orderIndex: parseInt(i.orderIndex, 10) || 0,
     parentSlug: i.parentSlug || null,
+    bannerImageUrl: i.bannerImageUrl || null,
+    heroEyebrow: i.heroEyebrow || null,
+    heroTitle: i.heroTitle || null,
+    heroSubtitle: i.heroSubtitle || null,
+    introHtml: i.introHtml || null,
+    seoTitle: i.seoTitle || null,
+    seoDescription: i.seoDescription || null,
+    featuredToolSlugs: safeParseSlugs(i.featuredToolSlugsJson),
   };
 }
 
@@ -59,8 +97,10 @@ export async function createCategory(fd: FormData) {
   const [existing] = await db.select({ id: categories.id }).from(categories).where(eq(categories.slug, input.slug)).limit(1);
   if (existing) throw new Error(`A category with slug "${input.slug}" already exists`);
   await db.insert(categories).values(values(input));
+  await logAdmin("category.create", `category:${input.slug}`, { name: input.name });
   revalidatePath("/admin/categories");
   revalidatePath("/ai-tools");
+  revalidatePath(`/ai-tools/${input.slug}`);
   redirect("/admin/categories");
 }
 
@@ -70,14 +110,81 @@ export async function updateCategory(id: string, fd: FormData) {
   const [conflict] = await db.select({ id: categories.id }).from(categories).where(eq(categories.slug, input.slug)).limit(1);
   if (conflict && conflict.id !== id) throw new Error(`A different category already has slug "${input.slug}"`);
   await db.update(categories).set({ ...values(input), updatedAt: new Date() }).where(eq(categories.id, id));
+  await logAdmin("category.update", `category:${id}`, { slug: input.slug });
   revalidatePath("/admin/categories");
   revalidatePath("/ai-tools");
+  revalidatePath(`/ai-tools/${input.slug}`);
   redirect("/admin/categories");
 }
 
 export async function deleteCategory(id: string) {
   await requireEditor();
+  const [row] = await db.select({ slug: categories.slug }).from(categories).where(eq(categories.id, id)).limit(1);
   await db.delete(categories).where(eq(categories.id, id));
+  await logAdmin("category.delete", `category:${id}`, { slug: row?.slug });
   revalidatePath("/admin/categories");
   revalidatePath("/ai-tools");
+}
+
+/**
+ * One-shot import of the 48 hardcoded categories from
+ * lib/categories.ts. Skips any slug that already exists so
+ * it's safe to re-run.
+ */
+export async function seedDefaultCategories(): Promise<{ created: string[]; skipped: string[] }> {
+  await requireEditor();
+
+  const existing = await db.select({ slug: categories.slug }).from(categories);
+  const existingSet = new Set(existing.map((r) => r.slug));
+
+  const created: string[] = [];
+  const skipped: string[] = [];
+
+  // POPULAR_CATS have richer metadata (emoji + description); merge with
+  // the broader ALL_CATS list, prefer popular versions for shared slugs.
+  const popularBySlug = new Map(POPULAR_CATS.map((c) => [c.slug, c]));
+  const seen = new Set<string>();
+
+  // Popular ones first (so they get the lower orderIndex)
+  let order = 0;
+  for (const p of POPULAR_CATS) {
+    if (seen.has(p.slug)) continue;
+    seen.add(p.slug);
+    if (existingSet.has(p.slug)) { skipped.push(p.slug); order++; continue; }
+    await db.insert(categories).values({
+      slug: p.slug,
+      name: p.name,
+      icon: p.emoji,
+      color: p.color,
+      description: p.desc,
+      popular: true,
+      orderIndex: order,
+    });
+    created.push(p.slug);
+    order++;
+  }
+
+  // Then the remaining ALL_CATS
+  for (const a of ALL_CATS) {
+    if (seen.has(a.slug)) continue;
+    seen.add(a.slug);
+    if (existingSet.has(a.slug)) { skipped.push(a.slug); order++; continue; }
+    const popular = popularBySlug.get(a.slug);
+    await db.insert(categories).values({
+      slug: a.slug,
+      name: a.name,
+      icon: popular?.emoji ?? a.icon ?? null,
+      color: popular?.color ?? a.bg ?? null,
+      description: popular?.desc ?? null,
+      popular: !!popular,
+      orderIndex: order,
+    });
+    created.push(a.slug);
+    order++;
+  }
+
+  await logAdmin("category.seed", "category:bulk", { createdCount: created.length, skippedCount: skipped.length });
+  revalidatePath("/admin/categories");
+  revalidatePath("/ai-tools");
+  return { created, skipped };
 }
