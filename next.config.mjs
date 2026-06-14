@@ -7,15 +7,9 @@ const nextConfig = {
       { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
     ],
   },
-  // Keep ESM-only / heavy server-side packages OUT of the Next bundler.
-  // isomorphic-dompurify -> jsdom -> @exodus/bytes are ESM-only and
-  // crash on Vercel's Node runtime when Webpack converts their imports
-  // to require(). Letting Node load them natively fixes the
-  // "require() of ES Module" error on /ai-tools/<slug> pages with
-  // editor-supplied intro HTML.
+  // Keep heavy ESM-prone server-side packages OUT of the Next bundler
+  // so Node loads them natively (handles ESM correctly).
   serverExternalPackages: [
-    "isomorphic-dompurify",
-    "jsdom",
     "@anthropic-ai/sdk",
     "@google/genai",
   ],
