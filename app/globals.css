@@ -424,6 +424,48 @@
 .nav-link .chev { transition: transform .2s; }
 .nav-link.open .chev { transform: rotate(180deg); }
 
+/* Sticky-nav search box — slots between the menu links and Sign in */
+.nav-search-form {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-right: 6px;
+}
+.nav-search-icon {
+  position: absolute;
+  left: 11px;
+  color: var(--text-3);
+  pointer-events: none;
+}
+.nav-search-input {
+  width: 220px;
+  height: 34px;
+  padding: 0 12px 0 32px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  transition: border-color 0.15s, background 0.15s, width 0.15s;
+  outline: none;
+}
+.nav-search-input::placeholder { color: var(--text-3); }
+.nav-search-input:hover { border-color: var(--border-2); }
+.nav-search-input:focus {
+  border-color: var(--blue);
+  background: #fff;
+  width: 260px;
+  box-shadow: 0 0 0 3px var(--blue-soft);
+}
+@media (max-width: 1180px) {
+  .nav-search-input { width: 160px; }
+  .nav-search-input:focus { width: 180px; }
+}
+@media (max-width: 980px) {
+  .nav-search-form { display: none; }
+}
+
 .mega-wrap {
   position: absolute;
   left: 0;

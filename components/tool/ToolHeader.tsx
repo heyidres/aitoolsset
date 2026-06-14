@@ -24,6 +24,12 @@ const SOCIAL_SVGS: Record<string, React.ReactNode> = {
 export type ToolHeaderOverrides = {
   tagline?: string;
   badges?: string[];
+  /**
+   * Per-badge href override. If a badge's label appears here, it links
+   * to this URL instead of the default /search?q=<badge>. Used so a
+   * badge that matches a CMS category routes to /ai-tools/<slug>.
+   */
+  badgeLinks?: Record<string, string>;
   socials?: Array<{ kind: string; url: string }>;
   weeklyUsers?: string | null;
   startingPrice?: string | null;
@@ -142,7 +148,9 @@ export function ToolHeader({
                   ) : (
                     <Link
                       key={b}
-                      href={`/search?q=${encodeURIComponent(b)}`}
+                      // Prefer the CMS-supplied category URL when the badge
+                      // matches a known category; fall back to a search.
+                      href={overrides?.badgeLinks?.[b] ?? `/search?q=${encodeURIComponent(b)}`}
                       className="text-[11.5px] font-bold px-[10px] py-1 rounded-pill transition-colors hover:border-blue hover:text-blue"
                       style={{ color: "var(--text-2)", background: "var(--surface)", border: "1px solid var(--border)" }}
                     >

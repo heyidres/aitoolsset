@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { LogoMark } from "./Logo";
 import { MegaPanel, PANELS } from "./MegaMenu";
 import { MobileDrawer } from "./MobileDrawer";
@@ -13,7 +14,16 @@ const DIRECT_LINKS = [
 export function Nav() {
   const [open, setOpen] = useState<string | null>(null);
   const [drawer, setDrawer] = useState(false);
+  const [query, setQuery] = useState("");
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const router = useRouter();
+
+  const onSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const q = query.trim();
+    if (!q) return;
+    router.push(`/search?q=${encodeURIComponent(q)}`);
+  };
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -90,6 +100,31 @@ export function Nav() {
           </div>
 
           <div className="items-center gap-2 flex nav-right-desktop">
+            <form onSubmit={onSearch} className="nav-search-form" role="search">
+              <svg
+                className="nav-search-icon"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <line x1="21" y1="21" x2="16.5" y2="16.5" />
+              </svg>
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search tools…"
+                aria-label="Search tools"
+                className="nav-search-input"
+              />
+            </form>
             <button
               className="font-display text-[13.5px] font-semibold px-4 py-[7px] rounded-pill transition-colors hover:text-text"
               style={{ color: "var(--text-2)" }}

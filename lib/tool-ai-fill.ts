@@ -1,26 +1,32 @@
 /**
  * ─────────────────────────────────────────────────────────────
- *  Tool auto-fill — pluggable AI provider
+ *  Tool auto-fill — pluggable AI provider with cascading fallback
  * ─────────────────────────────────────────────────────────────
  *
- *  Two providers, picked at request time based on which env
- *  key is present (Gemini takes precedence — it's free):
+ *  Three providers tried in order. If the first errors with a
+ *  quota / rate-limit / auth failure we automatically fall
+ *  through to the next one, so a daily Gemini cap doesn't break
+ *  the admin flow.
  *
- *   1) Google Gemini (gemini-2.5-flash)
- *      • Free tier: 15 RPM, 1500 requests/day, no credit card
- *      • Get a key: https://aistudio.google.com/apikey
- *      • Set: GEMINI_API_KEY=...
+ *   1) Google Gemini (gemini-2.5-flash)            — FREE, top-tier
+ *      • 15 RPM, 1500 requests/day, no credit card
+ *      • https://aistudio.google.com/apikey
+ *      • GEMINI_API_KEY=...
  *
- *   2) Anthropic Claude (claude-haiku-4-5)
- *      • Pay-as-you-go (~$0.005 per auto-fill)
- *      • Get a key: https://console.anthropic.com
- *      • Set: ANTHROPIC_API_KEY=...
+ *   2) Groq Llama 3.3 70B (llama-3.3-70b-versatile) — FREE, top-tier
+ *      • 30 RPM, 14,400 requests/day, no credit card
+ *      • https://console.groq.com/keys
+ *      • GROQ_API_KEY=...
+ *
+ *   3) Anthropic Claude Haiku (claude-haiku-4-5)    — PAID
+ *      • ~$0.005 per auto-fill, pay-as-you-go
+ *      • https://console.anthropic.com
+ *      • ANTHROPIC_API_KEY=...
  *
  *  Flow:
  *   1) Fetch the homepage HTML (with a real browser UA)
  *   2) Strip to readable text (~6000 chars max)
- *   3) Ask the provider to return structured editorial detail
- *      as JSON
+ *   3) Try each configured provider in turn until one returns JSON
  *   4) Return a typed result the form merges into client state
  *
  *  Used by /admin/tools/new and /admin/tools/[id]/edit via the
@@ -33,6 +39,7 @@ import { GoogleGenAI } from "@google/genai";
 
 const ANTHROPIC_MODEL = "claude-haiku-4-5";
 const GEMINI_MODEL = "gemini-2.5-flash";
+const GROQ_MODEL = "llama-3.3-70b-versatile";
 
 export type AutofillResult = {
   description: string; // HTML
@@ -200,9 +207,73 @@ async function runAnthropic(name: string, websiteUrl: string, homepageText: stri
   return parseJsonResponse(block.text);
 }
 
+// ── Groq (OpenAI-compatible REST — no SDK dep) ───────────────
+async function runGroq(name: string, websiteUrl: string, homepageText: string | null) {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error("GROQ_API_KEY is not set");
+
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      // Forces strict JSON output (same as Gemini's responseMimeType).
+      response_format: { type: "json_object" },
+      temperature: 0.2,
+      max_tokens: 4000,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: buildUserMessage(name, websiteUrl, homepageText) },
+      ],
+    }),
+    signal: AbortSignal.timeout(45_000),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Groq ${res.status}: ${body.slice(0, 300) || res.statusText}`);
+  }
+  const json = (await res.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+  const text = json.choices?.[0]?.message?.content;
+  if (!text) throw new Error("Groq returned no content");
+  return parseJsonResponse(text);
+}
+
+// ── Cascading fallback ───────────────────────────────────────
+type Provider = "gemini" | "groq" | "anthropic";
+
 /**
- * Run the auto-fill. Picks Gemini if GEMINI_API_KEY is set,
- * otherwise Anthropic, otherwise throws with a setup message.
+ * Errors that mean "this provider is unavailable RIGHT NOW — try the
+ * next one." We DON'T fall through on genuine bad input (e.g. URL
+ * unreachable) — those would fail on every provider.
+ */
+function isProviderUnavailable(err: unknown): boolean {
+  const msg = String(err instanceof Error ? err.message : err).toLowerCase();
+  return (
+    msg.includes("quota") ||
+    msg.includes("rate limit") ||
+    msg.includes("rate_limit") ||
+    msg.includes("resource_exhausted") ||
+    msg.includes("credit balance") ||
+    msg.includes("429") ||
+    msg.includes("503") ||
+    msg.includes("overloaded") ||
+    msg.includes("authentication") ||
+    msg.includes("unauthorized") ||
+    msg.includes("401") ||
+    msg.includes("invalid api key")
+  );
+}
+
+/**
+ * Run the auto-fill. Tries each configured provider in priority order
+ * (Gemini → Groq → Anthropic). On a quota/auth failure, transparently
+ * falls through to the next one. Re-throws the LAST error if every
+ * configured provider fails, so the user sees something actionable.
  */
 export async function autofillToolDetail({
   name,
@@ -213,20 +284,46 @@ export async function autofillToolDetail({
 }): Promise<AutofillResult> {
   const homepageText = await fetchHomepageText(websiteUrl);
 
-  if (process.env.GEMINI_API_KEY) {
-    return runGemini(name, websiteUrl, homepageText);
+  const chain: Array<{
+    id: Provider;
+    enabled: boolean;
+    run: () => Promise<AutofillResult>;
+  }> = [
+    { id: "gemini",    enabled: !!process.env.GEMINI_API_KEY,    run: () => runGemini(name, websiteUrl, homepageText) },
+    { id: "groq",      enabled: !!process.env.GROQ_API_KEY,      run: () => runGroq(name, websiteUrl, homepageText) },
+    { id: "anthropic", enabled: !!process.env.ANTHROPIC_API_KEY, run: () => runAnthropic(name, websiteUrl, homepageText) },
+  ];
+
+  const active = chain.filter((p) => p.enabled);
+  if (active.length === 0) {
+    throw new Error(
+      "No AI provider configured. Add a free GEMINI_API_KEY (https://aistudio.google.com/apikey) or GROQ_API_KEY (https://console.groq.com/keys) to .env.local, then restart dev."
+    );
   }
-  if (process.env.ANTHROPIC_API_KEY) {
-    return runAnthropic(name, websiteUrl, homepageText);
+
+  let lastErr: unknown = null;
+  for (const provider of active) {
+    try {
+      return await provider.run();
+    } catch (err) {
+      lastErr = err;
+      // Only cascade on quota / rate-limit / auth failures. Anything else
+      // (network, parse error) is likely deterministic — bubble up.
+      if (!isProviderUnavailable(err)) throw err;
+      console.warn(`[autofill] ${provider.id} unavailable, trying next provider…`, err instanceof Error ? err.message : err);
+    }
   }
-  throw new Error(
-    "No AI provider configured. Add GEMINI_API_KEY (free) or ANTHROPIC_API_KEY to .env.local, then restart dev."
-  );
+
+  // Every provider was rate-limited / unauthorised.
+  throw lastErr instanceof Error
+    ? new Error(`All AI providers exhausted. Last error from ${active[active.length - 1].id}: ${lastErr.message}`)
+    : new Error("All AI providers exhausted.");
 }
 
 /** Which provider would `autofillToolDetail` use right now? Used for diagnostics. */
-export function activeProvider(): "gemini" | "anthropic" | "none" {
+export function activeProvider(): Provider | "none" {
   if (process.env.GEMINI_API_KEY) return "gemini";
+  if (process.env.GROQ_API_KEY) return "groq";
   if (process.env.ANTHROPIC_API_KEY) return "anthropic";
   return "none";
 }

@@ -12,7 +12,7 @@ import { EmbedSection } from "@/components/tool/EmbedSection";
 import { RelatedSlider } from "@/components/tool/RelatedSlider";
 import { TOOLS, type Tool } from "@/lib/tools";
 import { DEFAULT_TOOL_DETAIL } from "@/lib/tool-detail";
-import { getToolBySlug, getReviewsForTool, type CmsTool } from "@/lib/cms";
+import { getToolBySlug, getReviewsForTool, getCategoryOptions, type CmsTool } from "@/lib/cms";
 import { cmsToolToLegacy, cmsReviewToLegacy, type LegacyReview } from "@/lib/cms-adapters";
 import { auth } from "@/lib/auth";
 import { JsonLd, toolJsonLd, breadcrumbJsonLd } from "@/lib/json-ld";
@@ -51,17 +51,48 @@ function socialsRecordToList(
   });
 }
 
-function buildHeaderOverrides(t: CmsTool): ToolHeaderOverrides {
-  // Badge row: first pill = free-tier status, then the user-provided tags.
+function buildHeaderOverrides(
+  t: CmsTool,
+  knownCategories: Array<{ slug: string; name: string }> = []
+): ToolHeaderOverrides {
+  // Badge row: first pill = free-tier status, then the user-provided tags +
+  // any extra categories the tool is listed under (so clicking them routes
+  // straight to the category page).
   const badges: string[] = [];
   if (t.pricing === "free") badges.push("Free");
   else if (t.pricing === "freemium") badges.push("Free tier available");
   else badges.push("Paid");
-  badges.push(...t.tags.slice(0, 4));
+
+  // Surface the multi-cat assignments as clickable pills (deduped against tags).
+  const seen = new Set<string>();
+  const categoryBadges: string[] = [];
+  for (const slug of t.categories ?? []) {
+    const cat = knownCategories.find((c) => c.slug === slug);
+    if (!cat) continue;
+    if (seen.has(cat.name)) continue;
+    seen.add(cat.name);
+    categoryBadges.push(cat.name);
+  }
+  for (const tag of t.tags ?? []) {
+    if (seen.has(tag)) continue;
+    seen.add(tag);
+    categoryBadges.push(tag);
+  }
+  badges.push(...categoryBadges.slice(0, 4));
+
+  // Build the badge → href map. A badge whose label matches a known category
+  // name links to /ai-tools/<slug>; anything else falls back to /search?q=.
+  const byName = new Map(knownCategories.map((c) => [c.name.toLowerCase(), c.slug]));
+  const badgeLinks: Record<string, string> = {};
+  for (const b of badges) {
+    const slug = byName.get(b.toLowerCase());
+    if (slug) badgeLinks[b] = `/ai-tools/${slug}`;
+  }
 
   return {
     tagline: t.tagline,
     badges,
+    badgeLinks,
     socials: socialsRecordToList(t.socials),
     weeklyUsers: t.weeklyUsers,
     startingPrice: t.startingPrice,
@@ -127,11 +158,14 @@ async function findTool(slug: string): Promise<FindToolResult> {
   if (hardcoded) return { tool: hardcoded };
   const cms = await getToolBySlug(slug);
   if (!cms || cms.status !== "published") return null;
-  const cmsReviews = await getReviewsForTool(cms.id).catch(() => []);
+  const [cmsReviews, allCategories] = await Promise.all([
+    getReviewsForTool(cms.id).catch(() => []),
+    getCategoryOptions().catch(() => []),
+  ]);
   return {
     tool: cmsToolToLegacy(cms),
     descriptionHtml: cms.description,
-    headerOverrides: buildHeaderOverrides(cms),
+    headerOverrides: buildHeaderOverrides(cms, allCategories),
     overviewOverrides: buildOverviewOverrides(cms),
     sidebarOverrides: buildSidebarOverrides(cms),
     cmsToolId: cms.id,
@@ -151,10 +185,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const found = await findTool(slug);
     if (!found) return { title: "Tool not found" };
     const { tool, seoTitle, seoDescription } = found;
-    const title = seoTitle?.trim() || `${tool.name} — AI Tools Set`;
+    const defaultTitle = `${tool.name} Reviews: Detail, Pricing & Features`;
+    const title = seoTitle?.trim() || defaultTitle;
     const description = seoDescription?.trim() || tool.desc;
     return {
-      title,
+      // `absolute` bypasses the root layout's "%s — AI Tools Set" template
+      // so the title renders exactly as written (matches editorial intent).
+      title: { absolute: title },
       description,
       openGraph: {
         title,
@@ -203,7 +240,9 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
       />
       <Nav />
 
-      {/* Breadcrumb bar */}
+      {/* Breadcrumb bar — flat: Home › AI Tools › <tool name>.
+          Category is intentionally omitted so the trail stays short
+          (multi-cat tools would otherwise pick one arbitrarily). */}
       <div className="bg-white px-9 section-pad-x" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="max-w-page mx-auto flex items-center gap-[6px] text-[13px] h-[44px]" style={{ color: "var(--text-3)" }}>
           <Link href="/" className="transition-colors hover:text-blue" style={{ color: "var(--text-3)" }}>
@@ -213,18 +252,6 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
           <Link href="/ai-tools" className="transition-colors hover:text-blue" style={{ color: "var(--text-3)" }}>
             AI Tools
           </Link>
-          {tool.cat && (
-            <>
-              <span style={{ color: "var(--border-2)" }}>›</span>
-              <Link
-                href={`/ai-tools/${tool.cat}`}
-                className="transition-colors hover:text-blue capitalize"
-                style={{ color: "var(--text-3)" }}
-              >
-                {tool.cat.replace(/-/g, " ")}
-              </Link>
-            </>
-          )}
           <span style={{ color: "var(--border-2)" }}>›</span>
           <span className="font-semibold" style={{ color: "var(--text-2)" }}>
             {tool.name}

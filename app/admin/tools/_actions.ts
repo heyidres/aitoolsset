@@ -273,20 +273,29 @@ export async function autofillTool(input: {
     // Anthropic — out of credits
     if (lower.includes("credit balance")) {
       throw new Error(
-        "Your Anthropic API account is out of credits. Either add credits at https://console.anthropic.com/settings/billing, or switch to the free Gemini provider by getting a key at https://aistudio.google.com/apikey and setting GEMINI_API_KEY in .env.local."
+        "Your Anthropic API account is out of credits. Add credits at https://console.anthropic.com/settings/billing, or add a free fallback: GEMINI_API_KEY (https://aistudio.google.com/apikey) or GROQ_API_KEY (https://console.groq.com/keys) in .env.local."
       );
     }
 
     // Either provider — bad / missing key
     if (lower.includes("api key") || lower.includes("api_key") || lower.includes("authentication") || lower.includes("unauthorized")) {
       throw new Error(
-        "AI API key is missing or invalid. For the free option, get a Gemini key at https://aistudio.google.com/apikey and set GEMINI_API_KEY in .env.local, then restart dev."
+        "AI API key is missing or invalid. Free options: Gemini (https://aistudio.google.com/apikey) or Groq (https://console.groq.com/keys). Set GEMINI_API_KEY or GROQ_API_KEY in .env.local and restart dev."
+      );
+    }
+
+    // All providers exhausted → user-friendly version
+    if (lower.includes("all ai providers exhausted")) {
+      throw new Error(
+        "All configured AI providers are rate-limited or out of credits. Add another free provider: Groq (https://console.groq.com/keys — 14,400 req/day free, top-tier) or Gemini (https://aistudio.google.com/apikey — 1,500 req/day free). Set GROQ_API_KEY or GEMINI_API_KEY in .env.local."
       );
     }
 
     // Either provider — rate / quota
     if (lower.includes("rate limit") || lower.includes("quota") || lower.includes("resource_exhausted") || lower.includes("429")) {
-      throw new Error("AI provider rate limit / quota hit — wait a minute and try again.");
+      throw new Error(
+        "AI provider rate limit / quota hit. Either wait a minute, or add a free fallback: GROQ_API_KEY (14,400 req/day free, https://console.groq.com/keys). The system will then auto-cascade to it on the next quota hit."
+      );
     }
 
     // Either provider — model not found / wrong region
