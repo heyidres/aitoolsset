@@ -33,6 +33,9 @@ type FindToolResult =
       cmsToolId?: string;
       /** Real DB reviews adapted to the legacy shape. Only set when CMS. */
       reviewsOverride?: LegacyReview[];
+      /** CMS-supplied SEO overrides. Blank → auto-generate from name + tagline. */
+      seoTitle?: string | null;
+      seoDescription?: string | null;
     }
   | null;
 
@@ -133,6 +136,8 @@ async function findTool(slug: string): Promise<FindToolResult> {
     sidebarOverrides: buildSidebarOverrides(cms),
     cmsToolId: cms.id,
     reviewsOverride: cmsReviews.map(cmsReviewToLegacy),
+    seoTitle: cms.seoTitle,
+    seoDescription: cms.seoDescription,
   };
 }
 
@@ -141,19 +146,28 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
-  const found = await findTool(slug);
-  if (!found) return { title: "Tool not found" };
-  const { tool } = found;
-  return {
-    title: `${tool.name} — AI Tools Set`,
-    description: tool.desc,
-    openGraph: {
-      title: `${tool.name} — AI Tools Set`,
-      description: tool.desc,
-      url: `https://aitoolsset.com/ai-tool/${tool.id}`,
-    },
-  };
+  try {
+    const { slug } = await params;
+    const found = await findTool(slug);
+    if (!found) return { title: "Tool not found" };
+    const { tool, seoTitle, seoDescription } = found;
+    const title = seoTitle?.trim() || `${tool.name} — AI Tools Set`;
+    const description = seoDescription?.trim() || tool.desc;
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        url: `https://aitoolsset.com/ai-tool/${tool.id}`,
+      },
+    };
+  } catch (err) {
+    // Metadata MUST never throw — bubbling would 500 the route before
+    // error.tsx can render. Match the category-page pattern.
+    console.error("[ai-tool/[slug]] generateMetadata failed", err);
+    return { title: "AI Tools Set" };
+  }
 }
 
 export default async function ToolDetailPage({ params }: { params: Promise<{ slug: string }> }) {

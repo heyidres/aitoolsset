@@ -51,6 +51,8 @@ export default async function EditToolPage({ params }: { params: Promise<{ id: s
     pros: tool.pros ?? [],
     cons: tool.cons ?? [],
     plans: tool.plans ?? [],
+    seoTitle: tool.seoTitle ?? "",
+    seoDescription: tool.seoDescription ?? "",
   };
 
   const action = async (formData: FormData) => {

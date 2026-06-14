@@ -64,6 +64,9 @@ export type ToolFormValues = {
   pros: string[];
   cons: string[];
   plans: Plan[];
+  // SEO overrides — blank = use auto-generated defaults
+  seoTitle: string;
+  seoDescription: string;
 };
 
 const EMPTY: ToolFormValues = {
@@ -95,6 +98,8 @@ const EMPTY: ToolFormValues = {
   pros: [],
   cons: [],
   plans: [],
+  seoTitle: "",
+  seoDescription: "",
 };
 
 function slugify(input: string): string {
@@ -591,6 +596,35 @@ export function ToolForm({
 
           <Section title="Pricing plans">
             <PlansEditor plans={values.plans} onChange={(p) => update("plans", p)} />
+          </Section>
+
+          <Section title="SEO (optional)">
+            <Field
+              label="Meta title"
+              hint="Overrides the public <title> tag. Leave blank to auto-generate from name + tagline. Max ~60 chars for full Google display."
+            >
+              <input
+                type="text"
+                name="seoTitle"
+                value={values.seoTitle}
+                onChange={(e) => update("seoTitle", e.target.value)}
+                maxLength={120}
+                placeholder="e.g. Midjourney Review 2026 — Best AI Image Generator?"
+              />
+            </Field>
+            <Field
+              label="Meta description"
+              hint="Search-result snippet. Blank = uses the tagline. Max ~160 chars."
+            >
+              <textarea
+                name="seoDescription"
+                rows={3}
+                value={values.seoDescription}
+                onChange={(e) => update("seoDescription", e.target.value)}
+                maxLength={300}
+                placeholder="e.g. Hands-on Midjourney review — pricing, output quality, prompt examples, and how it compares to DALL-E 3 and Stable Diffusion."
+              />
+            </Field>
           </Section>
 
           <Section title="Media">

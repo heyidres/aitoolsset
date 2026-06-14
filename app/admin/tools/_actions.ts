@@ -68,6 +68,8 @@ const ToolInput = z.object({
   prosJson: z.string().optional().default(""),
   consJson: z.string().optional().default(""),
   plansJson: z.string().optional().default(""),
+  seoTitle: z.string().optional().default(""),
+  seoDescription: z.string().optional().default(""),
 });
 
 function asBool(v: string | undefined | null): boolean {
@@ -123,6 +125,8 @@ function parseFormData(fd: FormData) {
     prosJson: (fd.get("prosJson") as string) ?? "",
     consJson: (fd.get("consJson") as string) ?? "",
     plansJson: (fd.get("plansJson") as string) ?? "",
+    seoTitle: (fd.get("seoTitle") as string) ?? "",
+    seoDescription: (fd.get("seoDescription") as string) ?? "",
   });
 }
 
@@ -179,6 +183,8 @@ function valuesFromInput(input: z.infer<typeof ToolInput>) {
     pros: safeJsonParse<string[]>(input.prosJson),
     cons: safeJsonParse<string[]>(input.consJson),
     plans: safeJsonParse<Array<{ name: string; price: string; period: string; popular?: boolean; feats: string[] }>>(input.plansJson),
+    seoTitle: input.seoTitle || null,
+    seoDescription: input.seoDescription || null,
   };
 }
 

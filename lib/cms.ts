@@ -78,6 +78,9 @@ export type CmsTool = {
   pros: string[] | null;
   cons: string[] | null;
   plans: CmsPlan[] | null;
+  /** Per-tool SEO overrides — public page falls back to name + tagline. */
+  seoTitle: string | null;
+  seoDescription: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -119,6 +122,8 @@ function toCmsTool(row: typeof tools.$inferSelect): CmsTool {
     pros: row.pros,
     cons: row.cons,
     plans: row.plans,
+    seoTitle: row.seoTitle,
+    seoDescription: row.seoDescription,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };

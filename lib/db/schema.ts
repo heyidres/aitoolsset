@@ -169,6 +169,12 @@ export const tools = pgTable(
     reviewCount: integer("review_count").notNull().default(0),
     avgRating: integer("avg_rating").notNull().default(0), // stored as rating*10 (47 = 4.7)
     deal: jsonb("deal").$type<{ label: string; expires: string } | null>(),
+
+    // SEO — overrides for the public tool detail page <title> / description.
+    // Fall back to generated defaults (name + tagline) when blank.
+    seoTitle: text("seo_title"),
+    seoDescription: text("seo_description"),
+
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
