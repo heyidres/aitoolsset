@@ -43,7 +43,9 @@ const ToolInput = z.object({
   tagline: z.string().min(1).max(140),
   domain: z.string().min(1).max(120),
   websiteUrl: z.string().url(),
+  linkRel: z.enum(["dofollow", "nofollow", "sponsored", "ugc"]).default("nofollow"),
   category: z.string().min(1),
+  extraCategoriesJson: z.string().optional().default(""),
   pricing: z.enum(["free", "freemium", "paid"]),
   description: z.string().min(1),
   tagsCsv: z.string().optional().default(""),
@@ -94,7 +96,13 @@ function parseFormData(fd: FormData) {
     tagline: (fd.get("tagline") as string) ?? "",
     domain: ((fd.get("domain") as string) ?? "").replace(/^https?:\/\//i, "").replace(/\/.*$/, ""),
     websiteUrl: (fd.get("websiteUrl") as string) ?? "",
+    linkRel: ((fd.get("linkRel") as string) ?? "nofollow") as
+      | "dofollow"
+      | "nofollow"
+      | "sponsored"
+      | "ugc",
     category: (fd.get("category") as string) ?? "",
+    extraCategoriesJson: (fd.get("extraCategoriesJson") as string) ?? "",
     pricing: ((fd.get("pricing") as string) ?? "freemium") as "free" | "freemium" | "paid",
     description: (fd.get("description") as string) ?? "",
     tagsCsv: (fd.get("tagsCsv") as string) ?? "",
@@ -126,14 +134,31 @@ function tagsFromCsv(csv: string): string[] {
     .slice(0, 12);
 }
 
+function safeParseSlugs(raw: string): string[] {
+  if (!raw.trim()) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((s): s is string => typeof s === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
 function valuesFromInput(input: z.infer<typeof ToolInput>) {
+  const extras = safeParseSlugs(input.extraCategoriesJson).filter((s) => s !== input.category);
+  // Store EVERY category the tool belongs to in `categories` — including
+  // the primary. That lets getToolsByCategory() match with a single
+  // jsonb-contains check.
+  const allCategories = Array.from(new Set([input.category, ...extras])).filter(Boolean);
   return {
     slug: input.slug,
     name: input.name,
     tagline: input.tagline,
     domain: input.domain,
     websiteUrl: input.websiteUrl,
+    linkRel: input.linkRel,
     category: input.category,
+    categories: allCategories,
     tags: tagsFromCsv(input.tagsCsv),
     description: input.description,
     pricing: input.pricing,

@@ -31,13 +31,18 @@ type Socials = {
 type Feature = { title: string; desc: string };
 type Plan = { name: string; price: string; period: string; popular?: boolean; feats: string[] };
 
+export type LinkRel = "dofollow" | "nofollow" | "sponsored" | "ugc";
+
 export type ToolFormValues = {
   name: string;
   slug: string;
   tagline: string;
   domain: string;
   websiteUrl: string;
+  linkRel: LinkRel;
   category: string;
+  /** Additional category slugs (excluding the primary). */
+  extraCategories: string[];
   pricing: "free" | "freemium" | "paid";
   description: string;
   tagsCsv: string;
@@ -67,7 +72,9 @@ const EMPTY: ToolFormValues = {
   tagline: "",
   domain: "",
   websiteUrl: "",
+  linkRel: "nofollow",
   category: "",
+  extraCategories: [],
   pricing: "freemium",
   description: "",
   tagsCsv: "",
@@ -214,6 +221,7 @@ export function ToolForm({
       <input type="hidden" name="prosJson" value={JSON.stringify(values.pros)} />
       <input type="hidden" name="consJson" value={JSON.stringify(values.cons)} />
       <input type="hidden" name="plansJson" value={JSON.stringify(values.plans)} />
+      <input type="hidden" name="extraCategoriesJson" value={JSON.stringify(values.extraCategories)} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 28 }}>
         {/* MAIN COLUMN */}
@@ -286,21 +294,47 @@ export function ToolForm({
               </Field>
             </Row>
 
+            <Field
+              label="Link rel"
+              required
+              hint="SEO rel attribute on the public 'Visit website' button. Dofollow passes PageRank; nofollow is the safe default for free listings; sponsored is for paid/affiliate; ugc is for user submissions."
+            >
+              <select
+                name="linkRel"
+                required
+                value={values.linkRel}
+                onChange={(e) => update("linkRel", e.target.value as LinkRel)}
+              >
+                <option value="nofollow">nofollow (default — no PageRank passed)</option>
+                <option value="dofollow">dofollow (search engines follow normally)</option>
+                <option value="sponsored">sponsored (paid placement / affiliate)</option>
+                <option value="ugc">ugc (user-generated content)</option>
+              </select>
+            </Field>
+
             <Row>
               <Field
-                label="Category"
+                label="Primary category"
                 required
                 hint={
                   usingFallback
                     ? "No CMS categories yet — showing default list. Add categories in /admin/categories to manage your own."
-                    : `${cats.length} categories available — manage at /admin/categories`
+                    : "Used for the breadcrumb + canonical URL. Pick additional categories below."
                 }
               >
                 <select
                   name="category"
                   required
                   value={values.category}
-                  onChange={(e) => update("category", e.target.value)}
+                  onChange={(e) => {
+                    const newPrimary = e.target.value;
+                    update("category", newPrimary);
+                    // Drop the new primary from extras if it was there
+                    update(
+                      "extraCategories",
+                      values.extraCategories.filter((s) => s !== newPrimary)
+                    );
+                  }}
                 >
                   <option value="">Choose…</option>
                   {cats.map((c) => (
@@ -323,6 +357,18 @@ export function ToolForm({
                 </select>
               </Field>
             </Row>
+
+            <Field
+              label="Additional categories"
+              hint="Tool also surfaces on each of these category pages. Click to add or remove."
+            >
+              <CategoryChipsPicker
+                allCategories={cats}
+                primary={values.category}
+                selected={values.extraCategories}
+                onChange={(next) => update("extraCategories", next)}
+              />
+            </Field>
 
             <Field label="Tags" hint="Comma-separated. e.g. Image, Generative, Art">
               <input
@@ -1043,6 +1089,75 @@ function ImageUpload({
           {err}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Multi-select category chips. The "primary" category (chosen via
+ * the dropdown above) is shown as a disabled chip with a star
+ * indicator and cannot be removed here — to swap it, change the
+ * dropdown selection.
+ */
+function CategoryChipsPicker({
+  allCategories,
+  primary,
+  selected,
+  onChange,
+}: {
+  allCategories: CategoryOption[];
+  primary: string;
+  selected: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const toggle = (slug: string) => {
+    if (slug === primary) return; // primary is managed via the dropdown
+    if (selected.includes(slug)) {
+      onChange(selected.filter((s) => s !== slug));
+    } else {
+      onChange([...selected, slug]);
+    }
+  };
+
+  if (allCategories.length === 0) {
+    return (
+      <div style={{ fontSize: 12, color: "var(--text-3)" }}>
+        No categories available. Add some at /admin/categories first.
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+      {allCategories.map((c) => {
+        const isPrimary = c.slug === primary;
+        const isSelected = selected.includes(c.slug);
+        const active = isPrimary || isSelected;
+        return (
+          <button
+            key={c.slug}
+            type="button"
+            onClick={() => toggle(c.slug)}
+            disabled={isPrimary}
+            title={isPrimary ? "Primary category (change via dropdown above)" : undefined}
+            style={{
+              padding: "5px 12px",
+              borderRadius: 100,
+              fontSize: 12,
+              fontWeight: 600,
+              border: `1.5px solid ${active ? "var(--blue)" : "var(--border)"}`,
+              background: active ? "var(--blue)" : "var(--white)",
+              color: active ? "#fff" : "var(--text-2)",
+              cursor: isPrimary ? "default" : "pointer",
+              opacity: isPrimary ? 0.85 : 1,
+              transition: "all .15s",
+            }}
+          >
+            {isPrimary ? "★ " : ""}
+            {c.name}
+          </button>
+        );
+      })}
     </div>
   );
 }

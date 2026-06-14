@@ -29,7 +29,31 @@ export type ToolHeaderOverrides = {
   startingPrice?: string | null;
   launched?: string | null;
   madeBy?: string | null;
+  /** Exact website URL — falls back to `https://{tool.domain}` */
+  websiteUrl?: string | null;
+  /** SEO rel attribute for the "Visit website" CTA. */
+  linkRel?: "dofollow" | "nofollow" | "sponsored" | "ugc" | null;
 };
+
+/**
+ * Build the `rel` attribute for the public website CTA.
+ * Always keeps `noopener noreferrer` for security (we open in a new tab).
+ * The SEO directive ('dofollow' adds nothing, the others append their keyword).
+ */
+function buildLinkRel(kind: ToolHeaderOverrides["linkRel"]): string {
+  const security = "noopener noreferrer";
+  switch (kind) {
+    case "nofollow":
+      return `nofollow ${security}`;
+    case "sponsored":
+      return `sponsored ${security}`;
+    case "ugc":
+      return `ugc ${security}`;
+    case "dofollow":
+    default:
+      return security;
+  }
+}
 
 export function ToolHeader({
   tool,
@@ -151,9 +175,9 @@ export function ToolHeader({
 
           <div className="flex gap-2 flex-shrink-0 items-start flex-wrap">
             <a
-              href={`https://${tool.domain}`}
+              href={overrides?.websiteUrl || `https://${tool.domain}`}
               target="_blank"
-              rel="noopener noreferrer"
+              rel={buildLinkRel(overrides?.linkRel ?? "nofollow")}
               className="font-display text-[14.5px] font-bold text-white px-[26px] py-[11px] rounded-pill flex items-center gap-[7px] whitespace-nowrap transition-colors hover:bg-blue-h"
               style={{ background: "var(--blue)" }}
             >

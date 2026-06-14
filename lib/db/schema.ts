@@ -116,7 +116,21 @@ export const tools = pgTable(
     tagline: text("tagline").notNull().default(""),
     domain: text("domain").notNull(),
     websiteUrl: text("website_url").notNull().default(""),
-    category: text("category").notNull(),
+    /**
+     * rel attribute applied to the public website link.
+     * 'dofollow' = no extra rel (search engines follow normally);
+     * 'nofollow' = no PageRank passed (default for unverified listings);
+     * 'sponsored' = paid placement / affiliate link;
+     * 'ugc' = user-generated submission.
+     */
+    linkRel: text("link_rel").notNull().default("nofollow"),
+    category: text("category").notNull(), // primary category — used for breadcrumb + sorting
+    /**
+     * Additional categories the tool also belongs to. The tool surfaces
+     * on every /ai-tools/<slug> page whose slug appears here OR matches
+     * the primary `category` column above.
+     */
+    categories: jsonb("categories").$type<string[]>().notNull().default([]),
     tags: jsonb("tags").$type<string[]>().notNull().default([]),
     description: text("description").notNull(),
     pricing: text("pricing").notNull(), // "free" | "freemium" | "paid"

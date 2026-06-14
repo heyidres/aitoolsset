@@ -26,7 +26,11 @@ export default async function EditToolPage({ params }: { params: Promise<{ id: s
     tagline: tool.tagline,
     domain: tool.domain,
     websiteUrl: tool.websiteUrl,
+    linkRel: tool.linkRel,
     category: tool.category,
+    // Hydrate extras from the multi-cat column, dropping the primary so
+    // the picker doesn't double-render it.
+    extraCategories: (tool.categories ?? []).filter((s) => s !== tool.category),
     pricing: tool.pricing,
     description: tool.description,
     tagsCsv: tool.tags.join(", "),

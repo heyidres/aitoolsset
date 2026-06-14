@@ -64,6 +64,8 @@ function buildHeaderOverrides(t: CmsTool): ToolHeaderOverrides {
     startingPrice: t.startingPrice,
     launched: t.launched,
     madeBy: t.madeBy,
+    websiteUrl: t.websiteUrl || null,
+    linkRel: t.linkRel,
   };
 }
 
@@ -112,6 +114,8 @@ function buildSidebarOverrides(t: CmsTool): ToolSidebarOverrides {
   return {
     quickInfo,
     tags: t.tags.length > 0 ? t.tags : undefined,
+    websiteUrl: t.websiteUrl || null,
+    linkRel: t.linkRel,
   };
 }
 

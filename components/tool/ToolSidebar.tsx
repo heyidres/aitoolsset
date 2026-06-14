@@ -8,7 +8,26 @@ export type ToolSidebarOverrides = {
   quickInfo?: Array<{ label: string; val: string; cls?: "green" | "blue" }>;
   /** Override for the tag pills shown in the Tags card. */
   tags?: string[];
+  /** Exact website URL — falls back to `https://{tool.domain}` */
+  websiteUrl?: string | null;
+  /** SEO rel attribute for the Quick-Info website link. */
+  linkRel?: "dofollow" | "nofollow" | "sponsored" | "ugc" | null;
 };
+
+function buildLinkRel(kind: ToolSidebarOverrides["linkRel"]): string {
+  const security = "noopener noreferrer";
+  switch (kind) {
+    case "nofollow":
+      return `nofollow ${security}`;
+    case "sponsored":
+      return `sponsored ${security}`;
+    case "ugc":
+      return `ugc ${security}`;
+    case "dofollow":
+    default:
+      return security;
+  }
+}
 
 export function ToolSidebar({
   tool,
@@ -54,9 +73,9 @@ export function ToolSidebar({
               Website
             </span>
             <a
-              href={`https://${tool.domain}`}
+              href={overrides?.websiteUrl || `https://${tool.domain}`}
               target="_blank"
-              rel="noopener noreferrer"
+              rel={buildLinkRel(overrides?.linkRel ?? "nofollow")}
               className="font-bold"
               style={{ color: "var(--blue)" }}
             >

@@ -46,7 +46,12 @@ export type CmsTool = {
   tagline: string;
   domain: string;
   websiteUrl: string;
+  /** rel attribute applied to the public website CTA. */
+  linkRel: "nofollow" | "dofollow" | "sponsored" | "ugc";
+  /** Primary category (used for breadcrumb + canonical URL). */
   category: string;
+  /** Additional categories — tool surfaces on each of these category pages. */
+  categories: string[];
   tags: string[];
   description: string;
   pricing: "free" | "freemium" | "paid";
@@ -86,7 +91,9 @@ function toCmsTool(row: typeof tools.$inferSelect): CmsTool {
     tagline: row.tagline,
     domain: row.domain,
     websiteUrl: row.websiteUrl,
+    linkRel: (row.linkRel as CmsTool["linkRel"]) ?? "nofollow",
     category: row.category,
+    categories: Array.isArray(row.categories) ? row.categories : [],
     tags: row.tags,
     description: row.description,
     pricing: row.pricing as CmsTool["pricing"],
@@ -156,12 +163,23 @@ export async function getToolById(id: string): Promise<CmsTool | null> {
   return row ? toCmsTool(row) : null;
 }
 
-/** Tools belonging to a category slug, published only. */
+/**
+ * Tools listed under a category slug, published only.
+ *
+ * A tool belongs to a category page if EITHER:
+ *   - its primary `category` column matches the slug, OR
+ *   - its `categories` jsonb array contains the slug
+ *
+ * The `@>` operator does a containment check against the jsonb array.
+ */
 export async function getToolsByCategory(categorySlug: string): Promise<CmsTool[]> {
+  const containsArg = JSON.stringify([categorySlug]);
   const rows = await db
     .select()
     .from(tools)
-    .where(sql`${tools.category} = ${categorySlug} AND ${tools.status} = 'published'`)
+    .where(
+      sql`(${tools.category} = ${categorySlug} OR ${tools.categories} @> ${containsArg}::jsonb) AND ${tools.status} = 'published'`
+    )
     .orderBy(desc(tools.saveCount));
   return rows.map(toCmsTool);
 }
