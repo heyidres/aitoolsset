@@ -79,15 +79,31 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
   const finalCount = cmsTools.length > 0 ? cmsTools.length : found.count;
 
   // Editor's picks — render at the top in a rich Tool-card rail.
-  const pickSlugs = new Set(found.cms?.featuredToolSlugs ?? []);
+  // featuredToolSlugs is jsonb with default []; be defensive against null/non-array
+  // values from older rows or any mid-migration state.
+  const rawPicks = found.cms?.featuredToolSlugs;
+  const pickSlugs = new Set(Array.isArray(rawPicks) ? rawPicks : []);
   const featuredTools =
     pickSlugs.size > 0
       ? cmsTools.filter((t) => pickSlugs.has(t.slug)).map(cmsToolToLegacy)
       : [];
 
   const cms = found.cms;
-  const hasCustomHero = !!(cms?.heroTitle || cms?.heroSubtitle || cms?.heroEyebrow);
+  const hasCustomHero = !!(cms?.heroTitle || cms?.heroSubtitle || cms?.heroEyebrow || cms?.bannerImageUrl);
   const hasIntro = !!cms?.introHtml?.trim();
+
+  // Sanitize once on the server. If DOMPurify throws (rare — happens
+  // when jsdom can't init in a constrained runtime), fall back to a
+  // plain-text strip so the page still renders.
+  let introHtmlSafe = "";
+  if (hasIntro && cms?.introHtml) {
+    try {
+      introHtmlSafe = sanitizeHtml(cms.introHtml);
+    } catch (err) {
+      console.error("[category page] sanitizeHtml failed", { slug, err });
+      introHtmlSafe = cms.introHtml.replace(/<[^>]+>/g, "");
+    }
+  }
 
   return (
     <main>
@@ -117,7 +133,7 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
       {hasIntro ? (
         <section className="px-9 py-14 section-pad-x bg-white" style={{ borderBottom: "1px solid var(--border)" }}>
           <div className="max-w-[820px] mx-auto">
-            <article className="tool-prose" dangerouslySetInnerHTML={{ __html: sanitizeHtml(cms!.introHtml ?? "") }} />
+            <article className="tool-prose" dangerouslySetInnerHTML={{ __html: introHtmlSafe }} />
           </div>
         </section>
       ) : (
@@ -240,7 +256,13 @@ function CustomCategoryHero({
           <span>
             🔄 Updated{" "}
             <strong style={{ color: "#fff", fontWeight: 800 }}>
-              {cms.updatedAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              {(() => {
+                // Neon HTTP can return timestamps as strings; coerce defensively.
+                const d = cms.updatedAt instanceof Date ? cms.updatedAt : new Date(cms.updatedAt as unknown as string);
+                return isNaN(d.getTime())
+                  ? "recently"
+                  : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+              })()}
             </strong>
           </span>
         </div>
