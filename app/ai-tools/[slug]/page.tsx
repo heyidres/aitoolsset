@@ -34,7 +34,10 @@ async function findCategory(slug: string): Promise<FoundCategory | null> {
   // Prefer the CMS row (it carries all editorial fields). Fall
   // back to the hardcoded ALL_CATS entry for backwards compat
   // until the editor seeds defaults.
-  const cms = await getCategoryBySlug(slug).catch(() => null);
+  const cms = await getCategoryBySlug(slug).catch((e) => {
+    console.error("[findCategory] getCategoryBySlug threw", { slug, err: e });
+    return null;
+  });
   if (cms) return { name: cms.name, slug: cms.slug, count: 0, cms };
   const hardcoded = ALL_CATS.find((c) => c.slug === slug);
   if (hardcoded) return { name: hardcoded.name, slug: hardcoded.slug, count: hardcoded.count, cms: null };
@@ -46,24 +49,31 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
-  const found = await findCategory(slug);
-  if (!found) return { title: "Category not found" };
-  const cms = found.cms;
-  const title = cms?.seoTitle ?? `Best AI ${found.name} Tools 2026 — Top Tools Reviewed | AI Tools Set`;
-  const description =
-    cms?.seoDescription ??
-    `Discover the best AI ${found.name.toLowerCase()} tools of 2026. Browse hand-picked AI tools. Compare pricing, features, and user reviews.`;
-  return {
-    title,
-    description,
-    openGraph: {
-      title: cms?.seoTitle ?? `Best AI ${found.name} Tools 2026 | AI Tools Set`,
+  try {
+    const { slug } = await params;
+    const found = await findCategory(slug);
+    if (!found) return { title: "Category not found" };
+    const cms = found.cms;
+    const title = cms?.seoTitle ?? `Best AI ${found.name} Tools 2026 — Top Tools Reviewed | AI Tools Set`;
+    const description =
+      cms?.seoDescription ??
+      `Discover the best AI ${found.name.toLowerCase()} tools of 2026. Browse hand-picked AI tools. Compare pricing, features, and user reviews.`;
+    return {
+      title,
       description,
-      url: `https://aitoolsset.com/ai-tools/${found.slug}`,
-      images: cms?.bannerImageUrl ? [{ url: cms.bannerImageUrl }] : undefined,
-    },
-  };
+      openGraph: {
+        title: cms?.seoTitle ?? `Best AI ${found.name} Tools 2026 | AI Tools Set`,
+        description,
+        url: `https://aitoolsset.com/ai-tools/${found.slug}`,
+        images: cms?.bannerImageUrl ? [{ url: cms.bannerImageUrl }] : undefined,
+      },
+    };
+  } catch (err) {
+    // Metadata MUST never throw — if it does Next.js 500s the whole
+    // route segment before error.tsx can render. Swallow + log.
+    console.error("[ai-tools/[slug]] generateMetadata failed", err);
+    return { title: "AI Tools — AI Tools Set" };
+  }
 }
 
 export default async function CategoryDetailPage({ params }: { params: Promise<{ slug: string }> }) {
