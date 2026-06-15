@@ -14,9 +14,18 @@ import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { ReadingProgress } from "@/components/blog/ReadingProgress";
 import { BlogSidebar } from "@/components/blog/BlogSidebar";
-import { getBlogPostBySlug, type CmsBlogPost } from "@/lib/cms";
-import { JsonLd, articleJsonLd, breadcrumbJsonLd } from "@/lib/json-ld";
-import { sanitizeHtml } from "@/lib/sanitize";
+import { BlogBody } from "@/components/blog/BlogBody";
+import { BlogFaqs } from "@/components/blog/BlogFaqs";
+import { AuthorByline } from "@/components/blog/AuthorByline";
+import { AuthorCards } from "@/components/blog/AuthorCards";
+import {
+  getBlogPostBySlug,
+  getAuthorsBySlugs,
+  getAuthorBySlug,
+  type CmsBlogPost,
+  type CmsAuthor,
+} from "@/lib/cms";
+import { JsonLd, articleJsonLd, breadcrumbJsonLd, faqJsonLd } from "@/lib/json-ld";
 import LegacyGpt5Article, { LEGACY_METADATA } from "./LegacyGpt5Article";
 
 export const runtime = "nodejs";
@@ -26,32 +35,37 @@ export const revalidate = 60;
 const LEGACY_SLUG = "gpt-5-complete-guide";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
-  if (slug === LEGACY_SLUG) {
-    return {
-      title: LEGACY_METADATA.title,
-      description: LEGACY_METADATA.description,
-      openGraph: {
+  try {
+    const { slug } = await params;
+    if (slug === LEGACY_SLUG) {
+      return {
         title: LEGACY_METADATA.title,
         description: LEGACY_METADATA.description,
+        openGraph: {
+          title: LEGACY_METADATA.title,
+          description: LEGACY_METADATA.description,
+          type: "article",
+          url: `https://aitoolsset.com/blog/${slug}`,
+        },
+      };
+    }
+    const post = await getBlogPostBySlug(slug).catch(() => null);
+    if (!post || post.status !== "published") return { title: "Article not found" };
+    return {
+      title: post.seoTitle ?? `${post.title} — AI Tools Set Blog`,
+      description: post.seoDescription ?? post.deck ?? undefined,
+      openGraph: {
+        title: post.title,
+        description: post.deck ?? undefined,
         type: "article",
         url: `https://aitoolsset.com/blog/${slug}`,
+        images: post.coverImageUrl ? [{ url: post.coverImageUrl }] : undefined,
       },
     };
+  } catch (err) {
+    console.error("[blog/[slug]] generateMetadata failed", err);
+    return { title: "AI Tools Set Blog" };
   }
-  const post = await getBlogPostBySlug(slug).catch(() => null);
-  if (!post || post.status !== "published") return { title: "Article not found" };
-  return {
-    title: post.seoTitle ?? `${post.title} — AI Tools Set Blog`,
-    description: post.seoDescription ?? post.deck ?? undefined,
-    openGraph: {
-      title: post.title,
-      description: post.deck ?? undefined,
-      type: "article",
-      url: `https://aitoolsset.com/blog/${slug}`,
-      images: post.coverImageUrl ? [{ url: post.coverImageUrl }] : undefined,
-    },
-  };
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -63,7 +77,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const post = await getBlogPostBySlug(slug).catch(() => null);
   if (!post || post.status !== "published") notFound();
 
-  return <CmsPostRenderer post={post} />;
+  // Resolve every author + reviewer in parallel for the rich byline + bio cards.
+  const [authors, reviewedBy] = await Promise.all([
+    getAuthorsBySlugs(post.authorSlugs).catch(() => []),
+    post.reviewedBySlug ? getAuthorBySlug(post.reviewedBySlug).catch(() => null) : Promise.resolve(null),
+  ]);
+
+  return <CmsPostRenderer post={post} authors={authors} reviewedBy={reviewedBy} />;
 }
 
 function fmtDate(d: Date | string | null): string {
@@ -72,14 +92,29 @@ function fmtDate(d: Date | string | null): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function CmsPostRenderer({ post }: { post: CmsBlogPost }) {
-  const author = post.author ?? "AI Tools Set Research Team";
-  const initials = author
-    .split(" ")
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+async function CmsPostRenderer({
+  post,
+  authors,
+  reviewedBy,
+}: {
+  post: CmsBlogPost;
+  authors: CmsAuthor[];
+  reviewedBy: CmsAuthor | null;
+}) {
+  // Person JSON-LD URLs for each author — fed into Article author array
+  // so Google maps the byline to a verified Person entity.
+  const authorJsonLd = authors.map((a) => ({
+    "@type": "Person",
+    name: a.name,
+    url: `https://aitoolsset.com/blog/author/${a.slug}`,
+    ...(a.photoUrl ? { image: a.photoUrl } : {}),
+    ...(a.role ? { jobTitle: a.role } : {}),
+    sameAs: [a.websiteUrl, a.linkedinUrl, a.xUrl, a.githubUrl].filter(Boolean),
+  }));
+
+  // Legacy fallback: when no CMS authors are linked, show the free-text byline.
+  const legacyAuthorName =
+    authors.length === 0 ? (post.author ?? "AI Tools Set Research Team") : null;
 
   return (
     <main>
@@ -93,17 +128,29 @@ function CmsPostRenderer({ post }: { post: CmsBlogPost }) {
             author: post.author,
             publishedAt: post.publishedAt,
             updatedAt: post.updatedAt,
+            ...(authorJsonLd.length > 0 ? { authors: authorJsonLd } : {}),
+            ...(reviewedBy
+              ? {
+                  reviewedBy: {
+                    "@type": "Person",
+                    name: reviewedBy.name,
+                    url: `https://aitoolsset.com/blog/author/${reviewedBy.slug}`,
+                  },
+                }
+              : {}),
           }),
           breadcrumbJsonLd([
             { name: "Home", url: "/" },
             { name: "Blog", url: "/blog" },
             { name: post.title, url: `/blog/${post.slug}` },
           ]),
+          ...(post.faqs.length > 0 ? [faqJsonLd(post.faqs.map((f) => ({ q: f.q, a: f.a })))] : []),
         ]}
       />
       <Nav />
       <ReadingProgress />
 
+      {/* HERO — title, deck, byline.  Centered narrow column (760px). */}
       <section className="bg-white px-9 pt-12 pb-10 section-pad-x" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="max-w-[760px] mx-auto">
           <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-[12.5px] font-medium mb-[22px] flex-wrap" style={{ color: "var(--text-3)" }}>
@@ -125,10 +172,10 @@ function CmsPostRenderer({ post }: { post: CmsBlogPost }) {
             className="mb-[18px]"
             style={{
               fontFamily: "var(--font-lora), Georgia, serif",
-              fontSize: "clamp(36px, 4.2vw, 52px)",
+              fontSize: "clamp(34px, 4.0vw, 48px)",
               fontWeight: 600,
               letterSpacing: "-1px",
-              lineHeight: 1.1,
+              lineHeight: 1.15,
               color: "var(--text)",
             }}
           >
@@ -136,24 +183,25 @@ function CmsPostRenderer({ post }: { post: CmsBlogPost }) {
           </h1>
 
           {post.deck && (
-            <p className="text-lg leading-[1.65] mb-[30px] font-normal" style={{ color: "var(--text-2)" }}>
+            <p
+              className="mb-[30px]"
+              style={{
+                fontSize: 18,
+                lineHeight: 1.6,
+                color: "var(--text-2)",
+                fontWeight: 400,
+              }}
+            >
               {post.deck}
             </p>
           )}
 
           <div className="flex items-center gap-[14px] flex-wrap">
-            <div className="flex items-center gap-[10px]">
-              <div
-                className="w-[42px] h-[42px] rounded-full flex items-center justify-center text-white font-display text-sm font-extrabold flex-shrink-0"
-                style={{ background: "linear-gradient(135deg, #0052ff, #578bfa)" }}
-              >
-                {initials}
-              </div>
-              <div className="flex flex-col">
-                <div className="font-display text-sm font-extrabold" style={{ color: "var(--text)" }}>{author}</div>
-                <div className="text-xs" style={{ color: "var(--text-3)" }}>AI Tools Set</div>
-              </div>
-            </div>
+            {authors.length > 0 ? (
+              <AuthorByline authors={authors} reviewedBy={reviewedBy} />
+            ) : (
+              <LegacyByline name={legacyAuthorName ?? "AI Tools Set"} />
+            )}
             {post.publishedAt && (
               <>
                 <span className="w-[3px] h-[3px] rounded-full" style={{ background: "var(--border-2)" }} />
@@ -182,9 +230,9 @@ function CmsPostRenderer({ post }: { post: CmsBlogPost }) {
         </div>
       </section>
 
-      {/* Cover image */}
+      {/* Cover image — same narrow column to feel centered with the article. */}
       {post.coverImageUrl && (
-        <div className="max-w-[1080px] mx-auto px-9 section-pad-x">
+        <div className="max-w-[860px] mx-auto px-9 section-pad-x">
           <div
             className="rounded-lg overflow-hidden mt-8"
             style={{
@@ -195,15 +243,58 @@ function CmsPostRenderer({ post }: { post: CmsBlogPost }) {
         </div>
       )}
 
-      {/* Body + sidebar */}
+      {/* BODY + sidebar — narrower wrapper centers the two-column grid. */}
       <section className="px-9 py-14 section-pad-x">
-        <div className="max-w-page mx-auto grid grid-cols-[minmax(0,760px)_300px] gap-12 items-start">
-          <article className="tool-prose" dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.body) }} />
+        <div
+          className="blog-layout mx-auto"
+          style={{
+            maxWidth: 1100,
+            display: "grid",
+            gridTemplateColumns: "minmax(0,720px) 280px",
+            gap: 48,
+            alignItems: "start",
+            justifyContent: "center",
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <BlogBody html={post.body} />
+            {post.faqs.length > 0 && <BlogFaqs items={post.faqs} />}
+            {(authors.length > 0 || reviewedBy) && (
+              <AuthorCards authors={authors} reviewedBy={reviewedBy} />
+            )}
+          </div>
           <BlogSidebar />
         </div>
       </section>
 
       <Footer />
     </main>
+  );
+}
+
+function LegacyByline({ name }: { name: string }) {
+  const initials = name
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+  return (
+    <div className="flex items-center gap-[10px]">
+      <div
+        className="w-[42px] h-[42px] rounded-full flex items-center justify-center text-white font-display text-sm font-extrabold flex-shrink-0"
+        style={{ background: "linear-gradient(135deg, #0052ff, #578bfa)" }}
+      >
+        {initials}
+      </div>
+      <div className="flex flex-col">
+        <div className="font-display text-sm font-extrabold" style={{ color: "var(--text)" }}>
+          {name}
+        </div>
+        <div className="text-xs" style={{ color: "var(--text-3)" }}>
+          AI Tools Set
+        </div>
+      </div>
+    </div>
   );
 }

@@ -22,8 +22,11 @@ const Input = z.object({
   deck: z.string().optional().default(""),
   coverImageUrl: z.string().optional().default(""),
   author: z.string().optional().default(""),
+  authorSlugsJson: z.string().optional().default(""),
+  reviewedBySlug: z.string().optional().default(""),
   tagsCsv: z.string().optional().default(""),
   body: z.string().min(1),
+  faqsJson: z.string().optional().default(""),
   readMinutes: z.string().optional().default(""),
   status: z.enum(["draft", "scheduled", "published"]).default("draft"),
   publishedAt: z.string().optional().default(""), // datetime-local
@@ -39,8 +42,11 @@ function parse(fd: FormData) {
     deck: (fd.get("deck") as string) ?? "",
     coverImageUrl: (fd.get("coverImageUrl") as string) ?? "",
     author: (fd.get("author") as string) ?? "",
+    authorSlugsJson: (fd.get("authorSlugsJson") as string) ?? "",
+    reviewedBySlug: (fd.get("reviewedBySlug") as string) ?? "",
     tagsCsv: (fd.get("tagsCsv") as string) ?? "",
     body: (fd.get("body") as string) ?? "",
+    faqsJson: (fd.get("faqsJson") as string) ?? "",
     readMinutes: (fd.get("readMinutes") as string) ?? "",
     status: ((fd.get("status") as string) ?? "draft") as "draft" | "scheduled" | "published",
     publishedAt: (fd.get("publishedAt") as string) ?? "",
@@ -49,8 +55,22 @@ function parse(fd: FormData) {
   });
 }
 
+function safeParseArr<T = unknown>(raw: string): T[] {
+  if (!raw.trim()) return [];
+  try {
+    const p = JSON.parse(raw);
+    return Array.isArray(p) ? (p as T[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 function values(i: z.infer<typeof Input>) {
   const tags = i.tagsCsv.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 12);
+  const authorSlugs = safeParseArr<string>(i.authorSlugsJson)
+    .filter((s) => typeof s === "string" && s.length > 0);
+  const faqs = safeParseArr<{ q: string; a: string }>(i.faqsJson)
+    .filter((f) => f && typeof f.q === "string" && typeof f.a === "string" && f.q.trim() && f.a.trim());
   return {
     slug: i.slug,
     title: i.title,
@@ -58,8 +78,11 @@ function values(i: z.infer<typeof Input>) {
     deck: i.deck || null,
     coverImageUrl: i.coverImageUrl || null,
     author: i.author || null,
+    authorSlugs,
+    reviewedBySlug: i.reviewedBySlug || null,
     tags,
     body: i.body,
+    faqs,
     readMinutes: i.readMinutes ? parseInt(i.readMinutes, 10) : null,
     status: i.status,
     publishedAt: i.publishedAt

@@ -71,19 +71,33 @@ export function articleJsonLd(args: {
   title: string;
   description?: string | null;
   imageUrl?: string | null;
+  /** Legacy free-text byline. Used when no structured authors are provided. */
   author?: string | null;
+  /**
+   * E-E-A-T author entities. When present, takes precedence over `author`
+   * and emits a full Person graph for each (with sameAs, jobTitle, image).
+   */
+  authors?: Json[];
+  /** Optional Person entity for the fact-checker / editor. */
+  reviewedBy?: Json;
   publishedAt?: Date | null;
   updatedAt?: Date | null;
 }): Json {
+  const authorField: Json | Json[] =
+    args.authors && args.authors.length > 0
+      ? args.authors
+      : args.author
+      ? { "@type": "Person", name: args.author }
+      : { "@type": "Organization", name: "AI Tools Set" };
+
   return {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: args.title,
     description: args.description ?? undefined,
     image: args.imageUrl ?? undefined,
-    author: args.author
-      ? { "@type": "Person", name: args.author }
-      : { "@type": "Organization", name: "AI Tools Set" },
+    author: authorField,
+    ...(args.reviewedBy ? { reviewedBy: args.reviewedBy } : {}),
     publisher: {
       "@type": "Organization",
       name: "AI Tools Set",

@@ -431,9 +431,19 @@ export const blogPosts = pgTable(
     category: text("category").notNull(), // Guide | Comparison | Roundup | Tutorial | News | Review
     deck: text("deck"),
     coverImageUrl: text("cover_image_url"),
-    author: text("author"),
+    author: text("author"), // legacy single-author free-text (kept for back-compat)
+    /**
+     * E-E-A-T author attribution. Each slug references authors.slug.
+     * The FIRST entry is the lead byline; subsequent slugs render as
+     * co-authors. Falls back to `author` text when empty.
+     */
+    authorSlugs: jsonb("author_slugs").$type<string[]>().notNull().default([]),
+    /** Optional "Reviewed by" attribution — separate person who fact-checked. */
+    reviewedBySlug: text("reviewed_by_slug"),
     tags: jsonb("tags").$type<string[]>().notNull().default([]),
     body: text("body").notNull().default(""), // HTML from rich text editor
+    /** Q&A pairs rendered below the body as accordion + emitted as FAQ JSON-LD. */
+    faqs: jsonb("faqs").$type<Array<{ q: string; a: string }>>().notNull().default([]),
     readMinutes: integer("read_minutes"),
     status: text("status").notNull().default("draft"), // draft | scheduled | published
     publishedAt: timestamp("published_at", { withTimezone: true }),
@@ -447,6 +457,34 @@ export const blogPosts = pgTable(
     statusIdx: index("blog_post_status_idx").on(t.status),
     publishedAtIdx: index("blog_post_published_at_idx").on(t.publishedAt),
   })
+);
+
+// ── Authors (E-E-A-T) ───────────────────────────────────────
+// Author profiles feed Google's E-E-A-T signals: every byline links
+// to a Person entity with role, credentials, photo, and verifiable
+// external profiles (LinkedIn, X, personal site).
+export const authors = pgTable(
+  "author",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    slug: text("slug").notNull().unique(),
+    name: text("name").notNull(),
+    /** Headline role e.g. "Senior AI Researcher", "Editor-in-Chief". */
+    role: text("role"),
+    /** Short bio HTML — rich text from the admin editor. */
+    bioHtml: text("bio_html"),
+    photoUrl: text("photo_url"),
+    /** Free-text credentials list. e.g. "PhD Stanford", "Ex-OpenAI", "ML Eng @ Google". */
+    credentials: jsonb("credentials").$type<string[]>().notNull().default([]),
+    /** Verifiable external profiles. Surface as rel="me" links for E-E-A-T. */
+    websiteUrl: text("website_url"),
+    linkedinUrl: text("linkedin_url"),
+    xUrl: text("x_url"),
+    githubUrl: text("github_url"),
+    email: text("email"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  }
 );
 
 // ── Deals ───────────────────────────────────────────────────

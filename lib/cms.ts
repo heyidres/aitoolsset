@@ -19,7 +19,8 @@
 
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "./db";
-import { tools, categories, blogPosts, deals, glossaryTerms, reviews, users, savedTools, sitePages } from "./db/schema";
+import { tools, categories, blogPosts, deals, glossaryTerms, reviews, users, savedTools, sitePages, authors } from "./db/schema";
+import { inArray } from "drizzle-orm";
 
 // ── Types ────────────────────────────────────────────────────
 export type CmsSocials = {
@@ -316,9 +317,16 @@ export type CmsBlogPost = {
   category: string;
   deck: string | null;
   coverImageUrl: string | null;
+  /** Legacy free-text byline (back-compat). Prefer `authorSlugs`. */
   author: string | null;
+  /** Multi-author E-E-A-T attribution. First slug = lead byline. */
+  authorSlugs: string[];
+  /** Optional fact-checker / editor attribution. */
+  reviewedBySlug: string | null;
   tags: string[];
   body: string;
+  /** Q&A pairs rendered below body + emitted as FAQ JSON-LD. */
+  faqs: Array<{ q: string; a: string }>;
   readMinutes: number | null;
   status: "draft" | "scheduled" | "published";
   publishedAt: Date | null;
@@ -338,8 +346,11 @@ function toCmsBlogPost(row: typeof blogPosts.$inferSelect): CmsBlogPost {
     deck: row.deck,
     coverImageUrl: row.coverImageUrl,
     author: row.author,
+    authorSlugs: Array.isArray(row.authorSlugs) ? row.authorSlugs : [],
+    reviewedBySlug: row.reviewedBySlug,
     tags: row.tags,
     body: row.body,
+    faqs: Array.isArray(row.faqs) ? row.faqs : [],
     readMinutes: row.readMinutes,
     status: row.status as CmsBlogPost["status"],
     publishedAt: row.publishedAt,
@@ -373,6 +384,85 @@ export async function getBlogPostBySlug(slug: string): Promise<CmsBlogPost | nul
 export async function getBlogPostById(id: string): Promise<CmsBlogPost | null> {
   const [row] = await db.select().from(blogPosts).where(eq(blogPosts.id, id)).limit(1);
   return row ? toCmsBlogPost(row) : null;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Authors (E-E-A-T)
+// ─────────────────────────────────────────────────────────────
+export type CmsAuthor = {
+  id: string;
+  slug: string;
+  name: string;
+  role: string | null;
+  bioHtml: string | null;
+  photoUrl: string | null;
+  credentials: string[];
+  websiteUrl: string | null;
+  linkedinUrl: string | null;
+  xUrl: string | null;
+  githubUrl: string | null;
+  email: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+function toCmsAuthor(row: typeof authors.$inferSelect): CmsAuthor {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    role: row.role,
+    bioHtml: row.bioHtml,
+    photoUrl: row.photoUrl,
+    credentials: Array.isArray(row.credentials) ? row.credentials : [],
+    websiteUrl: row.websiteUrl,
+    linkedinUrl: row.linkedinUrl,
+    xUrl: row.xUrl,
+    githubUrl: row.githubUrl,
+    email: row.email,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+export async function getAllAuthors(): Promise<CmsAuthor[]> {
+  const rows = await db.select().from(authors).orderBy(asc(authors.name));
+  return rows.map(toCmsAuthor);
+}
+
+export async function getAuthorBySlug(slug: string): Promise<CmsAuthor | null> {
+  const [row] = await db.select().from(authors).where(eq(authors.slug, slug)).limit(1);
+  return row ? toCmsAuthor(row) : null;
+}
+
+export async function getAuthorById(id: string): Promise<CmsAuthor | null> {
+  const [row] = await db.select().from(authors).where(eq(authors.id, id)).limit(1);
+  return row ? toCmsAuthor(row) : null;
+}
+
+/** Look up several authors at once, returned in the same order as the input slugs. */
+export async function getAuthorsBySlugs(slugs: string[]): Promise<CmsAuthor[]> {
+  if (slugs.length === 0) return [];
+  const rows = await db.select().from(authors).where(inArray(authors.slug, slugs));
+  const bySlug = new Map(rows.map((r) => [r.slug, toCmsAuthor(r)]));
+  return slugs.map((s) => bySlug.get(s)).filter((a): a is CmsAuthor => !!a);
+}
+
+/** Lightweight options for admin pickers (slug + name only). */
+export async function getAuthorOptions(): Promise<Array<{ slug: string; name: string }>> {
+  const rows = await db.select({ slug: authors.slug, name: authors.name }).from(authors).orderBy(asc(authors.name));
+  return rows;
+}
+
+/** Every published blog post written by the given author slug. */
+export async function getPostsByAuthor(slug: string): Promise<CmsBlogPost[]> {
+  const containsArg = JSON.stringify([slug]);
+  const rows = await db
+    .select()
+    .from(blogPosts)
+    .where(sql`(${blogPosts.authorSlugs} @> ${containsArg}::jsonb OR ${blogPosts.reviewedBySlug} = ${slug}) AND ${blogPosts.status} = 'published'`)
+    .orderBy(desc(blogPosts.publishedAt));
+  return rows.map(toCmsBlogPost);
 }
 
 // ─────────────────────────────────────────────────────────────

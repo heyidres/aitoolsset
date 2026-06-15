@@ -6,15 +6,23 @@ import { RichTextEditor } from "../_components/RichTextEditor";
 
 const CATEGORIES = ["Guide", "Comparison", "Roundup", "Tutorial", "News", "Review", "Opinion"];
 
+export type AuthorOpt = { slug: string; name: string };
+export type ToolOpt = { slug: string; name: string };
+
 export type BlogFormValues = {
   title: string;
   slug: string;
   category: string;
   deck: string;
   coverImageUrl: string;
+  /** Legacy single-name byline (kept for back-compat). */
   author: string;
+  /** E-E-A-T multi-author slugs. First = lead byline. */
+  authorSlugs: string[];
+  reviewedBySlug: string;
   tagsCsv: string;
   body: string;
+  faqs: Array<{ q: string; a: string }>;
   readMinutes: string;
   status: "draft" | "scheduled" | "published";
   publishedAt: string; // datetime-local
@@ -29,8 +37,11 @@ const EMPTY: BlogFormValues = {
   deck: "",
   coverImageUrl: "",
   author: "",
+  authorSlugs: [],
+  reviewedBySlug: "",
   tagsCsv: "",
   body: "",
+  faqs: [],
   readMinutes: "",
   status: "draft",
   publishedAt: "",
@@ -46,10 +57,16 @@ export function BlogForm({
   initial = EMPTY,
   mode,
   action,
+  authorOptions = [],
+  toolOptions = [],
 }: {
   initial?: BlogFormValues;
   mode: "create" | "edit";
   action: (fd: FormData) => Promise<void>;
+  /** CMS authors from /admin/authors. Drives the multi-author picker + reviewed-by select. */
+  authorOptions?: AuthorOpt[];
+  /** Published tools — drives the "+ Tool" embed picker in the rich-text toolbar. */
+  toolOptions?: ToolOpt[];
 }) {
   const [values, setValues] = useState<BlogFormValues>(initial);
   const [slugTouched, setSlugTouched] = useState(!!initial.slug);
@@ -75,6 +92,8 @@ export function BlogForm({
   return (
     <form onSubmit={submit} className="adm-panel" style={{ padding: 28 }}>
       <input type="hidden" name="status" value={values.status} />
+      <input type="hidden" name="authorSlugsJson" value={JSON.stringify(values.authorSlugs)} />
+      <input type="hidden" name="faqsJson" value={JSON.stringify(values.faqs)} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 28 }}>
         <div>
@@ -90,16 +109,42 @@ export function BlogForm({
             <Field label="Deck / subtitle" hint="Optional. Shown under the title.">
               <input type="text" name="deck" maxLength={240} value={values.deck} onChange={(e) => u("deck", e.target.value)} placeholder="Hands-on with every major coding AI…" />
             </Field>
-            <Row>
-              <Field label="Category" required>
-                <select name="category" required value={values.category} onChange={(e) => u("category", e.target.value)}>
-                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </Field>
-              <Field label="Author">
-                <input type="text" name="author" value={values.author} onChange={(e) => u("author", e.target.value)} placeholder="Sarah Park" />
-              </Field>
-            </Row>
+            <Field label="Category" required>
+              <select name="category" required value={values.category} onChange={(e) => u("category", e.target.value)}>
+                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </Field>
+            <Field
+              label="Authors (E-E-A-T)"
+              hint="Click chips to add/remove. First selected = lead byline. Each links to a Person JSON-LD entity with credentials + external profiles."
+            >
+              <AuthorChips
+                allAuthors={authorOptions}
+                selected={values.authorSlugs}
+                onChange={(slugs) => u("authorSlugs", slugs)}
+              />
+            </Field>
+            <Field
+              label="Reviewed by"
+              hint="Optional fact-checker / editor. Renders as a separate Reviewed-By byline — strongest E-E-A-T signal for YMYL content."
+            >
+              <select
+                value={values.reviewedBySlug}
+                onChange={(e) => u("reviewedBySlug", e.target.value)}
+                name="reviewedBySlug"
+              >
+                <option value="">— No reviewer —</option>
+                {authorOptions
+                  .filter((a) => !values.authorSlugs.includes(a.slug))
+                  .map((a) => <option key={a.slug} value={a.slug}>{a.name}</option>)}
+              </select>
+            </Field>
+            <Field
+              label="Legacy byline (back-compat)"
+              hint="Only used when no CMS authors are picked above. Plain text. Leave blank if you're using the multi-author picker."
+            >
+              <input type="text" name="author" value={values.author} onChange={(e) => u("author", e.target.value)} placeholder="Sarah Park" />
+            </Field>
             <Row>
               <Field label="Tags" hint="Comma-separated">
                 <input type="text" name="tagsCsv" value={values.tagsCsv} onChange={(e) => u("tagsCsv", e.target.value)} placeholder="Code, Productivity, Review" />
@@ -115,8 +160,27 @@ export function BlogForm({
           </Section>
 
           <Section title="Body">
-            <Field label="Article body" required hint="Use H2/H3 for sections, bold/italic for emphasis, links to cite sources.">
-              <RichTextEditor name="body" defaultValue={values.body} placeholder="Open with a strong hook…" />
+            <Field
+              label="Article body"
+              required
+              hint={
+                'Use H2/H3 for sections. To embed a tool card mid-article, click "+ Tool" in the toolbar and pick one — it inserts a marker like [[tool:slug]] that renders as a full card on the public page.'
+              }
+            >
+              <BodyEditor
+                value={values.body}
+                onChange={(v) => u("body", v)}
+                toolOptions={toolOptions}
+              />
+            </Field>
+          </Section>
+
+          <Section title="FAQs">
+            <Field
+              label="Frequently asked questions"
+              hint="Renders below the article as accordion AND emitted as FAQ JSON-LD so Google can show the FAQ rich-snippet on the SERP. 3-8 entries work best."
+            >
+              <FaqEditor faqs={values.faqs} onChange={(f) => u("faqs", f)} />
             </Field>
           </Section>
 
@@ -197,6 +261,256 @@ function CoverImageField({ value, onChange }: { value: string; onChange: (v: str
       </div>
       <input type="url" name="coverImageUrl" value={value} onChange={(e) => onChange(e.target.value)} placeholder="Or paste a URL: https://example.com/cover.jpg" style={{ width: "100%", border: "1.5px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 13, background: "var(--white)", outline: "none" }} />
       {err && <div style={{ marginTop: 6, color: "var(--red)", fontSize: 12, fontWeight: 600 }}>{err}</div>}
+    </div>
+  );
+}
+
+/**
+ * RichTextEditor wrapper that adds a "+ Tool" button to the toolbar.
+ * Clicking opens a slug picker; pick a tool and we insert a marker
+ * `[[tool:<slug>]]` on its own line. The public blog renderer splits
+ * the body on these markers and renders a server-side tool card in
+ * place of each one.
+ */
+function BodyEditor({
+  value,
+  onChange,
+  toolOptions,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  toolOptions: ToolOpt[];
+}) {
+  const [picking, setPicking] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const insertMarker = (slug: string) => {
+    // RTE owns the HTML — append a paragraph with the marker.
+    const marker = `<p>[[tool:${slug}]]</p>`;
+    onChange((value ?? "") + marker);
+    setPicking(false);
+    setSearch("");
+  };
+
+  const filtered = toolOptions.filter((t) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return t.name.toLowerCase().includes(q) || t.slug.toLowerCase().includes(q);
+  });
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+        <button
+          type="button"
+          onClick={() => setPicking(true)}
+          className="adm-btn-sm primary"
+          style={{ padding: "6px 12px", fontSize: 12 }}
+        >
+          + Insert tool card
+        </button>
+        <div style={{ fontSize: 11.5, color: "var(--text-3)", alignSelf: "center" }}>
+          Inserts a <code style={{ fontFamily: "var(--mono)" }}>[[tool:slug]]</code> marker — renders as a full tool card on the public page.
+        </div>
+      </div>
+      <RichTextEditor name="body" defaultValue={value} placeholder="Open with a strong hook…" />
+
+      {picking && (
+        <div
+          onClick={() => setPicking(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15,23,42,.55)",
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 24,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: 480,
+              maxHeight: "70vh",
+              background: "#fff",
+              borderRadius: 12,
+              boxShadow: "0 20px 60px rgba(0,0,0,.25)",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ padding: "16px 18px", borderBottom: "1px solid var(--border)" }}>
+              <div style={{ fontFamily: "var(--font-manrope)", fontSize: 14, fontWeight: 800, marginBottom: 8 }}>
+                Insert a tool card
+              </div>
+              <input
+                type="text"
+                autoFocus
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search tools…"
+                style={{
+                  width: "100%",
+                  padding: "8px 10px",
+                  borderRadius: 8,
+                  border: "1.5px solid var(--border)",
+                  fontSize: 13,
+                  outline: "none",
+                }}
+              />
+            </div>
+            <div style={{ overflowY: "auto", flex: 1 }}>
+              {filtered.length === 0 ? (
+                <div style={{ padding: 24, textAlign: "center", color: "var(--text-3)", fontSize: 13 }}>
+                  No tools match.
+                </div>
+              ) : (
+                filtered.map((t) => (
+                  <button
+                    key={t.slug}
+                    type="button"
+                    onClick={() => insertMarker(t.slug)}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      width: "100%",
+                      padding: "10px 16px",
+                      background: "transparent",
+                      border: 0,
+                      borderBottom: "1px solid var(--border)",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      fontSize: 13,
+                    }}
+                  >
+                    <strong style={{ fontWeight: 700 }}>{t.name}</strong>
+                    <code style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--text-3)" }}>{t.slug}</code>
+                  </button>
+                ))
+              )}
+            </div>
+            <div style={{ padding: 12, textAlign: "right", borderTop: "1px solid var(--border)" }}>
+              <button type="button" onClick={() => setPicking(false)} className="adm-btn-sm ghost" style={{ padding: "6px 14px", fontSize: 12 }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AuthorChips({
+  allAuthors,
+  selected,
+  onChange,
+}: {
+  allAuthors: AuthorOpt[];
+  selected: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const toggle = (slug: string) => {
+    if (selected.includes(slug)) {
+      onChange(selected.filter((s) => s !== slug));
+    } else {
+      onChange([...selected, slug]);
+    }
+  };
+
+  if (allAuthors.length === 0) {
+    return (
+      <div style={{ fontSize: 12, color: "var(--text-3)" }}>
+        No authors yet. <Link href="/admin/authors/new" style={{ color: "var(--blue)" }}>Add an author</Link> to attribute this post.
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+      {allAuthors.map((a) => {
+        const idx = selected.indexOf(a.slug);
+        const active = idx >= 0;
+        const isLead = idx === 0;
+        return (
+          <button
+            key={a.slug}
+            type="button"
+            onClick={() => toggle(a.slug)}
+            title={isLead ? "Lead byline" : undefined}
+            style={{
+              padding: "5px 12px",
+              borderRadius: 100,
+              fontSize: 12,
+              fontWeight: 600,
+              border: `1.5px solid ${active ? "var(--blue)" : "var(--border)"}`,
+              background: active ? "var(--blue)" : "var(--white)",
+              color: active ? "#fff" : "var(--text-2)",
+              cursor: "pointer",
+            }}
+          >
+            {isLead ? "★ " : ""}{a.name}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function FaqEditor({
+  faqs,
+  onChange,
+}: {
+  faqs: Array<{ q: string; a: string }>;
+  onChange: (next: Array<{ q: string; a: string }>) => void;
+}) {
+  const update = (i: number, patch: Partial<{ q: string; a: string }>) => {
+    const next = faqs.slice();
+    next[i] = { ...next[i], ...patch };
+    onChange(next);
+  };
+  const remove = (i: number) => onChange(faqs.filter((_, idx) => idx !== i));
+  const add = () => onChange([...faqs, { q: "", a: "" }]);
+
+  if (faqs.length === 0) {
+    return (
+      <button type="button" onClick={add} className="adm-btn-sm ghost" style={{ padding: "8px 14px" }}>
+        + Add first FAQ
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {faqs.map((f, i) => (
+        <div key={i} style={{ border: "1px solid var(--border)", borderRadius: 10, padding: 14 }}>
+          <input
+            type="text"
+            value={f.q}
+            onChange={(e) => update(i, { q: e.target.value })}
+            placeholder="Question"
+            style={{ width: "100%", border: "1.5px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 13, marginBottom: 8, outline: "none", fontWeight: 600 }}
+          />
+          <textarea
+            rows={3}
+            value={f.a}
+            onChange={(e) => update(i, { a: e.target.value })}
+            placeholder="Answer (plain text or basic HTML — links, bold, italics allowed)"
+            style={{ width: "100%", border: "1.5px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 13, outline: "none" }}
+          />
+          <button type="button" onClick={() => remove(i)} className="adm-btn-sm ghost" style={{ marginTop: 6, color: "var(--red)" }}>
+            Remove FAQ
+          </button>
+        </div>
+      ))}
+      <button type="button" onClick={add} className="adm-btn-sm ghost" style={{ padding: "8px 14px" }}>
+        + Add another FAQ
+      </button>
     </div>
   );
 }

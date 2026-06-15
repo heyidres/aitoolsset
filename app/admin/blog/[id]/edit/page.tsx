@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getBlogPostById } from "@/lib/cms";
+import { getBlogPostById, getAuthorOptions, getPublishedTools } from "@/lib/cms";
 import { BlogForm, type BlogFormValues } from "../../BlogForm";
 import { updateBlogPost } from "../../_actions";
 
@@ -18,8 +18,14 @@ function toLocal(d: Date | null): string {
 
 export default async function EditBlogPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const post = await getBlogPostById(id);
+  const [post, authorOptions, allTools] = await Promise.all([
+    getBlogPostById(id),
+    getAuthorOptions().catch(() => []),
+    getPublishedTools().catch(() => []),
+  ]);
   if (!post) notFound();
+
+  const toolOptions = allTools.map((t) => ({ slug: t.slug, name: t.name }));
 
   const initial: BlogFormValues = {
     title: post.title,
@@ -28,8 +34,11 @@ export default async function EditBlogPostPage({ params }: { params: Promise<{ i
     deck: post.deck ?? "",
     coverImageUrl: post.coverImageUrl ?? "",
     author: post.author ?? "",
+    authorSlugs: post.authorSlugs ?? [],
+    reviewedBySlug: post.reviewedBySlug ?? "",
     tagsCsv: post.tags.join(", "),
     body: post.body,
+    faqs: post.faqs ?? [],
     readMinutes: post.readMinutes ? String(post.readMinutes) : "",
     status: post.status,
     publishedAt: toLocal(post.publishedAt),
@@ -42,5 +51,13 @@ export default async function EditBlogPostPage({ params }: { params: Promise<{ i
     await updateBlogPost(id, fd);
   };
 
-  return <BlogForm mode="edit" initial={initial} action={action} />;
+  return (
+    <BlogForm
+      mode="edit"
+      initial={initial}
+      action={action}
+      authorOptions={authorOptions}
+      toolOptions={toolOptions}
+    />
+  );
 }

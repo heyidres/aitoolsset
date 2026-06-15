@@ -82,6 +82,13 @@ const Icon = {
       <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
     </svg>
   ),
+  Authors: () => (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="8.5" cy="7" r="4" />
+      <path d="M20 8v6M23 11h-6" />
+    </svg>
+  ),
   Reviews: () => (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <polygon points="12 2 15 8.5 22 9.3 17 14 18.2 21 12 17.5 5.8 21 7 14 2 9.3 9 8.5 12 2" />
@@ -190,6 +197,7 @@ export function Sidebar({ counts, user }: { counts: SidebarCounts; user: Sidebar
           {item("/admin/tools", "Tools", Icon.Tools, { value: compactCount(counts.tools) })}
           {item("/admin/news", "News", Icon.News)}
           {item("/admin/blog", "Blog", Icon.Blog)}
+          {item("/admin/authors", "Authors", Icon.Authors)}
           {item("/admin/categories", "Categories", Icon.Categories)}
           {item("/admin/deals", "Deals", Icon.Deals)}
           {item("/admin/glossary", "Glossary", Icon.Glossary)}

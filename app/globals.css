@@ -1375,6 +1375,100 @@ body.imgs-dark .imgs-foot { background: rgba(0, 0, 0, .2); border-top-color: rgb
 }
 
 /* ─────────────────────────────────────────────────────────────
+ *  .blog-prose — editorial article body
+ *
+ *  Larger type + darker color + roomier line-height than tool-prose.
+ *  Long-form reading needs higher contrast and bigger leading; this
+ *  class is the upgrade applied on /blog/[slug] only.
+ * ───────────────────────────────────────────────────────────── */
+.blog-prose {
+  font-family: var(--font-dm-sans), sans-serif;
+  font-size: 17px;
+  line-height: 1.78;
+  color: var(--text);
+  word-break: break-word;
+}
+.blog-prose p { margin-bottom: 18px; color: var(--text); }
+.blog-prose p:last-child { margin-bottom: 0; }
+.blog-prose h2 {
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -.5px;
+  margin: 38px 0 14px;
+  color: var(--text);
+  line-height: 1.25;
+}
+.blog-prose h3 {
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -.3px;
+  margin: 28px 0 10px;
+  color: var(--text);
+  line-height: 1.3;
+}
+.blog-prose ul,
+.blog-prose ol {
+  padding-left: 24px;
+  margin-bottom: 20px;
+}
+.blog-prose ul li { list-style: disc; margin-bottom: 8px; color: var(--text); }
+.blog-prose ol li { list-style: decimal; margin-bottom: 8px; color: var(--text); }
+.blog-prose blockquote {
+  border-left: 4px solid var(--blue);
+  padding: 6px 0 6px 18px;
+  margin: 24px 0;
+  color: var(--text);
+  font-style: italic;
+  font-size: 18px;
+  line-height: 1.65;
+}
+.blog-prose a {
+  color: var(--blue);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1.5px;
+  font-weight: 500;
+}
+.blog-prose a:hover { color: var(--blue-h); }
+.blog-prose strong { font-weight: 700; color: var(--text); }
+.blog-prose em { font-style: italic; }
+.blog-prose code {
+  background: var(--surface);
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+  color: var(--text);
+}
+.blog-prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  margin: 24px 0;
+  display: block;
+}
+.blog-prose hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 32px 0;
+}
+
+/* Center the body grid on tablet and shrink to single column under 980px */
+@media (max-width: 1080px) {
+  .blog-layout {
+    grid-template-columns: minmax(0, 720px) !important;
+  }
+  .blog-layout > aside { display: none; }
+}
+@media (max-width: 720px) {
+  .blog-prose { font-size: 16px; line-height: 1.72; }
+  .blog-prose h2 { font-size: 22px; }
+  .blog-prose h3 { font-size: 17.5px; }
+}
+
+/* ─────────────────────────────────────────────────────────────
  *  Mobile baseline — added in Phase 6 to plug remaining gaps
  *  in the per-page prototypes. Most pages already collapse via
  *  page-specific rules above; this section covers everything
