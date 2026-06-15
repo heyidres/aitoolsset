@@ -133,7 +133,8 @@ export const tools = pgTable(
     categories: jsonb("categories").$type<string[]>().notNull().default([]),
     tags: jsonb("tags").$type<string[]>().notNull().default([]),
     description: text("description").notNull(),
-    pricing: text("pricing").notNull(), // "free" | "freemium" | "paid"
+    /** "free" | "freemium" | "paid" | "credit" | "trial" | "enterprise" */
+    pricing: text("pricing").notNull(),
     logoUrl: text("logo_url"),
     screenshotUrl: text("screenshot_url"),
     verified: boolean("verified").notNull().default(false),
@@ -153,8 +154,17 @@ export const tools = pgTable(
       linkedin?: string | null;
       github?: string | null;
       youtube?: string | null;
+      facebook?: string | null;
+      instagram?: string | null;
+      discord?: string | null;
     } | null>(),
     features: jsonb("features").$type<Array<{ title: string; desc: string }> | null>(),
+    /** Concrete jobs the tool helps users complete. e.g. "Generate ad creatives" */
+    useCases: jsonb("use_cases").$type<string[] | null>(),
+    /** OS + surface availability. e.g. "Web", "macOS", "iOS", "API". */
+    platforms: jsonb("platforms").$type<string[] | null>(),
+    /** Third-party integrations. e.g. "Zapier", "Slack", "Notion", "Figma". */
+    integrations: jsonb("integrations").$type<string[] | null>(),
     pros: jsonb("pros").$type<string[] | null>(),
     cons: jsonb("cons").$type<string[] | null>(),
     plans: jsonb("plans").$type<Array<{

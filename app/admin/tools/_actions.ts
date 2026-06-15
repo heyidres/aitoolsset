@@ -46,7 +46,7 @@ const ToolInput = z.object({
   linkRel: z.enum(["dofollow", "nofollow", "sponsored", "ugc"]).default("nofollow"),
   category: z.string().min(1),
   extraCategoriesJson: z.string().optional().default(""),
-  pricing: z.enum(["free", "freemium", "paid"]),
+  pricing: z.enum(["free", "freemium", "paid", "credit", "trial", "enterprise"]),
   description: z.string().min(1),
   tagsCsv: z.string().optional().default(""),
   logoUrl: z.string().optional().default(""),
@@ -65,6 +65,9 @@ const ToolInput = z.object({
   browserExtension: z.string().optional().default(""),
   socialsJson: z.string().optional().default(""),
   featuresJson: z.string().optional().default(""),
+  useCasesJson: z.string().optional().default(""),
+  platformsJson: z.string().optional().default(""),
+  integrationsJson: z.string().optional().default(""),
   prosJson: z.string().optional().default(""),
   consJson: z.string().optional().default(""),
   plansJson: z.string().optional().default(""),
@@ -105,7 +108,13 @@ function parseFormData(fd: FormData) {
       | "ugc",
     category: (fd.get("category") as string) ?? "",
     extraCategoriesJson: (fd.get("extraCategoriesJson") as string) ?? "",
-    pricing: ((fd.get("pricing") as string) ?? "freemium") as "free" | "freemium" | "paid",
+    pricing: ((fd.get("pricing") as string) ?? "freemium") as
+      | "free"
+      | "freemium"
+      | "paid"
+      | "credit"
+      | "trial"
+      | "enterprise",
     description: (fd.get("description") as string) ?? "",
     tagsCsv: (fd.get("tagsCsv") as string) ?? "",
     logoUrl: (fd.get("logoUrl") as string) ?? "",
@@ -122,6 +131,9 @@ function parseFormData(fd: FormData) {
     browserExtension: (fd.get("browserExtension") as string) ?? "",
     socialsJson: (fd.get("socialsJson") as string) ?? "",
     featuresJson: (fd.get("featuresJson") as string) ?? "",
+    useCasesJson: (fd.get("useCasesJson") as string) ?? "",
+    platformsJson: (fd.get("platformsJson") as string) ?? "",
+    integrationsJson: (fd.get("integrationsJson") as string) ?? "",
     prosJson: (fd.get("prosJson") as string) ?? "",
     consJson: (fd.get("consJson") as string) ?? "",
     plansJson: (fd.get("plansJson") as string) ?? "",
@@ -180,6 +192,9 @@ function valuesFromInput(input: z.infer<typeof ToolInput>) {
     browserExtension: asNullableBool(input.browserExtension),
     socials: safeJsonParse<Record<string, string | null>>(input.socialsJson),
     features: safeJsonParse<Array<{ title: string; desc: string }>>(input.featuresJson),
+    useCases: safeJsonParse<string[]>(input.useCasesJson),
+    platforms: safeJsonParse<string[]>(input.platformsJson),
+    integrations: safeJsonParse<string[]>(input.integrationsJson),
     pros: safeJsonParse<string[]>(input.prosJson),
     cons: safeJsonParse<string[]>(input.consJson),
     plans: safeJsonParse<Array<{ name: string; price: string; period: string; popular?: boolean; feats: string[] }>>(input.plansJson),

@@ -27,9 +27,15 @@ type Socials = {
   linkedin?: string | null;
   github?: string | null;
   youtube?: string | null;
+  facebook?: string | null;
+  instagram?: string | null;
+  discord?: string | null;
 };
 type Feature = { title: string; desc: string };
 type Plan = { name: string; price: string; period: string; popular?: boolean; feats: string[] };
+type ConfidenceMap = Record<string, "high" | "medium" | "low">;
+
+export type PricingKind = "free" | "freemium" | "paid" | "credit" | "trial" | "enterprise";
 
 export type LinkRel = "dofollow" | "nofollow" | "sponsored" | "ugc";
 
@@ -43,7 +49,7 @@ export type ToolFormValues = {
   category: string;
   /** Additional category slugs (excluding the primary). */
   extraCategories: string[];
-  pricing: "free" | "freemium" | "paid";
+  pricing: PricingKind;
   description: string;
   tagsCsv: string;
   logoUrl: string;
@@ -61,6 +67,9 @@ export type ToolFormValues = {
   browserExtension: "" | "true" | "false";
   socials: Socials;
   features: Feature[];
+  useCases: string[];
+  platforms: string[];
+  integrations: string[];
   pros: string[];
   cons: string[];
   plans: Plan[];
@@ -95,6 +104,9 @@ const EMPTY: ToolFormValues = {
   browserExtension: "",
   socials: {},
   features: [],
+  useCases: [],
+  platforms: [],
+  integrations: [],
   pros: [],
   cons: [],
   plans: [],
@@ -143,6 +155,12 @@ export function ToolForm({
   const [autoMsg, setAutoMsg] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [autoPending, startAuto] = useTransition();
+  /**
+   * Per-field confidence from the last auto-fill run. Form renders a
+   * yellow "Verify" badge on every field marked "low" so the editor
+   * double-checks before publishing.
+   */
+  const [confidence, setConfidence] = useState<ConfidenceMap>({});
 
   useEffect(() => {
     if (!slugTouched) setValues((v) => ({ ...v, slug: slugify(v.name) }));
@@ -192,21 +210,40 @@ export function ToolForm({
           ...v,
           tagline: r.tagline || v.tagline,
           description: r.description || v.description,
+          seoTitle: r.seoTitle || v.seoTitle,
+          seoDescription: r.seoDescription || v.seoDescription,
           madeBy: r.madeBy ?? v.madeBy,
           launched: r.launched ?? v.launched,
           weeklyUsers: r.weeklyUsers ?? v.weeklyUsers,
           startingPrice: r.startingPrice ?? v.startingPrice,
+          pricing: r.pricing ?? v.pricing,
           hasApi: r.hasApi === null ? v.hasApi : r.hasApi ? "true" : "false",
           mobileApp: r.mobileApp ?? v.mobileApp,
           browserExtension:
             r.browserExtension === null ? v.browserExtension : r.browserExtension ? "true" : "false",
           socials: r.socials ?? v.socials,
           features: r.features ?? v.features,
+          useCases: r.useCases ?? v.useCases,
+          platforms: r.platforms ?? v.platforms,
+          integrations: r.integrations ?? v.integrations,
+          // Merge AI-extracted tags into existing CSV (deduped)
+          tagsCsv: r.tags && r.tags.length > 0
+            ? Array.from(new Set([
+                ...v.tagsCsv.split(",").map((s) => s.trim()).filter(Boolean),
+                ...r.tags,
+              ])).join(", ")
+            : v.tagsCsv,
           pros: r.pros ?? v.pros,
           cons: r.cons ?? v.cons,
           plans: r.plans ?? v.plans,
         }));
-        setAutoMsg("AI auto-fill complete — review the fields then click Save.");
+        setConfidence(r._confidence ?? {});
+        const lowCount = Object.values(r._confidence ?? {}).filter((c) => c === "low").length;
+        setAutoMsg(
+          lowCount > 0
+            ? `AI auto-fill complete — ${lowCount} field${lowCount === 1 ? "" : "s"} flagged for review (look for the ⚠ badges below).`
+            : "AI auto-fill complete — every field verified against the live site. Review and click Save."
+        );
       } catch (err) {
         setError(err instanceof Error ? err.message : "Auto-fill failed");
       }
@@ -223,6 +260,9 @@ export function ToolForm({
       <input type="hidden" name="browserExtension" value={values.browserExtension} />
       <input type="hidden" name="socialsJson" value={JSON.stringify(values.socials)} />
       <input type="hidden" name="featuresJson" value={JSON.stringify(values.features)} />
+      <input type="hidden" name="useCasesJson" value={JSON.stringify(values.useCases)} />
+      <input type="hidden" name="platformsJson" value={JSON.stringify(values.platforms)} />
+      <input type="hidden" name="integrationsJson" value={JSON.stringify(values.integrations)} />
       <input type="hidden" name="prosJson" value={JSON.stringify(values.pros)} />
       <input type="hidden" name="consJson" value={JSON.stringify(values.cons)} />
       <input type="hidden" name="plansJson" value={JSON.stringify(values.plans)} />
@@ -261,7 +301,7 @@ export function ToolForm({
               />
             </Field>
 
-            <Field label="Tagline" required hint="One-sentence pitch shown on cards (max 140 chars)">
+            <Field label="Tagline" required confidence={confidence.tagline} hint="One-sentence pitch shown on cards (max 140 chars)">
               <input
                 type="text"
                 name="tagline"
@@ -349,16 +389,19 @@ export function ToolForm({
                   ))}
                 </select>
               </Field>
-              <Field label="Pricing" required>
+              <Field label="Pricing" required confidence={confidence.pricing}>
                 <select
                   name="pricing"
                   required
                   value={values.pricing}
                   onChange={(e) => update("pricing", e.target.value as ToolFormValues["pricing"])}
                 >
-                  <option value="free">Free</option>
-                  <option value="freemium">Free + Paid (freemium)</option>
-                  <option value="paid">Paid</option>
+                  <option value="free">Free (no paid tier)</option>
+                  <option value="freemium">Freemium (free + paid)</option>
+                  <option value="paid">Paid (no free tier)</option>
+                  <option value="trial">Free Trial (then paid)</option>
+                  <option value="credit">Credit-Based (pay-per-use)</option>
+                  <option value="enterprise">Enterprise (custom / sales-led)</option>
                 </select>
               </Field>
             </Row>
@@ -375,7 +418,7 @@ export function ToolForm({
               />
             </Field>
 
-            <Field label="Tags" hint="Comma-separated. e.g. Image, Generative, Art">
+            <Field label="Tags / Keywords" confidence={confidence.tags} hint="Comma-separated. Doubles as SEO keywords woven into the description. Auto-fill mixes the primary category, use-case keywords, and audience tags.">
               <input
                 type="text"
                 name="tagsCsv"
@@ -435,6 +478,7 @@ export function ToolForm({
             <Field
               label="Description"
               required
+              confidence={confidence.description}
               hint="Full description for the tool page. Use H2/H3 for sections, bold/italic for emphasis, links to cite sources."
             >
               <RichTextEditor
@@ -447,7 +491,7 @@ export function ToolForm({
 
           <Section title="Quick info">
             <Row>
-              <Field label="Made by" hint="Company that built the tool">
+              <Field label="Made by" confidence={confidence.madeBy} hint="Company that built the tool">
                 <input
                   type="text"
                   name="madeBy"
@@ -456,7 +500,7 @@ export function ToolForm({
                   placeholder="e.g. OpenAI"
                 />
               </Field>
-              <Field label="Launched" hint="Short date">
+              <Field label="Launched" confidence={confidence.launched} hint="Short date">
                 <input
                   type="text"
                   name="launched"
@@ -467,7 +511,7 @@ export function ToolForm({
               </Field>
             </Row>
             <Row>
-              <Field label="Weekly users" hint="Estimate, optional">
+              <Field label="Weekly users" confidence={confidence.weeklyUsers} hint="Estimate, optional">
                 <input
                   type="text"
                   name="weeklyUsers"
@@ -476,7 +520,7 @@ export function ToolForm({
                   placeholder="e.g. 200M+"
                 />
               </Field>
-              <Field label="Starting price" hint="Display string">
+              <Field label="Starting price" confidence={confidence.startingPrice} hint="Display string">
                 <input
                   type="text"
                   name="startingPrice"
@@ -487,14 +531,14 @@ export function ToolForm({
               </Field>
             </Row>
             <Row>
-              <Field label="Has API">
+              <Field label="Has API" confidence={confidence.hasApi}>
                 <select value={values.hasApi} onChange={(e) => update("hasApi", e.target.value as ToolFormValues["hasApi"])}>
                   <option value="">— Unknown —</option>
                   <option value="true">Available</option>
                   <option value="false">Not available</option>
                 </select>
               </Field>
-              <Field label="Mobile app">
+              <Field label="Mobile app" confidence={confidence.mobileApp}>
                 <input
                   type="text"
                   name="mobileApp"
@@ -504,7 +548,7 @@ export function ToolForm({
                 />
               </Field>
             </Row>
-            <Field label="Browser extension">
+            <Field label="Browser extension" confidence={confidence.browserExtension}>
               <select
                 value={values.browserExtension}
                 onChange={(e) => update("browserExtension", e.target.value as ToolFormValues["browserExtension"])}
@@ -556,6 +600,59 @@ export function ToolForm({
                 />
               </Field>
             </Row>
+            <Row>
+              <Field label="Facebook URL">
+                <input
+                  type="url"
+                  value={values.socials.facebook ?? ""}
+                  onChange={(e) => update("socials", { ...values.socials, facebook: e.target.value })}
+                  placeholder="https://facebook.com/openai"
+                />
+              </Field>
+              <Field label="Instagram URL">
+                <input
+                  type="url"
+                  value={values.socials.instagram ?? ""}
+                  onChange={(e) => update("socials", { ...values.socials, instagram: e.target.value })}
+                  placeholder="https://instagram.com/openai"
+                />
+              </Field>
+            </Row>
+            <Field label="Discord invite URL">
+              <input
+                type="url"
+                value={values.socials.discord ?? ""}
+                onChange={(e) => update("socials", { ...values.socials, discord: e.target.value })}
+                placeholder="https://discord.gg/openai"
+              />
+            </Field>
+          </Section>
+
+          <Section title="Use cases">
+            <ListEditor
+              items={values.useCases}
+              placeholder="Concrete job the tool helps complete (start with a verb)"
+              hint='Each entry should start with a verb. e.g. "Generate ad creatives for Facebook campaigns", "Transcribe Zoom calls into searchable notes". One per line.'
+              onChange={(items) => update("useCases", items)}
+            />
+          </Section>
+
+          <Section title="Platforms">
+            <ListEditor
+              items={values.platforms}
+              placeholder="Web, macOS, iOS, Android, API, Chrome Extension…"
+              hint="One platform per line. Only include surfaces the tool genuinely ships on."
+              onChange={(items) => update("platforms", items)}
+            />
+          </Section>
+
+          <Section title="Integrations">
+            <ListEditor
+              items={values.integrations}
+              placeholder="Zapier, Slack, Notion, Figma, Google Drive…"
+              hint="Third-party tools this integrates with. One per line. Auto-fill pulls these from the /features and /integrations pages when present."
+              onChange={(items) => update("integrations", items)}
+            />
           </Section>
 
           <Section title="Key features">
@@ -601,6 +698,7 @@ export function ToolForm({
           <Section title="SEO (optional)">
             <Field
               label="Meta title"
+              confidence={confidence.seoTitle}
               hint="Overrides the public <title> tag. Leave blank to auto-generate from name + tagline. Max ~60 chars for full Google display."
             >
               <input
@@ -614,7 +712,8 @@ export function ToolForm({
             </Field>
             <Field
               label="Meta description"
-              hint="Search-result snippet. Blank = uses the tagline. Max ~160 chars."
+              confidence={confidence.seoDescription}
+              hint="Search-result snippet (150-160 chars). Blank = uses the tagline. Auto-fill writes one optimized for click-through."
             >
               <textarea
                 name="seoDescription"
@@ -776,26 +875,55 @@ function Field({
   label,
   hint,
   required,
+  confidence,
   children,
 }: {
   label: string;
   hint?: string;
   required?: boolean;
+  /** When set to "low", renders a "Verify" warning chip next to the label. */
+  confidence?: "high" | "medium" | "low";
   children: React.ReactNode;
 }) {
+  const showWarning = confidence === "low";
   return (
     <div style={{ marginBottom: 16 }}>
       <label
         style={{
-          display: "block",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
           fontFamily: "var(--font-manrope)",
           fontSize: 12.5,
           fontWeight: 700,
           marginBottom: 6,
         }}
       >
-        {label}
-        {required && <span style={{ color: "var(--red)", marginLeft: 4 }}>*</span>}
+        <span>
+          {label}
+          {required && <span style={{ color: "var(--red)", marginLeft: 4 }}>*</span>}
+        </span>
+        {showWarning && (
+          <span
+            title="AI auto-fill flagged this field as low confidence. Verify the value against the source before publishing."
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              fontSize: 10.5,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: ".04em",
+              padding: "2px 7px",
+              borderRadius: 100,
+              background: "#fef3c7",
+              color: "#92400e",
+              border: "1px solid #fcd34d",
+            }}
+          >
+            ⚠ Verify
+          </span>
+        )}
       </label>
       <div className="adm-input-wrap">{children}</div>
       {hint && <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 4 }}>{hint}</div>}

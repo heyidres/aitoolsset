@@ -27,7 +27,12 @@ export type CmsSocials = {
   linkedin?: string | null;
   github?: string | null;
   youtube?: string | null;
+  facebook?: string | null;
+  instagram?: string | null;
+  discord?: string | null;
 };
+
+export type CmsPricing = "free" | "freemium" | "paid" | "credit" | "trial" | "enterprise";
 
 export type CmsFeature = { title: string; desc: string };
 
@@ -54,7 +59,7 @@ export type CmsTool = {
   categories: string[];
   tags: string[];
   description: string;
-  pricing: "free" | "freemium" | "paid";
+  pricing: CmsPricing;
   logoUrl: string | null;
   screenshotUrl: string | null;
   verified: boolean;
@@ -75,6 +80,9 @@ export type CmsTool = {
   browserExtension: boolean | null;
   socials: CmsSocials | null;
   features: CmsFeature[] | null;
+  useCases: string[] | null;
+  platforms: string[] | null;
+  integrations: string[] | null;
   pros: string[] | null;
   cons: string[] | null;
   plans: CmsPlan[] | null;
@@ -119,6 +127,9 @@ function toCmsTool(row: typeof tools.$inferSelect): CmsTool {
     browserExtension: row.browserExtension,
     socials: row.socials,
     features: row.features,
+    useCases: row.useCases,
+    platforms: row.platforms,
+    integrations: row.integrations,
     pros: row.pros,
     cons: row.cons,
     plans: row.plans,

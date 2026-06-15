@@ -19,6 +19,8 @@ function renderMd(text: string) {
 
 export type ToolOverviewOverrides = {
   features?: Array<{ title: string; desc: string }>;
+  /** Concrete jobs the tool helps users complete. Rendered between features and pros/cons. */
+  useCases?: string[];
   pros?: string[];
   cons?: string[];
   plans?: Array<{ name: string; price: string; period: string; popular?: boolean; feats: string[] }>;
@@ -42,6 +44,7 @@ export function ToolOverview({
   // CMS mode: any override (even an empty array) signals "use CMS data, don't fall through to dummy".
   const isCms = !!overrides;
   const features = overrides?.features ?? (isCms ? [] : detail.features);
+  const useCases = overrides?.useCases ?? [];
   const pros = overrides?.pros ?? (isCms ? [] : detail.pros);
   const cons = overrides?.cons ?? (isCms ? [] : detail.cons);
   const plans = overrides?.plans ?? (isCms ? [] : detail.plans);
@@ -119,6 +122,37 @@ export function ToolOverview({
             </div>
           ))}
         </div>
+      </section>
+      )}
+
+      {/* Use cases — concrete jobs the tool helps users complete */}
+      {useCases.length > 0 && (
+      <section className="py-9" style={{ borderBottom: "1px solid var(--border)" }}>
+        <h2
+          className="font-display font-extrabold pb-[10px] mb-[14px]"
+          style={{ fontSize: 20, letterSpacing: "-.4px", color: "var(--text)", borderBottom: "1px solid var(--border)" }}
+        >
+          What you can do with {name}
+        </h2>
+        <ul className="flex flex-col gap-[10px] my-3 min-w-0 list-none pl-0">
+          {useCases.map((uc) => (
+            <li
+              key={uc}
+              className="flex items-start gap-[10px] text-[14.5px] leading-[1.55]"
+              style={{ color: "var(--text-2)" }}
+            >
+              <div
+                className="w-5 h-5 rounded-[5px] flex items-center justify-center flex-shrink-0 mt-[2px]"
+                style={{ background: "var(--green-bg)", border: "1px solid var(--green-border)" }}
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--green)" }}>
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <span>{uc}</span>
+            </li>
+          ))}
+        </ul>
       </section>
       )}
 

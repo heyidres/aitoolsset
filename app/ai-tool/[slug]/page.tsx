@@ -39,7 +39,9 @@ type FindToolResult =
     }
   | null;
 
-const SOCIAL_KIND_ORDER = ["x", "linkedin", "github", "youtube"] as const;
+const SOCIAL_KIND_ORDER = [
+  "x", "linkedin", "github", "youtube", "facebook", "instagram", "discord",
+] as const;
 
 function socialsRecordToList(
   socials: CmsTool["socials"]
@@ -106,10 +108,24 @@ function buildHeaderOverrides(
 function buildOverviewOverrides(t: CmsTool): ToolOverviewOverrides {
   return {
     features: t.features ?? [],
+    useCases: t.useCases ?? [],
     pros: t.pros ?? [],
     cons: t.cons ?? [],
     plans: t.plans ?? [],
   };
+}
+
+/** Display label for the expanded pricing enum. */
+function pricingLabel(p: CmsTool["pricing"]): string {
+  switch (p) {
+    case "free": return "Free";
+    case "freemium": return "Free + Paid";
+    case "paid": return "Paid";
+    case "trial": return "Free Trial";
+    case "credit": return "Pay-per-use";
+    case "enterprise": return "Enterprise";
+    default: return p;
+  }
 }
 
 function buildSidebarOverrides(t: CmsTool): ToolSidebarOverrides {
@@ -121,9 +137,7 @@ function buildSidebarOverrides(t: CmsTool): ToolSidebarOverrides {
 
   if (t.madeBy) quickInfo.push({ label: "Made by", val: t.madeBy });
 
-  const pricingLabel =
-    t.pricing === "free" ? "Free" : t.pricing === "freemium" ? "Free + Paid" : "Paid";
-  quickInfo.push({ label: "Pricing", val: pricingLabel, cls: "green" });
+  quickInfo.push({ label: "Pricing", val: pricingLabel(t.pricing), cls: "green" });
 
   if (t.startingPrice) quickInfo.push({ label: "Starts at", val: t.startingPrice, cls: "green" });
   if (t.launched) quickInfo.push({ label: "Launched", val: t.launched });
@@ -140,6 +154,15 @@ function buildSidebarOverrides(t: CmsTool): ToolSidebarOverrides {
     val: t.browserExtension ? "Yes" : "No",
     cls: t.browserExtension ? "green" : undefined,
   });
+  // Surface platforms + integrations in Quick Info when populated —
+  // these are the most search-relevant facets for a tool listing.
+  if (t.platforms && t.platforms.length > 0) {
+    quickInfo.push({ label: "Platforms", val: t.platforms.slice(0, 4).join(", ") });
+  }
+  if (t.integrations && t.integrations.length > 0) {
+    quickInfo.push({ label: "Integrations", val: t.integrations.slice(0, 4).join(", ") });
+  }
+
   quickInfo.push({
     label: "Last updated",
     val: t.updatedAt.toLocaleDateString("en-US", { month: "short", year: "numeric" }),

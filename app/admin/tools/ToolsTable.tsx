@@ -21,7 +21,7 @@ type Row = {
   domain: string;
   websiteUrl: string;
   category: string;
-  pricing: "free" | "freemium" | "paid";
+  pricing: "free" | "freemium" | "paid" | "credit" | "trial" | "enterprise";
   saves: number;
   verified: boolean;
   featured: boolean;
@@ -31,9 +31,15 @@ type Row = {
 type Tab = "all" | "published" | "draft" | "featured" | "verified";
 
 function pricingLabel(p: Row["pricing"]): string {
-  if (p === "free") return "Free";
-  if (p === "freemium") return "Free + Paid";
-  return "Paid";
+  switch (p) {
+    case "free": return "Free";
+    case "freemium": return "Free + Paid";
+    case "paid": return "Paid";
+    case "trial": return "Free Trial";
+    case "credit": return "Pay-per-use";
+    case "enterprise": return "Enterprise";
+    default: return p;
+  }
 }
 
 export function ToolsTable({ rows }: { rows: Row[] }) {
