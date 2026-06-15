@@ -243,26 +243,25 @@ async function CmsPostRenderer({
         </div>
       )}
 
-      {/* BODY + sidebar — narrower wrapper centers the two-column grid. */}
+      {/* BODY — single centered column.
+          The sidebar moved below the article (renders as "Keep reading"),
+          matching the Futurepedia / Wirecutter editorial pattern: dead-
+          center body, no left-shift, full reading focus. */}
       <section className="px-9 py-14 section-pad-x">
-        <div
-          className="blog-layout mx-auto"
-          style={{
-            maxWidth: 1100,
-            display: "grid",
-            gridTemplateColumns: "minmax(0,720px) 280px",
-            gap: 48,
-            alignItems: "start",
-            justifyContent: "center",
-          }}
-        >
-          <div style={{ minWidth: 0 }}>
-            <BlogBody html={post.body} />
-            {post.faqs.length > 0 && <BlogFaqs items={post.faqs} />}
-            {(authors.length > 0 || reviewedBy) && (
-              <AuthorCards authors={authors} reviewedBy={reviewedBy} />
-            )}
-          </div>
+        <div className="max-w-[760px] mx-auto" style={{ minWidth: 0 }}>
+          <BlogBody html={post.body} />
+          {post.faqs.length > 0 && <BlogFaqs items={post.faqs} />}
+          {(authors.length > 0 || reviewedBy) && (
+            <AuthorCards authors={authors} reviewedBy={reviewedBy} />
+          )}
+        </div>
+      </section>
+
+      {/* Sidebar widgets surfaced below the article so they don't pull
+          the body off-center. Tucked in a max-w-page container so they
+          can use the full row. */}
+      <section className="px-9 pb-16 section-pad-x">
+        <div className="max-w-[860px] mx-auto">
           <BlogSidebar />
         </div>
       </section>

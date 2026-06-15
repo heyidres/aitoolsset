@@ -16,6 +16,10 @@ import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
+import { Table } from "@tiptap/extension-table";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { TableCell } from "@tiptap/extension-table-cell";
 
 type Props = {
   /** Form field name — what gets serialised in the FormData submission. */
@@ -45,6 +49,16 @@ export function RichTextEditor({ name, defaultValue = "", placeholder }: Props) 
       Placeholder.configure({
         placeholder: placeholder ?? "Write something…",
       }),
+      // Tables — paste from Google Docs / Notion / Excel now renders
+      // as a real <table> instead of plain text. resizable: true gives
+      // editors drag handles to adjust column widths.
+      Table.configure({
+        resizable: true,
+        HTMLAttributes: { class: "rte-table" },
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: defaultValue,
     editorProps: {
@@ -210,6 +224,40 @@ function Toolbar({ editor }: { editor: Editor }) {
           <line x1="2" y1="22" x2="22" y2="2" />
         </svg>
       </Btn>
+      <div className="rte-sep" />
+      <Btn
+        title="Insert table"
+        onClick={() =>
+          editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+        }
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <line x1="3" y1="9" x2="21" y2="9" />
+          <line x1="3" y1="15" x2="21" y2="15" />
+          <line x1="9" y1="3" x2="9" y2="21" />
+          <line x1="15" y1="3" x2="15" y2="21" />
+        </svg>
+      </Btn>
+      {editor.isActive("table") && (
+        <>
+          <Btn title="Add row below" onClick={() => editor.chain().focus().addRowAfter().run()}>
+            <span style={{ fontSize: 11, fontWeight: 700 }}>+ Row</span>
+          </Btn>
+          <Btn title="Add column right" onClick={() => editor.chain().focus().addColumnAfter().run()}>
+            <span style={{ fontSize: 11, fontWeight: 700 }}>+ Col</span>
+          </Btn>
+          <Btn title="Delete row" onClick={() => editor.chain().focus().deleteRow().run()}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--red)" }}>− Row</span>
+          </Btn>
+          <Btn title="Delete column" onClick={() => editor.chain().focus().deleteColumn().run()}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--red)" }}>− Col</span>
+          </Btn>
+          <Btn title="Delete table" onClick={() => editor.chain().focus().deleteTable().run()}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--red)" }}>✕ Table</span>
+          </Btn>
+        </>
+      )}
       <div className="rte-sep" />
       <Btn
         title="Clear formatting"
