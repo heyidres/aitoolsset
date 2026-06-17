@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { RichTextEditor } from "../_components/RichTextEditor";
+import { BLOCK_TEMPLATES } from "@/lib/blog-markers";
 
 const CATEGORIES = ["Guide", "Comparison", "Roundup", "Tutorial", "News", "Review", "Opinion"];
 
@@ -283,6 +284,7 @@ function BodyEditor({
 }) {
   const [picking, setPicking] = useState(false);
   const [search, setSearch] = useState("");
+  const [blockMenuOpen, setBlockMenuOpen] = useState(false);
 
   const insertMarker = (slug: string) => {
     // RTE owns the HTML — append a paragraph with the marker.
@@ -290,6 +292,11 @@ function BodyEditor({
     onChange((value ?? "") + marker);
     setPicking(false);
     setSearch("");
+  };
+
+  const insertBlock = (template: string) => {
+    onChange((value ?? "") + template);
+    setBlockMenuOpen(false);
   };
 
   const filtered = toolOptions.filter((t) => {
@@ -300,7 +307,7 @@ function BodyEditor({
 
   return (
     <div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 8, position: "relative", flexWrap: "wrap" }}>
         <button
           type="button"
           onClick={() => setPicking(true)}
@@ -309,9 +316,76 @@ function BodyEditor({
         >
           + Insert tool card
         </button>
+        <button
+          type="button"
+          onClick={() => setBlockMenuOpen((s) => !s)}
+          className="adm-btn-sm ghost"
+          style={{ padding: "6px 12px", fontSize: 12, border: "1.5px solid var(--border)" }}
+        >
+          + Insert block ▾
+        </button>
         <div style={{ fontSize: 11.5, color: "var(--text-3)", alignSelf: "center" }}>
-          Inserts a <code style={{ fontFamily: "var(--mono)" }}>[[tool:slug]]</code> marker — renders as a full tool card on the public page.
+          Blocks insert text markers like <code style={{ fontFamily: "var(--mono)" }}>[[tldr]]…[[/tldr]]</code>. Public page renders them as styled cards.
         </div>
+
+        {blockMenuOpen && (
+          <div
+            style={{
+              position: "absolute",
+              top: 40,
+              left: 0,
+              zIndex: 50,
+              width: 360,
+              background: "#fff",
+              border: "1px solid var(--border)",
+              borderRadius: 12,
+              boxShadow: "0 12px 40px rgba(0,0,0,.12)",
+              padding: 6,
+              maxHeight: 420,
+              overflowY: "auto",
+            }}
+          >
+            {BLOCK_TEMPLATES.map((b) => (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => insertBlock(b.template)}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  textAlign: "left",
+                  padding: "10px 12px",
+                  background: "transparent",
+                  border: 0,
+                  borderRadius: 8,
+                  cursor: "pointer",
+                  transition: "background .12s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <div style={{ fontFamily: "var(--font-manrope)", fontSize: 13, fontWeight: 700, color: "var(--text)" }}>
+                  {b.label}
+                </div>
+                <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2, lineHeight: 1.4 }}>
+                  {b.description}
+                </div>
+              </button>
+            ))}
+            <div
+              style={{
+                marginTop: 6,
+                padding: "8px 12px",
+                borderTop: "1px solid var(--border)",
+                fontSize: 11,
+                color: "var(--text-3)",
+                lineHeight: 1.5,
+              }}
+            >
+              💡 After insert, edit the template text inline. Markers like <code style={{ fontFamily: "var(--mono)" }}>[[tldr]]</code> survive saving and render as cards on the public page.
+            </div>
+          </div>
+        )}
       </div>
       <RichTextEditor name="body" defaultValue={value} placeholder="Open with a strong hook…" />
 

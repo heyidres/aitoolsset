@@ -1382,47 +1382,114 @@ body.imgs-dark .imgs-foot { background: rgba(0, 0, 0, .2); border-top-color: rgb
  *  class is the upgrade applied on /blog/[slug] only.
  * ───────────────────────────────────────────────────────────── */
 .blog-prose {
-  font-family: var(--font-dm-sans), sans-serif;
-  font-size: 17px;
-  line-height: 1.78;
+  font-family: var(--font-lora), Georgia, serif;
+  font-size: 18px;
+  line-height: 1.8;
   color: var(--text);
   word-break: break-word;
 }
-.blog-prose p { margin-bottom: 18px; color: var(--text); }
+.blog-prose p { margin-bottom: 22px; color: var(--text); }
 .blog-prose p:last-child { margin-bottom: 0; }
+/* Drop cap on the very first paragraph — magazine reading cue. */
+.blog-prose > div:first-child > p:first-of-type::first-letter,
+.blog-prose > p:first-of-type::first-letter {
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 64px;
+  font-weight: 900;
+  float: left;
+  line-height: 0.9;
+  margin: 6px 12px 0 0;
+  color: var(--blue);
+}
 .blog-prose h2 {
   font-family: var(--font-manrope), sans-serif;
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: -.5px;
-  margin: 38px 0 14px;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  line-height: 1.15;
+  margin: 44px 0 16px;
   color: var(--text);
-  line-height: 1.25;
+  scroll-margin-top: 80px;
 }
 .blog-prose h3 {
   font-family: var(--font-manrope), sans-serif;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
-  letter-spacing: -.3px;
-  margin: 28px 0 10px;
+  letter-spacing: -.5px;
+  line-height: 1.25;
+  margin: 36px 0 12px;
   color: var(--text);
-  line-height: 1.3;
+  scroll-margin-top: 80px;
 }
+/* Custom bullets — blue dots aligned to first text line. */
 .blog-prose ul,
 .blog-prose ol {
-  padding-left: 24px;
-  margin-bottom: 20px;
+  margin: 0 0 22px 0;
+  padding-left: 0;
+  list-style: none;
 }
-.blog-prose ul li { list-style: disc; margin-bottom: 8px; color: var(--text); }
-.blog-prose ol li { list-style: decimal; margin-bottom: 8px; color: var(--text); }
-.blog-prose blockquote {
-  border-left: 4px solid var(--blue);
-  padding: 6px 0 6px 18px;
-  margin: 24px 0;
-  color: var(--text);
-  font-style: italic;
+.blog-prose ul li,
+.blog-prose ol li {
+  font-family: var(--font-lora), Georgia, serif;
   font-size: 18px;
+  line-height: 1.75;
+  color: var(--text);
+  padding-left: 28px;
+  position: relative;
+  margin-bottom: 10px;
+}
+.blog-prose ul li::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 14px;
+  width: 6px;
+  height: 6px;
+  background: var(--blue);
+  border-radius: 50%;
+}
+.blog-prose ol { counter-reset: blog-item; }
+.blog-prose ol li { counter-increment: blog-item; }
+.blog-prose ol li::before {
+  content: counter(blog-item);
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 22px;
+  height: 22px;
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.blog-prose blockquote {
+  border-left: 3px solid var(--blue);
+  background: var(--cream);
+  padding: 20px 24px;
+  margin: 28px 0;
+  border-radius: 0 12px 12px 0;
+  font-family: var(--font-lora), Georgia, serif;
+  font-style: italic;
+  font-size: 19px;
   line-height: 1.65;
+  color: var(--text);
+  position: relative;
+}
+.blog-prose blockquote::before {
+  content: '"';
+  position: absolute;
+  top: -10px;
+  left: 14px;
+  font-family: var(--font-lora), Georgia, serif;
+  font-size: 48px;
+  color: var(--blue);
+  font-weight: 700;
+  line-height: 1;
 }
 .blog-prose a {
   color: var(--blue);
@@ -1533,6 +1600,328 @@ body.imgs-dark .imgs-foot { background: rgba(0, 0, 0, .2); border-top-color: rgb
     grid-template-columns: minmax(0, 720px) !important;
   }
   .blog-layout > aside { display: none; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+ *  SCANNABLE CONTENT BLOCKS
+ *
+ *  Drop-in components inserted via [[marker]] syntax from the
+ *  editor. Visual reference: the perplexity-vs-chatgpt prototype.
+ *  Reset block fonts back to Manrope/DM Sans so they pop out from
+ *  the surrounding Lora prose.
+ * ───────────────────────────────────────────────────────────── */
+
+/* 1. TL;DR snippet box (featured-snippet target) */
+.blog-snippet {
+  background: var(--blue-soft);
+  border: 1.5px solid rgba(0,82,255,.2);
+  border-left-width: 4px;
+  border-radius: 12px;
+  padding: 20px 22px;
+  margin: 32px 0;
+  font-family: var(--font-manrope), sans-serif;
+}
+.blog-snippet-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--blue);
+  margin-bottom: 8px;
+}
+.blog-snippet-text {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.65;
+  color: var(--text);
+  margin: 0;
+}
+
+/* 2. Highlight box (TL;DR with title + icon) */
+.blog-highlight {
+  background: var(--blue-soft);
+  border: 1px solid rgba(0,82,255,.18);
+  border-radius: 20px;
+  padding: 24px;
+  margin: 32px 0;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.blog-highlight-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--blue);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 18px;
+}
+.blog-highlight-body { flex: 1; }
+.blog-highlight-title {
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.blog-highlight-text {
+  font-family: var(--font-dm-sans), sans-serif;
+  font-size: 14.5px;
+  color: var(--text-2);
+  line-height: 1.65;
+}
+.blog-highlight-text p { margin: 0 0 8px; font-family: inherit; font-size: inherit; }
+.blog-highlight-text p:last-child { margin: 0; }
+
+/* 3. Verdict cards — two-side "wins for…" comparison */
+.blog-verdict-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 28px 0;
+}
+.blog-verdict-card {
+  background: var(--green-bg);
+  border: 1.5px solid var(--green-border);
+  border-radius: 20px;
+  padding: 18px;
+}
+.blog-verdict-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.blog-verdict-name {
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+.blog-verdict-tag {
+  margin-left: auto;
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--green);
+  background: #fff;
+  border: 1px solid var(--green-border);
+  padding: 3px 8px;
+  border-radius: 100px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.blog-verdict-text {
+  font-family: var(--font-dm-sans), sans-serif;
+  font-size: 13.5px;
+  color: var(--text-2);
+  line-height: 1.6;
+}
+
+/* 4. Pros & Cons grid */
+.blog-pc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 28px 0;
+}
+.blog-pc-col {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+.blog-pc-pros { background: var(--green-bg); border-color: var(--green-border); }
+.blog-pc-cons {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+.blog-pc-title {
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.blog-pc-pros .blog-pc-title { color: var(--green); }
+.blog-pc-cons .blog-pc-title { color: #ef4444; }
+.blog-pc-items {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.blog-pc-items li {
+  list-style: none !important;
+  font-family: var(--font-dm-sans), sans-serif !important;
+  font-size: 13.5px !important;
+  line-height: 1.55 !important;
+  color: var(--text-2) !important;
+  padding-left: 22px !important;
+  position: relative;
+  margin: 0 !important;
+}
+.blog-pc-items li::before { display: none; }
+.blog-pc-pros .blog-pc-items li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--green);
+  font-weight: 800;
+  display: block;
+  background: transparent;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+}
+.blog-pc-cons .blog-pc-items li::before {
+  content: '✕';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #ef4444;
+  font-weight: 800;
+  display: block;
+  background: transparent;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+}
+
+/* 5. Round block — numbered head-to-head test */
+.blog-round {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 22px;
+  margin: 24px 0;
+}
+.blog-round-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.blog-round-num {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.blog-round-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 13px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.blog-round-title {
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -.3px;
+  color: var(--text);
+}
+.blog-round-winner {
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--green);
+  background: var(--green-bg);
+  border: 1px solid var(--green-border);
+  padding: 4px 10px;
+  border-radius: 100px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.blog-round-text {
+  font-family: var(--font-dm-sans), sans-serif;
+  font-size: 14.5px;
+  color: var(--text-2);
+  line-height: 1.7;
+}
+.blog-round-text strong { color: var(--text); }
+
+/* 6. Use-case decision card */
+.blog-uc-card {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  margin: 16px 0;
+}
+.blog-uc-tag {
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--blue);
+  margin-bottom: 8px;
+}
+.blog-uc-title {
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.blog-uc-reason {
+  font-family: var(--font-dm-sans), sans-serif;
+  font-size: 13.5px;
+  color: var(--text-2);
+  line-height: 1.55;
+  margin-bottom: 10px;
+}
+.blog-uc-reason strong { color: var(--text); }
+.blog-uc-winner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--blue);
+  background: var(--blue-soft);
+  padding: 4px 10px;
+  border-radius: 100px;
+}
+
+/* Mobile collapse — all 2-col block grids drop to 1 col */
+@media (max-width: 720px) {
+  .blog-verdict-grid,
+  .blog-pc-grid {
+    grid-template-columns: 1fr;
+  }
+  .blog-highlight { flex-direction: column; }
+  .blog-prose { font-size: 17px; }
+  .blog-prose ul li, .blog-prose ol li { font-size: 17px; }
+  .blog-prose > p:first-of-type::first-letter,
+  .blog-prose > div:first-child > p:first-of-type::first-letter {
+    font-size: 52px;
+  }
 }
 @media (max-width: 720px) {
   .blog-prose { font-size: 16px; line-height: 1.72; }
