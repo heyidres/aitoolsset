@@ -64,12 +64,18 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
       Placeholder.configure({
         placeholder: placeholder ?? "Write something…",
       }),
-      // Tables — paste from Google Docs / Notion / Excel now renders
-      // as a real <table> instead of plain text. resizable: true gives
+      // Tables — paste from Google Docs / Notion / Excel renders as
+      // a real <table> instead of plain text. resizable:true gives
       // editors drag handles to adjust column widths.
+      // We omit a custom HTMLAttributes.class so the generic
+      // `.rte-content table` rule styles both inserted AND pasted
+      // tables identically (pasted tables never carry our class).
       Table.configure({
         resizable: true,
-        HTMLAttributes: { class: "rte-table" },
+        handleWidth: 6,
+        cellMinWidth: 60,
+        lastColumnResizable: true,
+        allowTableNodeSelection: true,
       }),
       TableRow,
       TableHeader,

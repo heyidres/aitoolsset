@@ -243,25 +243,19 @@ async function CmsPostRenderer({
         </div>
       )}
 
-      {/* BODY — single centered column.
-          The sidebar moved below the article (renders as "Keep reading"),
-          matching the Futurepedia / Wirecutter editorial pattern: dead-
-          center body, no left-shift, full reading focus. */}
+      {/* BODY + sidebar — matches the blog-post.html prototype:
+          2-col grid (flex-1fr | 320px). Article body capped at 720px and
+          justify-self:center so the reading column STILL feels centered
+          within its slot, while the sidebar stays pinned on the right. */}
       <section className="px-9 py-14 section-pad-x">
-        <div className="max-w-[760px] mx-auto" style={{ minWidth: 0 }}>
-          <BlogBody html={post.body} />
-          {post.faqs.length > 0 && <BlogFaqs items={post.faqs} />}
-          {(authors.length > 0 || reviewedBy) && (
-            <AuthorCards authors={authors} reviewedBy={reviewedBy} />
-          )}
-        </div>
-      </section>
-
-      {/* Sidebar widgets surfaced below the article so they don't pull
-          the body off-center. Tucked in a max-w-page container so they
-          can use the full row. */}
-      <section className="px-9 pb-16 section-pad-x">
-        <div className="max-w-[860px] mx-auto">
+        <div className="blog-layout mx-auto max-w-[1320px]">
+          <article className="blog-body-col" style={{ minWidth: 0 }}>
+            <BlogBody html={post.body} />
+            {post.faqs.length > 0 && <BlogFaqs items={post.faqs} />}
+            {(authors.length > 0 || reviewedBy) && (
+              <AuthorCards authors={authors} reviewedBy={reviewedBy} />
+            )}
+          </article>
           <BlogSidebar />
         </div>
       </section>

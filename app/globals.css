@@ -1571,35 +1571,120 @@ body.imgs-dark .imgs-foot { background: rgba(0, 0, 0, .2); border-top-color: rgb
   .blog-prose th, .blog-prose td { padding: 10px 12px; }
 }
 
-/* Editor preview — same look in the admin so what-you-see-is-what-you-get */
+/* ─────────────────────────────────────────────────────────────
+ *  Editor table — what-you-see-is-what-you-get for both freshly
+ *  inserted tables AND tables pasted from Google Docs / Notion /
+ *  Excel. TipTap registers the Table extension so pasted <table>
+ *  HTML becomes real nodes; this CSS makes every cell visibly
+ *  bordered, padded, and clickable.
+ *
+ *  Match both `.rte-table` (when inserted via toolbar) and any
+ *  generic `.rte-content table` (when pasted without our class).
+ * ───────────────────────────────────────────────────────────── */
+.rte-content table,
 .rte-table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  border: 1px solid var(--border);
+  border-collapse: collapse !important;
+  border: 1.5px solid var(--border-2);
   border-radius: 8px;
   overflow: hidden;
-  margin: 14px 0;
-  font-size: 13px;
+  margin: 16px 0;
+  font-size: 14px;
+  background: #fff;
+  table-layout: fixed;
 }
-.rte-table th, .rte-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
+.rte-content table th,
+.rte-content table td,
+.rte-table th,
+.rte-table td {
+  padding: 10px 14px;
+  border: 1px solid var(--border-2);
   text-align: left;
   vertical-align: top;
+  min-width: 80px;
+  position: relative;
 }
-.rte-table th { background: var(--surface); font-weight: 700; font-family: var(--font-manrope), sans-serif; }
-.rte-table tbody tr:last-child td { border-bottom: 0; }
-.rte-table .selectedCell { background: var(--blue-soft); }
+.rte-content table th,
+.rte-table th {
+  background: var(--surface);
+  font-weight: 700;
+  font-family: var(--font-manrope), sans-serif;
+  color: var(--text);
+}
+.rte-content table tbody tr:nth-child(even),
+.rte-table tbody tr:nth-child(even) {
+  background: rgba(91,97,110,.025);
+}
+.rte-content table tr:hover td,
+.rte-table tr:hover td {
+  background: rgba(0,82,255,.04);
+}
+.rte-content table .selectedCell,
+.rte-table .selectedCell {
+  background: var(--blue-soft) !important;
+  outline: 2px solid var(--blue);
+  outline-offset: -2px;
+}
+.rte-content table p,
+.rte-table p {
+  margin: 0 !important;
+  font-family: var(--font-body) !important;
+  font-size: inherit !important;
+}
+/* Column resize handle (ProseMirror table-resize plugin) */
+.rte-content .column-resize-handle,
+.rte-table .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background-color: var(--blue);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.rte-content.resize-cursor .column-resize-handle,
+.rte-table:hover .column-resize-handle {
+  opacity: 0.7;
+}
 .rte-content .tableWrapper { overflow-x: auto; }
-.rte-content .resize-cursor { cursor: ew-resize; }
+.rte-content .resize-cursor { cursor: col-resize; }
+/* Help text below the editor when there's no table */
+.rte-content table::after {
+  content: '';
+  display: block;
+}
 
-/* Single-column centered body — sidebar moved BELOW the article (or hidden) */
-@media (max-width: 1080px) {
+/* 2-col blog layout: flex body + 320px sticky sidebar.
+   Body column is capped at 720px and justify-self centered so the
+   article stays visually centered within its slot while the sidebar
+   anchors to the right. Matches the blog-post.html prototype. */
+.blog-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 56px;
+  align-items: flex-start;
+}
+.blog-body-col {
+  min-width: 0;
+  max-width: 720px;
+  justify-self: center;
+  width: 100%;
+}
+.blog-sidebar {
+  position: sticky;
+  top: 80px;
+}
+/* Tablet — sidebar drops below */
+@media (max-width: 980px) {
   .blog-layout {
-    grid-template-columns: minmax(0, 720px) !important;
+    grid-template-columns: minmax(0, 720px);
+    justify-content: center;
   }
-  .blog-layout > aside { display: none; }
+  .blog-sidebar {
+    position: static;
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────

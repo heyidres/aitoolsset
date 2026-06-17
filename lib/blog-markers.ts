@@ -263,8 +263,8 @@ export const BLOCK_TEMPLATES: Array<{
   {
     id: "table",
     label: "Comparison table",
-    description: "3-column comparison table with header row. Add/remove rows inline.",
+    description: "3-column table with header row. Click cells to edit; toolbar buttons add/remove rows + columns.",
     template:
-      '<table class="rte-table"><thead><tr><th>Feature</th><th>Option A</th><th>Option B</th></tr></thead><tbody><tr><td>First feature</td><td>Detail for A</td><td>Detail for B</td></tr><tr><td>Pricing</td><td>$10/mo</td><td>$20/mo</td></tr><tr><td>Free tier</td><td>Yes</td><td>Limited</td></tr></tbody></table><p></p>',
+      "<table><thead><tr><th><p>Feature</p></th><th><p>Option A</p></th><th><p>Option B</p></th></tr></thead><tbody><tr><td><p>First feature</p></td><td><p>Detail for A</p></td><td><p>Detail for B</p></td></tr><tr><td><p>Pricing</p></td><td><p>$10/mo</p></td><td><p>$20/mo</p></td></tr><tr><td><p>Free tier</p></td><td><p>Yes</p></td><td><p>Limited</p></td></tr></tbody></table><p></p>",
   },
 ];
