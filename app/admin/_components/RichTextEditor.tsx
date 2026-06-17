@@ -97,18 +97,23 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
   /**
    * Expose imperative `insertContent` / `focus` to parent refs.
    * insertContent uses TipTap's parser, so `<p>[[tool:slug]]</p>`
-   * lands as a real paragraph node (not raw text) at the cursor.
+   * lands as a real paragraph node (not raw text).
+   *
+   * IMPORTANT: we call `.focus()` WITHOUT a position so TipTap restores
+   * the editor's remembered selection (the cursor's last position).
+   * The button caller must also `e.preventDefault()` on mousedown so
+   * the editor never actually loses its selection to the button.
+   * Only if there's no remembered selection do we fall back to "end".
    */
   useImperativeHandle(
     ref,
     () => ({
       insertContent: (incoming: string) => {
         if (!editor) return;
-        // Focus first so the insertion point is the actual cursor — not
-        // the document end. Then insert and let onUpdate sync `html`.
-        editor.chain().focus("end").insertContent(incoming).run();
+        const hasSelection = !editor.state.selection.empty || editor.state.selection.from > 0;
+        editor.chain().focus(hasSelection ? undefined : "end").insertContent(incoming).run();
       },
-      focus: () => editor?.commands.focus("end"),
+      focus: () => editor?.commands.focus(),
     }),
     [editor]
   );

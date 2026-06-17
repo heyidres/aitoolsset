@@ -260,4 +260,11 @@ export const BLOCK_TEMPLATES: Array<{
     description: "Full embedded tool card (logo, tagline, CTA).",
     template: "<p>[[tool:replace-with-slug]]</p>",
   },
+  {
+    id: "table",
+    label: "Comparison table",
+    description: "3-column comparison table with header row. Add/remove rows inline.",
+    template:
+      '<table class="rte-table"><thead><tr><th>Feature</th><th>Option A</th><th>Option B</th></tr></thead><tbody><tr><td>First feature</td><td>Detail for A</td><td>Detail for B</td></tr><tr><td>Pricing</td><td>$10/mo</td><td>$20/mo</td></tr><tr><td>Free tier</td><td>Yes</td><td>Limited</td></tr></tbody></table><p></p>',
+  },
 ];

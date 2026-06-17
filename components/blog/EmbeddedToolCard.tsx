@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { CmsTool } from "@/lib/cms";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 /**
  * Full-width tool card rendered inline in a blog article body.
@@ -98,9 +99,13 @@ export function EmbeddedToolCard({
               color: "var(--text)",
               marginBottom: 4,
               lineHeight: 1.2,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
             }}
           >
             {tool.name}
+            {tool.verified && <VerifiedBadge />}
           </div>
           <div style={{ fontSize: 14, color: "var(--text-2)", lineHeight: 1.55, marginBottom: 12 }}>
             {tool.tagline}

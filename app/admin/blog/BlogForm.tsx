@@ -318,6 +318,10 @@ function BodyEditor({
       <div style={{ display: "flex", gap: 8, marginBottom: 8, position: "relative", flexWrap: "wrap" }}>
         <button
           type="button"
+          // preventDefault on mousedown so the editor doesn't lose its
+          // selection — without this, clicking the button would blur
+          // the editor and any subsequent insert would land at the end.
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => setPicking(true)}
           className="adm-btn-sm primary"
           style={{ padding: "6px 12px", fontSize: 12 }}
@@ -326,6 +330,7 @@ function BodyEditor({
         </button>
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => setBlockMenuOpen((s) => !s)}
           className="adm-btn-sm ghost"
           style={{ padding: "6px 12px", fontSize: 12, border: "1.5px solid var(--border)" }}
@@ -357,6 +362,7 @@ function BodyEditor({
               <button
                 key={b.id}
                 type="button"
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => insertBlock(b.template)}
                 style={{
                   display: "block",
@@ -455,6 +461,7 @@ function BodyEditor({
                   <button
                     key={t.slug}
                     type="button"
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => insertMarker(t.slug)}
                     style={{
                       display: "flex",
