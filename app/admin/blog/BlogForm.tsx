@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useTransition } from "react";
-import { RichTextEditor } from "../_components/RichTextEditor";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { RichTextEditor, type RichTextEditorHandle } from "../_components/RichTextEditor";
 import { BLOCK_TEMPLATES } from "@/lib/blog-markers";
 
 const CATEGORIES = ["Guide", "Comparison", "Roundup", "Tutorial", "News", "Review", "Opinion"];
@@ -285,17 +285,25 @@ function BodyEditor({
   const [picking, setPicking] = useState(false);
   const [search, setSearch] = useState("");
   const [blockMenuOpen, setBlockMenuOpen] = useState(false);
+  // Imperative handle into TipTap. We push insertions straight to the
+  // editor instead of mutating parent state — TipTap owns the doc.
+  const editorRef = useRef<RichTextEditorHandle | null>(null);
+
+  // Silence the "unused prop" lint — value/onChange are kept on the
+  // signature for back-compat with anywhere that still drives the
+  // editor via initial value; the editor's own onUpdate keeps the
+  // hidden input + form state in sync.
+  void value;
+  void onChange;
 
   const insertMarker = (slug: string) => {
-    // RTE owns the HTML — append a paragraph with the marker.
-    const marker = `<p>[[tool:${slug}]]</p>`;
-    onChange((value ?? "") + marker);
+    editorRef.current?.insertContent(`<p>[[tool:${slug}]]</p>`);
     setPicking(false);
     setSearch("");
   };
 
   const insertBlock = (template: string) => {
-    onChange((value ?? "") + template);
+    editorRef.current?.insertContent(template);
     setBlockMenuOpen(false);
   };
 
@@ -387,7 +395,7 @@ function BodyEditor({
           </div>
         )}
       </div>
-      <RichTextEditor name="body" defaultValue={value} placeholder="Open with a strong hook…" />
+      <RichTextEditor ref={editorRef} name="body" defaultValue={value} placeholder="Open with a strong hook…" />
 
       {picking && (
         <div

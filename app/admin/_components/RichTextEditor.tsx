@@ -11,7 +11,7 @@
 
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -30,7 +30,22 @@ type Props = {
   placeholder?: string;
 };
 
-export function RichTextEditor({ name, defaultValue = "", placeholder }: Props) {
+/**
+ * Imperative handle exposed to parents that need to inject HTML at
+ * the cursor (e.g. the BlogForm's "+ Insert tool card" / "+ Insert
+ * block" buttons). Required because TipTap owns its own internal
+ * doc state — mutating `defaultValue` from the parent has no effect
+ * after mount.
+ */
+export type RichTextEditorHandle = {
+  insertContent: (html: string) => void;
+  focus: () => void;
+};
+
+export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function RichTextEditor(
+  { name, defaultValue = "", placeholder },
+  ref
+) {
   const [html, setHtml] = useState(defaultValue);
 
   const editor = useEditor({
@@ -79,6 +94,25 @@ export function RichTextEditor({ name, defaultValue = "", placeholder }: Props) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
 
+  /**
+   * Expose imperative `insertContent` / `focus` to parent refs.
+   * insertContent uses TipTap's parser, so `<p>[[tool:slug]]</p>`
+   * lands as a real paragraph node (not raw text) at the cursor.
+   */
+  useImperativeHandle(
+    ref,
+    () => ({
+      insertContent: (incoming: string) => {
+        if (!editor) return;
+        // Focus first so the insertion point is the actual cursor — not
+        // the document end. Then insert and let onUpdate sync `html`.
+        editor.chain().focus("end").insertContent(incoming).run();
+      },
+      focus: () => editor?.commands.focus("end"),
+    }),
+    [editor]
+  );
+
   if (!editor) {
     return <div className="rte-skeleton" />;
   }
@@ -90,7 +124,7 @@ export function RichTextEditor({ name, defaultValue = "", placeholder }: Props) 
       <input type="hidden" name={name} value={html} />
     </div>
   );
-}
+});
 
 function Toolbar({ editor }: { editor: Editor }) {
   const setLink = useCallback(() => {
