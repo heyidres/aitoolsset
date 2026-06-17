@@ -168,6 +168,74 @@ export async function getFeaturedTools(): Promise<CmsTool[]> {
   return rows.map(toCmsTool);
 }
 
+export type CategoryStats = {
+  /** Total published tools in this category (primary OR additional). */
+  count: number;
+  /** Tools published in the last 7 days — drives the "+N this week" pill. */
+  newThisWeek: number;
+  /** Latest 5 published tools (newest first), used for the bottom-of-card favicon rail. */
+  topTools: Array<{ slug: string; name: string; domain: string; logoUrl: string | null }>;
+};
+
+/**
+ * Group every PUBLISHED tool by every category slug it belongs to
+ * (primary `category` + each entry in `categories[]`), in ONE query.
+ *
+ * Used by the /ai-tools landing page so every category card shows
+ * live counts and the actual 5 latest tools — no more hardcoded
+ * domains in lib/categories.ts.
+ *
+ * Returns a Map keyed by category slug. Categories with zero tools
+ * are not present in the map.
+ */
+export async function getCategoryStats(): Promise<Map<string, CategoryStats>> {
+  const rows = await db
+    .select({
+      slug: tools.slug,
+      name: tools.name,
+      domain: tools.domain,
+      logoUrl: tools.logoUrl,
+      category: tools.category,
+      categories: tools.categories,
+      createdAt: tools.createdAt,
+    })
+    .from(tools)
+    .where(eq(tools.status, "published"))
+    .orderBy(desc(tools.createdAt));
+
+  const stats = new Map<string, CategoryStats>();
+  const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+
+  for (const r of rows) {
+    const inCats = new Set<string>(
+      [r.category, ...(Array.isArray(r.categories) ? r.categories : [])].filter(Boolean) as string[]
+    );
+    const createdMs =
+      r.createdAt instanceof Date ? r.createdAt.getTime() : new Date(r.createdAt as unknown as string).getTime();
+    const isNew = !isNaN(createdMs) && createdMs >= oneWeekAgo;
+
+    for (const slug of inCats) {
+      let entry = stats.get(slug);
+      if (!entry) {
+        entry = { count: 0, newThisWeek: 0, topTools: [] };
+        stats.set(slug, entry);
+      }
+      entry.count++;
+      if (isNew) entry.newThisWeek++;
+      // Already ordered by createdAt DESC → first 5 ARE the latest.
+      if (entry.topTools.length < 5) {
+        entry.topTools.push({
+          slug: r.slug,
+          name: r.name,
+          domain: r.domain,
+          logoUrl: r.logoUrl,
+        });
+      }
+    }
+  }
+  return stats;
+}
+
 /** Single tool by URL slug. Returns null if not found. */
 export async function getToolBySlug(slug: string): Promise<CmsTool | null> {
   const [row] = await db.select().from(tools).where(eq(tools.slug, slug)).limit(1);

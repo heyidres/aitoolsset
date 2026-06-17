@@ -204,25 +204,43 @@ export function cmsGlossaryToLegacy(t: CmsGlossaryTerm): GlossaryTerm {
 }
 
 // ── Categories ───────────────────────────────────────────────
-/** A DB-managed category mapped to the rich PopularCategory shape. */
-export function cmsCategoryToPopular(c: CmsCategory, fallback?: Partial<PopularCategory>): PopularCategory {
+/**
+ * A DB-managed category mapped to the rich PopularCategory shape.
+ *
+ * Priority for each field:
+ *   1. Live stats (counts + topTools) — when present, override any fallback.
+ *   2. CMS row (name, emoji, color, description) — set by the editor.
+ *   3. Hardcoded fallback from POPULAR_CATS — legacy seed values.
+ *   4. Hard-coded defaults — when nothing else exists.
+ */
+export function cmsCategoryToPopular(
+  c: CmsCategory,
+  fallback?: Partial<PopularCategory>,
+  stats?: { count: number; newThisWeek: number; topTools: Array<{ domain: string }> }
+): PopularCategory {
+  const liveCount = stats?.count ?? 0;
+  const liveTrend = stats ? `+${stats.newThisWeek}` : undefined;
+  const liveTools = stats?.topTools.map((t) => t.domain) ?? [];
+
   return {
     name: c.name,
     slug: c.slug,
     emoji: c.icon ?? fallback?.emoji ?? "📂",
     color: c.color ?? fallback?.color ?? "#0052ff",
     desc: c.description ?? fallback?.desc ?? "",
-    count: fallback?.count ?? 0,
-    trend: fallback?.trend ?? "+0",
-    tools: fallback?.tools ?? [],
+    // Live count wins ONLY when > 0 — otherwise fall back to hardcoded
+    // seed numbers so empty categories don't suddenly show "0 tools".
+    count: liveCount > 0 ? liveCount : fallback?.count ?? 0,
+    trend: liveTrend ?? fallback?.trend ?? "+0",
+    tools: liveTools.length > 0 ? liveTools : fallback?.tools ?? [],
   };
 }
 
 /** A DB-managed category mapped to the lighter A-Z list shape. */
-export function cmsCategoryToSmall(c: CmsCategory): SmallCategory {
+export function cmsCategoryToSmall(c: CmsCategory, liveCount?: number): SmallCategory {
   return {
     name: c.name,
-    count: 0, // tool counts aren't backfilled yet
+    count: typeof liveCount === "number" ? liveCount : 0,
     icon: c.icon ?? "📂",
     bg: c.color ?? "#eef0f3",
     slug: c.slug,

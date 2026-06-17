@@ -15,7 +15,7 @@ import {
   type PopularCategory,
   type SmallCategory,
 } from "@/lib/categories";
-import { getAllCategories } from "@/lib/cms";
+import { getAllCategories, getCategoryStats, type CategoryStats } from "@/lib/cms";
 import { cmsCategoryToPopular, cmsCategoryToSmall } from "@/lib/cms-adapters";
 
 export const runtime = "nodejs";
@@ -48,19 +48,35 @@ function mergeBySlug<T extends { slug: string }>(hardcoded: T[], cms: T[]): T[] 
 }
 
 export default async function CategoriesPage() {
-  const cmsCats = await getAllCategories().catch(() => []);
+  const [cmsCats, stats] = await Promise.all([
+    getAllCategories().catch(() => []),
+    getCategoryStats().catch(() => new Map<string, CategoryStats>()),
+  ]);
 
-  // Build per-component merged lists. For the rich PopularCategoriesGrid
-  // we let CMS rows inherit the hardcoded count/trend/tools when matched
-  // (those aren't stored in the DB yet).
+  // CMS-managed categories get live counts + latest tools woven in.
   const hardcodedPopularBySlug = new Map(POPULAR_CATS.map((c) => [c.slug, c]));
   const cmsPopular: PopularCategory[] = cmsCats.map((c) =>
-    cmsCategoryToPopular(c, hardcodedPopularBySlug.get(c.slug))
+    cmsCategoryToPopular(c, hardcodedPopularBySlug.get(c.slug), stats.get(c.slug))
   );
-  const popularMerged = mergeBySlug(POPULAR_CATS, cmsPopular);
+  const popularMerged = mergeBySlug(POPULAR_CATS, cmsPopular)
+    // Apply live stats to hardcoded-only rows too — so a seeded "3D"
+    // category gets its real count/tool rail even when it has no CMS row.
+    .map((c) => {
+      const s = stats.get(c.slug);
+      if (!s) return c;
+      return {
+        ...c,
+        count: s.count > 0 ? s.count : c.count,
+        trend: `+${s.newThisWeek}`,
+        tools: s.topTools.length > 0 ? s.topTools.map((t) => t.domain) : c.tools,
+      };
+    });
 
-  const cmsSmall: SmallCategory[] = cmsCats.map(cmsCategoryToSmall);
-  const allMerged = mergeBySlug(ALL_CATS, cmsSmall);
+  const cmsSmall: SmallCategory[] = cmsCats.map((c) => cmsCategoryToSmall(c, stats.get(c.slug)?.count));
+  const allMerged = mergeBySlug(ALL_CATS, cmsSmall).map((c) => {
+    const s = stats.get(c.slug);
+    return s && s.count > 0 ? { ...c, count: s.count } : c;
+  });
 
   return (
     <main>
