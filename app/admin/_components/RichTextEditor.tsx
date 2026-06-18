@@ -51,11 +51,18 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        heading: { levels: [2, 3] },
+        // H1-H4 covers SEO-friendly outlines (H1 reserved for title in
+        // most callers; we still allow it for full editorial freedom).
+        heading: { levels: [1, 2, 3, 4] },
       }),
       Link.configure({
+        // false = clicks NEVER open the link in the editor; the user can
+        // always click to position the cursor. Cmd/Ctrl+click is also
+        // intercepted because the editor owns the click handler.
         openOnClick: false,
         autolink: true,
+        defaultProtocol: "https",
+        protocols: ["http", "https", "mailto"],
         HTMLAttributes: {
           rel: "noopener noreferrer",
           class: "rte-link",
@@ -138,17 +145,71 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
 });
 
 function Toolbar({ editor }: { editor: Editor }) {
-  const setLink = useCallback(() => {
-    const prev = editor.getAttributes("link").href as string | undefined;
-    const url = window.prompt("Link URL (leave blank to remove)", prev ?? "https://");
-    if (url === null) return;
-    if (url.trim() === "") {
+  // Link popover state — replaces the window.prompt with a small inline
+  // panel that lets the editor pick rel (nofollow/dofollow/sponsored/ugc)
+  // and target_blank alongside the URL.
+  const [linkPanel, setLinkPanel] = useState<{
+    open: boolean;
+    url: string;
+    rel: "nofollow" | "dofollow" | "sponsored" | "ugc";
+    newTab: boolean;
+  }>({ open: false, url: "", rel: "nofollow", newTab: false });
+
+  const openLinkPanel = useCallback(() => {
+    const attrs = editor.getAttributes("link") as {
+      href?: string;
+      rel?: string;
+      target?: string;
+    };
+    const existingRel = attrs.rel ?? "";
+    setLinkPanel({
+      open: true,
+      url: attrs.href ?? "",
+      rel: existingRel.includes("sponsored")
+        ? "sponsored"
+        : existingRel.includes("ugc")
+        ? "ugc"
+        : existingRel.includes("nofollow")
+        ? "nofollow"
+        : attrs.href
+        ? "dofollow"
+        : "nofollow",
+      newTab: attrs.target === "_blank",
+    });
+  }, [editor]);
+
+  const applyLink = useCallback(() => {
+    const url = linkPanel.url.trim();
+    if (!url) {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      setLinkPanel((s) => ({ ...s, open: false }));
       return;
     }
-    const safe = /^https?:\/\//i.test(url) ? url : `https://${url}`;
-    editor.chain().focus().extendMarkRange("link").setLink({ href: safe }).run();
-  }, [editor]);
+    const safe = /^(https?:\/\/|mailto:)/i.test(url) ? url : `https://${url}`;
+    // Compose rel: always include `noopener noreferrer` for security;
+    // append the SEO directive (nofollow/sponsored/ugc) — `dofollow`
+    // appends nothing because the absence of a directive = default follow.
+    const security = "noopener noreferrer";
+    const seoRel =
+      linkPanel.rel === "nofollow"
+        ? `nofollow ${security}`
+        : linkPanel.rel === "sponsored"
+        ? `sponsored ${security}`
+        : linkPanel.rel === "ugc"
+        ? `ugc ${security}`
+        : security;
+    editor
+      .chain()
+      .focus()
+      .extendMarkRange("link")
+      .setLink({
+        href: safe,
+        target: linkPanel.newTab ? "_blank" : null,
+        rel: seoRel,
+      })
+      .run();
+    setLinkPanel((s) => ({ ...s, open: false }));
+  }, [editor, linkPanel]);
 
   const Btn = ({
     label,
@@ -178,6 +239,13 @@ function Toolbar({ editor }: { editor: Editor }) {
   return (
     <div className="rte-toolbar" role="toolbar">
       <Btn
+        title="Heading 1"
+        active={editor.isActive("heading", { level: 1 })}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+      >
+        <span style={{ fontWeight: 800 }}>H1</span>
+      </Btn>
+      <Btn
         title="Heading 2"
         active={editor.isActive("heading", { level: 2 })}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
@@ -190,6 +258,13 @@ function Toolbar({ editor }: { editor: Editor }) {
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
       >
         <span style={{ fontWeight: 800 }}>H3</span>
+      </Btn>
+      <Btn
+        title="Heading 4"
+        active={editor.isActive("heading", { level: 4 })}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
+      >
+        <span style={{ fontWeight: 800 }}>H4</span>
       </Btn>
       <div className="rte-sep" />
       <Btn
@@ -253,7 +328,7 @@ function Toolbar({ editor }: { editor: Editor }) {
         </svg>
       </Btn>
       <div className="rte-sep" />
-      <Btn title="Insert link" active={editor.isActive("link")} onClick={setLink}>
+      <Btn title="Insert link" active={editor.isActive("link")} onClick={openLinkPanel}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
           <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
           <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.71" />
@@ -305,6 +380,29 @@ function Toolbar({ editor }: { editor: Editor }) {
       )}
       <div className="rte-sep" />
       <Btn
+        title="Horizontal rule (divider)"
+        onClick={() => editor.chain().focus().setHorizontalRule().run()}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+          <line x1="3" y1="12" x2="21" y2="12" />
+        </svg>
+      </Btn>
+      <Btn
+        title="Insert image (paste URL)"
+        onClick={() => {
+          const url = window.prompt("Image URL");
+          if (!url) return;
+          editor.chain().focus().insertContent(`<p><img src="${url}" alt="" /></p>`).run();
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <polyline points="21 15 16 10 5 21" />
+        </svg>
+      </Btn>
+      <div className="rte-sep" />
+      <Btn
         title="Clear formatting"
         onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}
       >
@@ -314,6 +412,138 @@ function Toolbar({ editor }: { editor: Editor }) {
           <line x1="13" y1="4" x2="8" y2="20" />
         </svg>
       </Btn>
+
+      {/* Link panel — slides under the toolbar when "Insert link" is clicked.
+          Two-field popover: URL + rel select + "open in new tab" toggle. */}
+      {linkPanel.open && (
+        <div
+          onMouseDown={(e) => e.stopPropagation()}
+          style={{
+            position: "absolute",
+            top: 44,
+            left: 12,
+            zIndex: 50,
+            background: "#fff",
+            border: "1px solid var(--border)",
+            borderRadius: 10,
+            boxShadow: "0 10px 30px rgba(0,0,0,.12)",
+            padding: 12,
+            width: 360,
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
+          <div style={{ fontFamily: "var(--font-manrope)", fontSize: 12, fontWeight: 800, color: "var(--text)" }}>
+            Insert / edit link
+          </div>
+          <input
+            type="url"
+            autoFocus
+            placeholder="https://example.com"
+            value={linkPanel.url}
+            onChange={(e) => setLinkPanel((s) => ({ ...s, url: e.target.value }))}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                applyLink();
+              } else if (e.key === "Escape") {
+                setLinkPanel((s) => ({ ...s, open: false }));
+              }
+            }}
+            style={{
+              padding: "8px 10px",
+              borderRadius: 6,
+              border: "1.5px solid var(--border)",
+              fontSize: 13,
+              outline: "none",
+            }}
+          />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center" }}>
+            <select
+              value={linkPanel.rel}
+              onChange={(e) =>
+                setLinkPanel((s) => ({ ...s, rel: e.target.value as typeof s.rel }))
+              }
+              style={{
+                padding: "7px 10px",
+                borderRadius: 6,
+                border: "1.5px solid var(--border)",
+                fontSize: 12.5,
+                background: "#fff",
+              }}
+            >
+              <option value="nofollow">rel=nofollow (default)</option>
+              <option value="dofollow">rel=dofollow (passes PageRank)</option>
+              <option value="sponsored">rel=sponsored (paid/affiliate)</option>
+              <option value="ugc">rel=ugc (user-generated)</option>
+            </select>
+            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--text-2)" }}>
+              <input
+                type="checkbox"
+                checked={linkPanel.newTab}
+                onChange={(e) => setLinkPanel((s) => ({ ...s, newTab: e.target.checked }))}
+              />
+              New tab
+            </label>
+          </div>
+          <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                editor.chain().focus().extendMarkRange("link").unsetLink().run();
+                setLinkPanel((s) => ({ ...s, open: false, url: "" }));
+              }}
+              style={{
+                padding: "6px 12px",
+                fontSize: 12,
+                borderRadius: 6,
+                border: "1px solid var(--border)",
+                background: "#fff",
+                color: "var(--red)",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              Remove
+            </button>
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => setLinkPanel((s) => ({ ...s, open: false }))}
+              style={{
+                padding: "6px 12px",
+                fontSize: 12,
+                borderRadius: 6,
+                border: "1px solid var(--border)",
+                background: "#fff",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={applyLink}
+              style={{
+                padding: "6px 14px",
+                fontSize: 12,
+                borderRadius: 6,
+                border: 0,
+                background: "var(--blue)",
+                color: "#fff",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

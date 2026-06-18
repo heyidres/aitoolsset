@@ -520,6 +520,7 @@
 }
 
 .admin-root .rte-toolbar {
+  position: relative; /* anchors the link panel popover */
   display: flex;
   align-items: center;
   gap: 2px;

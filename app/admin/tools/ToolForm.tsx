@@ -14,9 +14,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { ALL_CATS } from "@/lib/categories";
-import { RichTextEditor } from "../_components/RichTextEditor";
+import { RichTextEditor, type RichTextEditorHandle } from "../_components/RichTextEditor";
 import { autofillTool } from "./_actions";
 import type { AutofillResult } from "@/lib/tool-ai-fill";
 
@@ -653,10 +653,9 @@ export function ToolForm({
           </Section>
 
           <Section title="Use cases">
-            <ListEditor
+            <RichListEditor
               items={values.useCases}
-              placeholder="Concrete job the tool helps complete (start with a verb)"
-              hint='Each entry should start with a verb. e.g. "Generate ad creatives for Facebook campaigns", "Transcribe Zoom calls into searchable notes". One per line.'
+              hint='Each <li> is one use case. Use bold/links/H4 from the toolbar. Press Enter for a new item.'
               onChange={(items) => update("useCases", items)}
             />
           </Section>
@@ -680,21 +679,27 @@ export function ToolForm({
           </Section>
 
           <Section title="Key features">
-            <ListEditor
-              items={values.features.map((f) => `${f.title} — ${f.desc}`)}
-              placeholder="Title — short description"
+            <RichListEditor
+              items={values.features.map((f) =>
+                f.title ? `<strong>${f.title}:</strong> ${f.desc}` : f.desc
+              )}
+              hint='Each <li> = one feature. Use "<strong>Feature name:</strong> description" so the bold title shows on the public page.'
               onChange={(items) =>
                 update(
                   "features",
                   items.map((s) => {
-                    const idx = s.indexOf(" — ");
-                    return idx > -1
-                      ? { title: s.slice(0, idx).trim(), desc: s.slice(idx + 3).trim() }
-                      : { title: s.trim(), desc: "" };
+                    // Pull "<strong>Title:</strong> rest" or "<b>Title</b> — rest"
+                    const m = s.match(/<(?:strong|b)>([^<]+)<\/(?:strong|b)>[:\s—-]*([\s\S]*)/i);
+                    if (m) return { title: m[1].trim().replace(/:$/, ""), desc: m[2].trim() };
+                    // Fallback: plain "Title: desc"
+                    const colon = s.indexOf(":");
+                    if (colon > 0 && colon < 80) {
+                      return { title: s.slice(0, colon).trim(), desc: s.slice(colon + 1).trim() };
+                    }
+                    return { title: "", desc: s.trim() };
                   })
                 )
               }
-              hint="Format: Title — short description. One per line."
             />
           </Section>
 
@@ -1042,6 +1047,89 @@ function ListEditor({
       />
     </Field>
   );
+}
+
+/**
+ * Rich list editor — wraps RichTextEditor in list mode. Each `<li>` in
+ * the body's HTML becomes one entry in the `items` string[] (with
+ * inline HTML like `<strong>`/`<a>` preserved). Lets editors author
+ * use cases / key features with bold, links, and full formatting.
+ *
+ * The internal `RichTextEditor` has its own toolbar (H1-H4, bold,
+ * italic, link, lists, etc) so the editor can do everything they'd
+ * do in the main description body.
+ */
+function RichListEditor({
+  items,
+  hint,
+  onChange,
+}: {
+  items: string[];
+  hint?: string;
+  onChange: (items: string[]) => void;
+}) {
+  const editorRef = useRef<RichTextEditorHandle | null>(null);
+  // Always re-mount as a list when items change externally (e.g. AI
+  // auto-fill). We don't track per-keystroke changes — instead, parse
+  // the editor's HTML out of the hidden input on every blur / form save.
+  const initialHtml =
+    items.length > 0
+      ? `<ul>${items.map((i) => `<li>${i}</li>`).join("")}</ul>`
+      : "<ul><li></li></ul>";
+
+  // Sync items out by scraping the hidden input on every change.
+  const hiddenName = `richlist-${Math.random().toString(36).slice(2, 8)}`;
+
+  return (
+    <Field label="" hint={hint}>
+      <RichTextEditor
+        ref={editorRef}
+        name={hiddenName}
+        defaultValue={initialHtml}
+        placeholder="Add one bullet per line. Use the H1-H4 / bold / link toolbar."
+      />
+      {/* The hidden field RichTextEditor renders is what we read from.
+          Every change fires onInput on the wrapping div — parse <li>s
+          out and emit them to the parent. */}
+      <ParsedListOut
+        watchName={hiddenName}
+        onParsed={(parsedItems) => onChange(parsedItems)}
+      />
+    </Field>
+  );
+}
+
+/**
+ * Tiny syncer — watches the hidden input that RichTextEditor mirrors
+ * its HTML into, and re-emits the parsed <li> items whenever the input's
+ * value changes. Lives outside RichTextEditor so we don't have to fork
+ * the shared editor just for this one use case.
+ */
+function ParsedListOut({
+  watchName,
+  onParsed,
+}: {
+  watchName: string;
+  onParsed: (items: string[]) => void;
+}) {
+  useEffect(() => {
+    const input = document.querySelector<HTMLInputElement>(`input[name="${watchName}"]`);
+    if (!input) return;
+    let last = input.value;
+    const tick = () => {
+      if (input.value !== last) {
+        last = input.value;
+        // Extract every <li>…</li> body, trim, drop empties.
+        const items = Array.from(input.value.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi))
+          .map((m) => m[1].trim())
+          .filter(Boolean);
+        onParsed(items);
+      }
+    };
+    const id = window.setInterval(tick, 350);
+    return () => window.clearInterval(id);
+  }, [watchName, onParsed]);
+  return null;
 }
 
 function PlansEditor({ plans, onChange }: { plans: Plan[]; onChange: (p: Plan[]) => void }) {

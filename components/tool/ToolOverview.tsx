@@ -52,9 +52,9 @@ export function ToolOverview({
   return (
     <div id="overview">
       {/* What is */}
-      <section className="py-7">
+      <section className="py-5">
         <h2
-          className="font-display font-extrabold mb-[12px]"
+          className="font-display font-extrabold mb-[10px]"
           style={{ fontSize: 20, letterSpacing: "-.4px", color: "var(--text)" }}
         >
           What is {name}?
@@ -98,51 +98,49 @@ export function ToolOverview({
 
       {/* Features */}
       {features.length > 0 && (
-      <section className="py-7">
+      <section className="py-5">
         <h2
-          className="font-display font-extrabold mb-[12px]"
+          className="font-display font-extrabold mb-[10px]"
           style={{ fontSize: 20, letterSpacing: "-.4px", color: "var(--text)" }}
         >
-          Key Features
+          Key Features of {name}
         </h2>
-        <div className="flex flex-col gap-[10px] my-3 min-w-0">
-          {features.map((f) => (
-            <div key={f.title} className="flex items-start gap-[10px] text-[14.5px] leading-[1.55]" style={{ color: "var(--text-2)" }}>
-              <div
-                className="w-5 h-5 rounded-[5px] flex items-center justify-center flex-shrink-0 mt-[2px]"
-                style={{ background: "var(--blue-soft)", border: "1px solid rgba(0,82,255,.15)" }}
-              >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--blue)" }}>
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </div>
-              <div>
-                <strong style={{ color: "var(--text)", fontWeight: 700 }}>{f.title}</strong> — {f.desc}
-              </div>
-            </div>
+        <ul className="list-disc pl-5 my-2 min-w-0 flex flex-col gap-[4px]">
+          {features.map((f, i) => (
+            <li
+              key={`${f.title || "feat"}-${i}`}
+              className="text-[14.5px] leading-[1.6]"
+              style={{ color: "var(--text-2)" }}
+            >
+              {f.title && (
+                <strong style={{ color: "var(--text)", fontWeight: 700 }}>
+                  {f.title}:
+                </strong>
+              )}{" "}
+              <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(f.desc) }} />
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
       )}
 
       {/* Use cases — concrete jobs the tool helps users complete */}
       {useCases.length > 0 && (
-      <section className="py-7">
+      <section className="py-5">
         <h2
-          className="font-display font-extrabold mb-[12px]"
+          className="font-display font-extrabold mb-[10px]"
           style={{ fontSize: 20, letterSpacing: "-.4px", color: "var(--text)" }}
         >
           What you can do with {name}
         </h2>
-        <ul className="flex flex-col gap-[8px] my-2 min-w-0 list-disc pl-5">
+        <ul className="list-disc pl-5 my-2 min-w-0 flex flex-col gap-[4px]">
           {useCases.map((uc) => (
             <li
               key={uc}
               className="text-[14.5px] leading-[1.6]"
               style={{ color: "var(--text-2)" }}
-            >
-              {uc}
-            </li>
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(uc) }}
+            />
           ))}
         </ul>
       </section>
@@ -150,9 +148,9 @@ export function ToolOverview({
 
       {/* Pros & Cons */}
       {(pros.length > 0 || cons.length > 0) && (
-      <section className="py-7">
+      <section className="py-5">
         <h2
-          className="font-display font-extrabold mb-[12px]"
+          className="font-display font-extrabold mb-[10px]"
           style={{ fontSize: 20, letterSpacing: "-.4px", color: "var(--text)" }}
         >
           Pros &amp; Cons
@@ -211,7 +209,7 @@ export function ToolOverview({
       {plans.length > 0 && (
       <section id="pricing" className="py-9" style={{ borderBottom: "1px solid var(--border)" }}>
         <h2
-          className="font-display font-extrabold mb-[12px]"
+          className="font-display font-extrabold mb-[10px]"
           style={{ fontSize: 20, letterSpacing: "-.4px", color: "var(--text)" }}
         >
           Pricing
