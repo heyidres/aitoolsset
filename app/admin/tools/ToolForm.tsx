@@ -206,12 +206,22 @@ export function ToolForm({
           name: values.name,
           websiteUrl: values.websiteUrl,
         });
+        // Hard caps so the AI can never push values past the server-side
+        // zod limits (tagline 200, seoTitle 120, seoDescription 300).
+        // Trim on a word boundary when possible, then add an ellipsis.
+        const cap = (s: string | null | undefined, max: number): string | undefined => {
+          if (!s) return undefined;
+          if (s.length <= max) return s;
+          const sliced = s.slice(0, max - 1);
+          const lastSpace = sliced.lastIndexOf(" ");
+          return (lastSpace > max * 0.6 ? sliced.slice(0, lastSpace) : sliced).trimEnd() + "…";
+        };
         setValues((v) => ({
           ...v,
-          tagline: r.tagline || v.tagline,
+          tagline: cap(r.tagline, 200) ?? v.tagline,
           description: r.description || v.description,
-          seoTitle: r.seoTitle || v.seoTitle,
-          seoDescription: r.seoDescription || v.seoDescription,
+          seoTitle: cap(r.seoTitle, 120) ?? v.seoTitle,
+          seoDescription: cap(r.seoDescription, 300) ?? v.seoDescription,
           madeBy: r.madeBy ?? v.madeBy,
           launched: r.launched ?? v.launched,
           weeklyUsers: r.weeklyUsers ?? v.weeklyUsers,
@@ -301,15 +311,29 @@ export function ToolForm({
               />
             </Field>
 
-            <Field label="Tagline" required confidence={confidence.tagline} hint="One-sentence pitch shown on cards (max 140 chars)">
+            <Field
+              label="Tagline"
+              required
+              confidence={confidence.tagline}
+              hint={`One-sentence pitch shown on cards. ${values.tagline.length}/200 chars${
+                values.tagline.length > 140 ? " — consider trimming for best card display" : ""
+              }`}
+            >
               <input
                 type="text"
                 name="tagline"
                 required
-                maxLength={140}
+                maxLength={200}
                 value={values.tagline}
                 onChange={(e) => update("tagline", e.target.value)}
                 placeholder="e.g. The gold standard for AI art generation."
+                style={
+                  values.tagline.length > 200
+                    ? { borderColor: "var(--red)" }
+                    : values.tagline.length > 140
+                    ? { borderColor: "#f59e0b" }
+                    : undefined
+                }
               />
             </Field>
 

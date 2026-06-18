@@ -40,7 +40,7 @@ async function requireEditor() {
 const ToolInput = z.object({
   name: z.string().min(1).max(80),
   slug: z.string().min(1).max(80),
-  tagline: z.string().min(1).max(140),
+  tagline: z.string().min(1).max(200),
   domain: z.string().min(1).max(120),
   websiteUrl: z.string().url(),
   linkRel: z.enum(["dofollow", "nofollow", "sponsored", "ugc"]).default("nofollow"),
@@ -94,8 +94,34 @@ function safeJsonParse<T>(s: string): T | null {
   }
 }
 
+/**
+ * Map a ZodError's first issue into a single human-readable string.
+ * Field paths get capitalised; `String must contain at most N character(s)`
+ * gets the field name prepended so the editor knows WHERE to trim.
+ */
+function friendlyZodError(err: z.ZodError): Error {
+  const issue = err.issues[0];
+  const field = issue?.path?.[0]?.toString() ?? "field";
+  const fieldLabel = field
+    .replace(/Json$/i, "")
+    .replace(/Csv$/i, "")
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (m) => m.toUpperCase())
+    .trim();
+  const detail =
+    issue?.code === "too_big" && issue?.type === "string"
+      ? `${fieldLabel} is too long — ${issue.maximum} chars max (you have ${
+          (issue as { received?: number }).received ?? "more"
+        }).`
+      : issue?.code === "too_small"
+      ? `${fieldLabel} is required.`
+      : `${fieldLabel}: ${issue?.message ?? "invalid value"}`;
+  return new Error(detail);
+}
+
 function parseFormData(fd: FormData) {
-  return ToolInput.parse({
+  try {
+    return ToolInput.parse({
     name: (fd.get("name") as string) ?? "",
     slug: ((fd.get("slug") as string) ?? "").trim() || slugify((fd.get("name") as string) ?? ""),
     tagline: (fd.get("tagline") as string) ?? "",
@@ -140,6 +166,10 @@ function parseFormData(fd: FormData) {
     seoTitle: (fd.get("seoTitle") as string) ?? "",
     seoDescription: (fd.get("seoDescription") as string) ?? "",
   });
+  } catch (err) {
+    if (err instanceof z.ZodError) throw friendlyZodError(err);
+    throw err;
+  }
 }
 
 function tagsFromCsv(csv: string): string[] {
