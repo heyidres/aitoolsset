@@ -1,5 +1,14 @@
+import Link from "next/link";
 import { PRICING_TIERS } from "@/lib/categories";
 import { CategoriesSectionHeader } from "./SectionHeader";
+
+/** Maps the display tag to the pricing-column value used by /search?pricing=. */
+const TAG_TO_VALUE: Record<string, string> = {
+  Free: "free",
+  Freemium: "freemium",
+  Paid: "paid",
+  Enterprise: "enterprise",
+};
 
 export function PricingGrid() {
   return (
@@ -12,9 +21,11 @@ export function PricingGrid() {
         />
         <div className="grid grid-cols-4 gap-4 pr-grid-4">
           {PRICING_TIERS.map((p) => (
-            <button
+            <Link
               key={p.tag}
-              className="pr-card-hover rounded-lg p-6 cursor-pointer text-left tnum"
+              href={`/search?pricing=${TAG_TO_VALUE[p.tag] ?? "free"}`}
+              className="pr-card-hover rounded-lg p-6 cursor-pointer text-left tnum block"
+              style={{ userSelect: "text" }}
             >
               <div
                 className="inline-flex font-display text-[11px] font-extrabold uppercase tracking-[.07em] px-[10px] py-[3px] rounded-pill mb-[14px]"
@@ -41,7 +52,7 @@ export function PricingGrid() {
                   →
                 </span>
               </div>
-            </button>
+            </Link>
           ))}
         </div>
       </div>

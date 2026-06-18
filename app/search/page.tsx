@@ -20,15 +20,31 @@ import { SearchInput } from "./SearchInput";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type SearchParams = { q?: string | string[] };
+type SearchParams = { q?: string | string[]; pricing?: string | string[] };
+
+/** Allowed pricing filter values — must match the tool.pricing column enum. */
+const PRICING_VALUES = new Set(["free", "freemium", "paid", "trial", "credit", "enterprise"]);
+
+function readPricing(raw: string | string[] | undefined): string | null {
+  const v = (typeof raw === "string" ? raw : "").trim().toLowerCase();
+  return PRICING_VALUES.has(v) ? v : null;
+}
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<SearchParams> }): Promise<Metadata> {
-  const { q } = await searchParams;
+  const { q, pricing } = await searchParams;
   const query = (typeof q === "string" ? q : "").trim();
+  const tier = readPricing(pricing);
+  const heading = query
+    ? `Search: ${query}`
+    : tier
+    ? `${tier[0].toUpperCase()}${tier.slice(1)} AI tools`
+    : "Search";
   return {
-    title: query ? `Search: ${query} — AI Tools Set` : "Search — AI Tools Set",
+    title: `${heading} — AI Tools Set`,
     description: query
       ? `AI tools matching "${query}" — curated from the AI Tools Set directory.`
+      : tier
+      ? `Browse ${tier} AI tools — every tool tagged ${tier} from our directory.`
       : "Search 2,400+ AI tools across 48 categories.",
     robots: { index: false, follow: true },
   };
@@ -46,14 +62,15 @@ function filterHardcoded(query: string): Tool[] {
 }
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const { q } = await searchParams;
+  const { q, pricing } = await searchParams;
   const query = (typeof q === "string" ? q : "").trim();
+  const tier = readPricing(pricing);
 
   let results: Tool[] = [];
-  if (query.length >= 2) {
+  if (query.length >= 2 || tier) {
     const [cmsHits, hardcodedHits] = await Promise.all([
-      searchTools(query).catch(() => []),
-      Promise.resolve(filterHardcoded(query)),
+      query.length >= 2 ? searchTools(query).catch(() => []) : Promise.resolve([]),
+      Promise.resolve(query.length >= 2 ? filterHardcoded(query) : []),
     ]);
 
     // Dedupe by slug. DB rows win when both sources have the same tool.
@@ -61,7 +78,27 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     for (const t of hardcodedHits) merged.set(t.id, t);
     for (const c of cmsHits) merged.set(c.slug, cmsToolToLegacy(c));
 
-    results = Array.from(merged.values()).sort((a, b) => b.saves - a.saves);
+    // If only a pricing filter is set (no query), surface every CMS
+    // tool whose pricing tier matches — bypass the search-string layer.
+    if (tier && query.length < 2) {
+      const { getPublishedTools } = await import("@/lib/cms");
+      const all = await getPublishedTools().catch(() => []);
+      for (const c of all) merged.set(c.slug, cmsToolToLegacy(c));
+    }
+
+    results = Array.from(merged.values());
+
+    // Apply pricing filter post-merge so query + tier work together.
+    if (tier) {
+      results = results.filter((t) => {
+        // Legacy hardcoded tools only carry a `free` boolean.
+        if (tier === "free") return t.free;
+        if (tier === "freemium") return t.free;
+        return !t.free;
+      });
+    }
+
+    results = results.sort((a, b) => b.saves - a.saves);
   }
 
   return (

@@ -3,13 +3,13 @@ import { useState } from "react";
 import Link from "next/link";
 
 const INTENTS = [
-  { key: "popular", label: "🔥 Popular", target: "#popular" },
-  { key: "all", label: "📂 All Categories", target: "#all" },
-  { key: "usecase", label: "🎯 By Use Case", target: "#usecase" },
-  { key: "pricing", label: "💰 By Pricing", target: "#pricing" },
-  { key: "az", label: "🔤 A–Z List", target: "#az" },
-  { key: "toprated", label: "⭐ Top Rated", target: "/top-rated", external: true },
-  { key: "new", label: "🆕 New This Week", target: "/new", external: true },
+  { key: "popular", label: "Popular", target: "#popular" },
+  { key: "all", label: "All Categories", target: "#all" },
+  { key: "usecase", label: "By Use Case", target: "#usecase" },
+  { key: "pricing", label: "By Pricing", target: "#pricing" },
+  { key: "az", label: "A–Z List", target: "#az" },
+  { key: "toprated", label: "Top Rated", target: "/top-rated", external: true },
+  { key: "new", label: "New This Week", target: "/new", external: true },
 ];
 
 export function IntentBar() {

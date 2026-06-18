@@ -17,24 +17,17 @@ export function AllCategoriesGrid({ catsOverride }: { catsOverride?: SmallCatego
             <Link
               key={c.slug}
               href={`/ai-tools/${c.slug}`}
-              className="cat-mini-card-hover rounded p-[18px] cursor-pointer flex items-start gap-[14px]"
+              className="cat-mini-card-hover rounded p-[18px] cursor-pointer flex flex-col"
+              style={{ userSelect: "text" }}
             >
               <div
-                className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center flex-shrink-0"
-                style={{ background: c.bg, fontSize: 17 }}
+                className="font-display font-extrabold mb-[2px]"
+                style={{ fontSize: 14, letterSpacing: "-.2px", color: "var(--text)" }}
               >
-                {c.icon}
+                {c.name}
               </div>
-              <div className="flex-1 min-w-0">
-                <div
-                  className="font-display font-extrabold mb-[2px]"
-                  style={{ fontSize: 14, letterSpacing: "-.2px", color: "var(--text)" }}
-                >
-                  {c.name}
-                </div>
-                <div className="text-xs font-semibold tnum" style={{ color: "var(--text-3)" }}>
-                  {c.count} tools
-                </div>
+              <div className="text-xs font-semibold tnum" style={{ color: "var(--text-3)" }}>
+                {c.count} tools
               </div>
             </Link>
           ))}

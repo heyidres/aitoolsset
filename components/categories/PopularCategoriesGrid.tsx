@@ -21,25 +21,21 @@ export function PopularCategoriesGrid({ catsOverride }: { catsOverride?: Popular
               key={c.slug}
               href={`/ai-tools/${c.slug}`}
               className="pop-card-hover relative overflow-hidden rounded-lg p-7 cursor-pointer flex flex-col"
-              style={{ color: c.color, minHeight: 240 }}
+              // userSelect:text lets editors copy the title / description
+              // text inside the card without the link hijacking the drag.
+              style={{ color: c.color, minHeight: 220, userSelect: "text" }}
             >
               <span className="pop-card-corner" />
 
               <div
-                className="w-12 h-12 rounded-[14px] flex items-center justify-center mb-[18px] relative"
-                style={{ background: "currentColor" }}
-              >
-                <span style={{ color: "#fff", fontSize: 22 }}>{c.emoji}</span>
-              </div>
-              <div
                 className="font-display font-black mb-[6px] relative"
-                style={{ fontSize: 21, letterSpacing: "-.6px", lineHeight: 1.15, color: "var(--text)" }}
+                style={{ fontSize: 22, letterSpacing: "-.6px", lineHeight: 1.15, color: "var(--text)" }}
               >
                 {c.name}
               </div>
               <p
                 className="text-[13.5px] leading-[1.55] mb-[18px] relative flex-1"
-                style={{ color: "var(--text-2)" }}
+                style={{ color: "var(--text-2)", userSelect: "text" }}
               >
                 {c.desc}
               </p>
