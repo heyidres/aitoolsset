@@ -4,7 +4,18 @@ import { Favicon } from "./Favicon";
 
 export function PopularTable({ toolsOverride }: { toolsOverride?: Tool[] } = {}) {
   const TOOLS_DATA = toolsOverride && toolsOverride.length > 0 ? toolsOverride : TOOLS;
-  const popular = [...TOOLS_DATA].sort((a, b) => b.saves - a.saves).slice(0, 8);
+  // Same precedence rule as TrendingGrid: manual homepageOrder pins float
+  // to the top, then natural sort by saves.
+  const popular = [...TOOLS_DATA]
+    .sort((a, b) => {
+      const ao = a.homepageOrder;
+      const bo = b.homepageOrder;
+      if (ao != null && bo != null && ao !== bo) return ao - bo;
+      if (ao != null && bo == null) return -1;
+      if (ao == null && bo != null) return 1;
+      return b.saves - a.saves;
+    })
+    .slice(0, 8);
   return (
     <div className="bg-white">
       <div className="max-w-page mx-auto px-9 section-pad-x">

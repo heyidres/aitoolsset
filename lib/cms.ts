@@ -19,7 +19,7 @@
 
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "./db";
-import { tools, categories, blogPosts, deals, glossaryTerms, reviews, users, savedTools, sitePages, authors } from "./db/schema";
+import { tools, categories, blogPosts, deals, glossaryTerms, reviews, users, savedTools, sitePages, authors, homeSections } from "./db/schema";
 import { inArray } from "drizzle-orm";
 
 // ── Types ────────────────────────────────────────────────────
@@ -71,6 +71,8 @@ export type CmsTool = {
   reviewCount: number;
   avgRating: number;
   deal: { label: string; expires: string } | null;
+  /** Manual pin for the homepage Trending + Popular rails. NULL = organic sort. */
+  homepageOrder: number | null;
   // Editorial detail
   madeBy: string | null;
   launched: string | null;
@@ -119,6 +121,7 @@ function toCmsTool(row: typeof tools.$inferSelect): CmsTool {
     reviewCount: row.reviewCount,
     avgRating: row.avgRating,
     deal: row.deal,
+    homepageOrder: row.homepageOrder,
     madeBy: row.madeBy,
     launched: row.launched,
     weeklyUsers: row.weeklyUsers,
@@ -452,6 +455,67 @@ export async function getBlogPostBySlug(slug: string): Promise<CmsBlogPost | nul
 export async function getBlogPostById(id: string): Promise<CmsBlogPost | null> {
   const [row] = await db.select().from(blogPosts).where(eq(blogPosts.id, id)).limit(1);
   return row ? toCmsBlogPost(row) : null;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Home page sections (For Writers / For Developers / …)
+// ─────────────────────────────────────────────────────────────
+export type CmsHomeUseCase = { name: string; desc: string; label: string; grad: string };
+
+export type CmsHomeSection = {
+  id: string;
+  slug: string;
+  badge: string;
+  title: string;
+  deck: string;
+  bgColor: string;
+  imageSide: "left" | "right";
+  position: number;
+  enabled: boolean;
+  toolSlugs: string[];
+  useCases: CmsHomeUseCase[];
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+function toCmsHomeSection(row: typeof homeSections.$inferSelect): CmsHomeSection {
+  return {
+    id: row.id,
+    slug: row.slug,
+    badge: row.badge,
+    title: row.title,
+    deck: row.deck,
+    bgColor: row.bgColor,
+    imageSide: (row.imageSide === "left" ? "left" : "right") as "left" | "right",
+    position: row.position,
+    enabled: row.enabled,
+    toolSlugs: Array.isArray(row.toolSlugs) ? row.toolSlugs : [],
+    useCases: Array.isArray(row.useCases) ? row.useCases : [],
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+export async function getAllHomeSections(): Promise<CmsHomeSection[]> {
+  const rows = await db
+    .select()
+    .from(homeSections)
+    .orderBy(asc(homeSections.position), asc(homeSections.createdAt));
+  return rows.map(toCmsHomeSection);
+}
+
+export async function getEnabledHomeSections(): Promise<CmsHomeSection[]> {
+  const rows = await db
+    .select()
+    .from(homeSections)
+    .where(eq(homeSections.enabled, true))
+    .orderBy(asc(homeSections.position), asc(homeSections.createdAt));
+  return rows.map(toCmsHomeSection);
+}
+
+export async function getHomeSectionById(id: string): Promise<CmsHomeSection | null> {
+  const [row] = await db.select().from(homeSections).where(eq(homeSections.id, id)).limit(1);
+  return row ? toCmsHomeSection(row) : null;
 }
 
 // ─────────────────────────────────────────────────────────────

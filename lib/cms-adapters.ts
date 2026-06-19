@@ -109,6 +109,7 @@ export function cmsToolToLegacy(t: CmsTool): Tool {
     link: `/ai-tool/${t.slug}`,
     verified: t.verified,
     deal: t.deal,
+    homepageOrder: t.homepageOrder,
   };
 }
 

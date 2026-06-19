@@ -180,6 +180,14 @@ export const tools = pgTable(
     avgRating: integer("avg_rating").notNull().default(0), // stored as rating*10 (47 = 4.7)
     deal: jsonb("deal").$type<{ label: string; expires: string } | null>(),
 
+    /**
+     * Manual pin for the homepage Trending + Popular rails.
+     * Lower numbers float to the top. NULL = use organic sort
+     * (by saveCount desc). Set this when editors want to
+     * spotlight a tool regardless of save activity.
+     */
+    homepageOrder: integer("homepage_order"),
+
     // SEO — overrides for the public tool detail page <title> / description.
     // Fall back to generated defaults (name + tagline) when blank.
     seoTitle: text("seo_title"),
@@ -587,6 +595,45 @@ export const auditLog = pgTable("audit_log", {
   meta: jsonb("meta").$type<Record<string, unknown>>(),
   at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ── Home page editorial sections ────────────────────────────
+/**
+ * The "For Writers / For Developers / …" blocks on the homepage.
+ * Each row drives one UseCaseBlock instance. Editors add/edit/reorder
+ * sections via /admin/home; the public homepage maps these in order.
+ *
+ * When the table is empty, app/page.tsx falls back to the original
+ * hardcoded Writers + Developers blocks so the site never goes blank.
+ */
+export const homeSections = pgTable(
+  "home_section",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    slug: text("slug").notNull().unique(),
+    badge: text("badge").notNull(), // "✦ For Writers"
+    title: text("title").notNull(), // "Write better, publish faster."
+    deck: text("deck").notNull().default(""),
+    /** CSS color value piped into the section background. e.g. "var(--mint)" */
+    bgColor: text("bg_color").notNull().default("var(--mint)"),
+    /** Whether the use-case grid renders on the left or right of the copy. */
+    imageSide: text("image_side").notNull().default("right"), // 'left' | 'right'
+    /** Lower numbers render first. */
+    position: integer("position").notNull().default(0),
+    enabled: boolean("enabled").notNull().default(true),
+    /** Slugs of CMS tools to feature. Resolved to real tool rows server-side. */
+    toolSlugs: jsonb("tool_slugs").$type<string[]>().notNull().default([]),
+    /** Up to 4 use-case tiles rendered next to the copy. */
+    useCases: jsonb("use_cases")
+      .$type<Array<{ name: string; desc: string; label: string; grad: string }>>()
+      .notNull()
+      .default([]),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    positionIdx: index("home_section_position_idx").on(t.position),
+  })
+);
 
 // ── Type exports for use in route handlers ──────────────────
 export type User = typeof users.$inferSelect;

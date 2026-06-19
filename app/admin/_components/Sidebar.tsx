@@ -202,6 +202,7 @@ export function Sidebar({ counts, user }: { counts: SidebarCounts; user: Sidebar
           {item("/admin/deals", "Deals", Icon.Deals)}
           {item("/admin/glossary", "Glossary", Icon.Glossary)}
           {item("/admin/pages", "Pages", Icon.Pages)}
+          {item("/admin/home", "Home sections", Icon.SiteContent)}
           {item("/admin/site-content", "Site content", Icon.SiteContent)}
         </div>
 

@@ -38,6 +38,7 @@ export default async function EditToolPage({ params }: { params: Promise<{ id: s
     screenshotUrl: tool.screenshotUrl ?? "",
     verified: tool.verified,
     featured: tool.featured,
+    homepageOrder: tool.homepageOrder === null ? "" : String(tool.homepageOrder),
     status: tool.status,
     madeBy: tool.madeBy ?? "",
     launched: tool.launched ?? "",

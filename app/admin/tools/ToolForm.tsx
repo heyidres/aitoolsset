@@ -56,6 +56,8 @@ export type ToolFormValues = {
   screenshotUrl: string;
   verified: boolean;
   featured: boolean;
+  /** Manual pin for homepage Trending + Popular. Blank = organic sort. */
+  homepageOrder: string;
   status: "draft" | "published";
   // Editorial detail
   madeBy: string;
@@ -94,6 +96,7 @@ const EMPTY: ToolFormValues = {
   screenshotUrl: "",
   verified: false,
   featured: false,
+  homepageOrder: "",
   status: "draft",
   madeBy: "",
   launched: "",
@@ -811,6 +814,39 @@ export function ToolForm({
               on={values.featured}
               onChange={(v) => update("featured", v)}
             />
+
+            <div style={{ marginTop: 4, marginBottom: 4 }}>
+              <label
+                style={{
+                  display: "block",
+                  fontFamily: "var(--font-manrope)",
+                  fontSize: 12.5,
+                  fontWeight: 700,
+                  marginBottom: 4,
+                }}
+              >
+                Homepage pin order
+              </label>
+              <input
+                type="number"
+                name="homepageOrder"
+                step={1}
+                min={0}
+                value={values.homepageOrder}
+                onChange={(e) => update("homepageOrder", e.target.value)}
+                placeholder="blank = organic"
+                style={{
+                  width: "100%",
+                  padding: "7px 10px",
+                  borderRadius: 6,
+                  border: "1.5px solid var(--border)",
+                  fontSize: 13,
+                }}
+              />
+              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 3 }}>
+                Lower numbers pin higher in Trending + Popular on the homepage. Blank = sort by saves.
+              </div>
+            </div>
 
             <div style={{ height: 1, background: "var(--border)", margin: "12px 0" }} />
 

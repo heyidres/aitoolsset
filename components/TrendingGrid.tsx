@@ -3,12 +3,12 @@ import { TOOLS, type Tool } from "@/lib/tools";
 import { Favicon } from "./Favicon";
 
 export function TrendingGrid({ toolsOverride }: { toolsOverride?: Tool[] } = {}) {
-  // CMS doesn't track "trending" yet, so when an override is
-  // provided we treat the top 4 by saves as trending. Falls
-  // back to the hardcoded trending flag otherwise.
+  // Manual pin first (lower homepageOrder = higher slot, NULL = organic).
+  // Falls back to save count, then to the hardcoded `trending` flag
+  // when no CMS data is around.
   const trending =
     toolsOverride && toolsOverride.length > 0
-      ? [...toolsOverride].sort((a, b) => b.saves - a.saves).slice(0, 4)
+      ? [...toolsOverride].sort(sortByHomepageOrderThenSaves).slice(0, 4)
       : TOOLS.filter((t) => t.trending).slice(0, 4);
   return (
     <section className="py-16 px-9 section-pad-x" style={{ background: "var(--near-black)" }}>
@@ -89,4 +89,22 @@ export function TrendingGrid({ toolsOverride }: { toolsOverride?: Tool[] } = {})
       </div>
     </section>
   );
+}
+
+/**
+ * Tools with a non-null homepageOrder always float above tools without
+ * one. Among the pinned group, lower numbers come first. Ties (or pure
+ * unpinned tools) fall back to save count desc.
+ */
+function sortByHomepageOrderThenSaves(a: Tool, b: Tool): number {
+  const ao = a.homepageOrder;
+  const bo = b.homepageOrder;
+  if (ao != null && bo != null) {
+    if (ao !== bo) return ao - bo;
+  } else if (ao != null) {
+    return -1;
+  } else if (bo != null) {
+    return 1;
+  }
+  return b.saves - a.saves;
 }

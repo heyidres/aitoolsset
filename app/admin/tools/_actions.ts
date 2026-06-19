@@ -53,6 +53,7 @@ const ToolInput = z.object({
   screenshotUrl: z.string().optional().default(""),
   verified: z.string().optional(),
   featured: z.string().optional(),
+  homepageOrder: z.string().optional().default(""),
   status: z.enum(["draft", "published"]).default("draft"),
 
   // Editorial detail — optional
@@ -147,6 +148,7 @@ function parseFormData(fd: FormData) {
     screenshotUrl: (fd.get("screenshotUrl") as string) ?? "",
     verified: (fd.get("verified") as string) ?? "",
     featured: (fd.get("featured") as string) ?? "",
+    homepageOrder: (fd.get("homepageOrder") as string) ?? "",
     status: ((fd.get("status") as string) ?? "draft") as "draft" | "published",
     madeBy: (fd.get("madeBy") as string) ?? "",
     launched: (fd.get("launched") as string) ?? "",
@@ -212,6 +214,7 @@ function valuesFromInput(input: z.infer<typeof ToolInput>) {
     screenshotUrl: input.screenshotUrl || null,
     verified: asBool(input.verified),
     featured: asBool(input.featured),
+    homepageOrder: input.homepageOrder.trim() ? parseInt(input.homepageOrder, 10) : null,
     status: input.status,
     madeBy: input.madeBy || null,
     launched: input.launched || null,

@@ -13,6 +13,8 @@ export type Tool = {
   link: string;
   verified: boolean;
   deal: { label: string; expires: string } | null;
+  /** Optional manual pin for Trending + Popular on the homepage. */
+  homepageOrder?: number | null;
 };
 
 export const TOOLS: Tool[] = [

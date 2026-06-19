@@ -11,7 +11,7 @@ import { NewsSection } from "@/components/NewsSection";
 import { BlogSection } from "@/components/BlogSection";
 import { CtaSection } from "@/components/CtaSection";
 import { TOOLS, WRITER_TOOLS, DEV_TOOLS, WRITER_USECASES, DEV_USECASES } from "@/lib/tools";
-import { getPublishedTools } from "@/lib/cms";
+import { getPublishedTools, getEnabledHomeSections, type CmsTool } from "@/lib/cms";
 import { mergeToolsBySlug } from "@/lib/cms-adapters";
 
 export const runtime = "nodejs";
@@ -19,12 +19,13 @@ export const runtime = "nodejs";
 export const revalidate = 60;
 
 export default async function HomePage() {
-  // Pull every published tool from Postgres, merge onto the
-  // hardcoded TOOLS list (DB row wins on slug). The merged list
-  // flows into FeaturedTools / TrendingGrid / PopularTable so
-  // anything you mark "Featured" in /admin/tools shows up here.
-  const cmsTools = await getPublishedTools().catch(() => []);
+  // Pull every published tool + every enabled homepage section in parallel.
+  const [cmsTools, sections] = await Promise.all([
+    getPublishedTools().catch(() => []),
+    getEnabledHomeSections().catch(() => []),
+  ]);
   const tools = mergeToolsBySlug(TOOLS, cmsTools);
+  const toolBySlug = new Map(cmsTools.map((t) => [t.slug, t]));
 
   return (
     <main>
@@ -34,33 +35,52 @@ export default async function HomePage() {
       <FeaturedTools toolsOverride={tools} />
       <TrendingGrid toolsOverride={tools} />
 
-      <UseCaseBlock
-        bg="var(--mint)"
-        badge="✦ For Writers"
-        title={
-          <>
-            Write better,<br />publish faster.
-          </>
-        }
-        description="From blog posts to screenplays — the best AI writing tools to supercharge your workflow."
-        tools={WRITER_TOOLS}
-        cases={WRITER_USECASES}
-        imageSide="right"
-      />
-
-      <UseCaseBlock
-        bg="var(--sand)"
-        badge="✦ For Developers"
-        title={
-          <>
-            Code smarter,<br />ship faster.
-          </>
-        }
-        description="AI tools that write, review, and deploy code — from autocomplete to full-stack generation."
-        tools={DEV_TOOLS}
-        cases={DEV_USECASES}
-        imageSide="left"
-      />
+      {/* Editorial use-case blocks. CMS rows win; fall through to the
+          legacy hardcoded "For Writers / For Developers" pair when the
+          home_section table is empty. */}
+      {sections.length > 0 ? (
+        sections.map((s) => (
+          <UseCaseBlock
+            key={s.id}
+            bg={s.bgColor}
+            badge={s.badge}
+            title={renderTitleWithBreaks(s.title)}
+            description={s.deck}
+            tools={resolveSectionTools(s.toolSlugs, toolBySlug)}
+            cases={s.useCases}
+            imageSide={s.imageSide}
+          />
+        ))
+      ) : (
+        <>
+          <UseCaseBlock
+            bg="var(--mint)"
+            badge="✦ For Writers"
+            title={
+              <>
+                Write better,<br />publish faster.
+              </>
+            }
+            description="From blog posts to screenplays — the best AI writing tools to supercharge your workflow."
+            tools={WRITER_TOOLS}
+            cases={WRITER_USECASES}
+            imageSide="right"
+          />
+          <UseCaseBlock
+            bg="var(--sand)"
+            badge="✦ For Developers"
+            title={
+              <>
+                Code smarter,<br />ship faster.
+              </>
+            }
+            description="AI tools that write, review, and deploy code — from autocomplete to full-stack generation."
+            tools={DEV_TOOLS}
+            cases={DEV_USECASES}
+            imageSide="left"
+          />
+        </>
+      )}
 
       <CategoriesGrid />
       <PopularTable toolsOverride={tools} />
@@ -70,4 +90,45 @@ export default async function HomePage() {
       <Footer />
     </main>
   );
+}
+
+/** Split on newlines so editors can break the headline in the CMS form. */
+function renderTitleWithBreaks(title: string): React.ReactNode {
+  const lines = title.split(/\r?\n/);
+  return lines.map((line, i) => (
+    <span key={i}>
+      {line}
+      {i < lines.length - 1 && <br />}
+    </span>
+  ));
+}
+
+/**
+ * Convert CMS tool slugs into the lightweight shape UseCaseBlock expects.
+ * Unknown slugs are skipped silently so a section never blows up if a
+ * tool is unpublished or renamed.
+ */
+function resolveSectionTools(
+  slugs: string[],
+  bySlug: Map<string, CmsTool>
+): Array<{ name: string; domain: string; tag: string }> {
+  const out: Array<{ name: string; domain: string; tag: string }> = [];
+  for (const slug of slugs) {
+    const t = bySlug.get(slug);
+    if (!t) continue;
+    const tag =
+      t.pricing === "free"
+        ? "Free"
+        : t.pricing === "freemium"
+        ? "Free tier"
+        : t.pricing === "trial"
+        ? "Free Trial"
+        : t.pricing === "credit"
+        ? "Credit-based"
+        : t.pricing === "enterprise"
+        ? "Enterprise"
+        : "Paid";
+    out.push({ name: t.name, domain: t.domain, tag });
+  }
+  return out.slice(0, 4);
 }
