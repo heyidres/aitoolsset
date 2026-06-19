@@ -10,7 +10,23 @@
 import { sanitizeHtml } from "@/lib/sanitize";
 import { getToolBySlug, type CmsTool } from "@/lib/cms";
 import { parseBlogBody, type ParsedBlock } from "@/lib/blog-markers";
-import { EmbeddedToolCard } from "./EmbeddedToolCard";
+import { EmbeddedToolCard, type SerializableTool } from "./EmbeddedToolCard";
+
+/** Strip the CMS tool down to the minimal shape the client card needs. */
+function toSerializable(t: CmsTool): SerializableTool {
+  return {
+    slug: t.slug,
+    name: t.name,
+    tagline: t.tagline,
+    domain: t.domain,
+    category: t.category,
+    tags: t.tags,
+    pricing: t.pricing,
+    logoUrl: t.logoUrl,
+    verified: t.verified,
+    saveCount: t.saveCount,
+  };
+}
 import {
   TldrBlock,
   HighlightBlock,
@@ -38,10 +54,10 @@ export async function BlogBody({ html }: { html: string }) {
     )
   );
   const tools = await Promise.all(toolSlugs.map((s) => getToolBySlug(s).catch(() => null)));
-  const bySlug = new Map<string, CmsTool>();
+  const bySlug = new Map<string, SerializableTool>();
   for (let i = 0; i < toolSlugs.length; i++) {
     const t = tools[i];
-    if (t && t.status === "published") bySlug.set(toolSlugs[i], t);
+    if (t && t.status === "published") bySlug.set(toolSlugs[i], toSerializable(t));
   }
 
   return (
@@ -62,7 +78,7 @@ function BlockRenderer({
   toolsBySlug,
 }: {
   block: ParsedBlock;
-  toolsBySlug: Map<string, CmsTool>;
+  toolsBySlug: Map<string, SerializableTool>;
 }) {
   switch (block.kind) {
     case "tool":

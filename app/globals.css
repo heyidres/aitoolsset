@@ -1687,6 +1687,19 @@ body.imgs-dark .imgs-foot { background: rgba(0, 0, 0, .2); border-top-color: rgb
   }
 }
 
+/* Embedded tool card hover halo + CTA invert — matches the
+   .tool-card spec from the blog-post.html prototype. */
+.embed-tc:hover {
+  border-color: var(--blue) !important;
+  box-shadow: 0 0 0 3px rgba(0,82,255,.07), 0 4px 16px rgba(0,0,0,.08);
+  transform: translateY(-2px);
+}
+.embed-tc:hover .embed-tc-cta {
+  background: var(--blue) !important;
+  color: #fff !important;
+  border-color: var(--blue) !important;
+}
+
 /* ─────────────────────────────────────────────────────────────
  *  SCANNABLE CONTENT BLOCKS
  *
