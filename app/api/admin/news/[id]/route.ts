@@ -13,9 +13,16 @@ import type { EditorialDraft } from "@/lib/news";
 
 export const runtime = "nodejs";
 
+const TopicEnum = z.enum(["llm", "image", "video", "code", "audio", "policy", "research", "cybersecurity", "startup"]);
+
 const PatchSchema = z.object({
   status: z.enum(["draft", "review", "approved", "published"]).optional(),
-  headline: z.string().min(8).max(200).optional(),
+  headline: z.string().min(8).max(300).optional(),
+  description: z.string().max(500).optional(),
+  tag: z.string().max(60).optional(),
+  topic: TopicEnum.optional(),
+  categories: z.array(z.string()).optional(),
+  breaking: z.boolean().optional(),
   draft: z
     .object({
       seoTitle: z.string().optional(),
@@ -46,6 +53,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const now = new Date();
 
   if (body.headline) updates.headline = body.headline;
+  if (body.description !== undefined) updates.description = body.description;
+  if (body.tag !== undefined) updates.tag = body.tag;
+  if (body.topic) updates.topic = body.topic;
+  if (body.categories) updates.categories = body.categories;
+  if (body.breaking !== undefined) updates.breaking = body.breaking;
   if (body.draft) updates.draft = body.draft as EditorialDraft;
 
   if (body.status) {

@@ -83,7 +83,7 @@ export function AdminRow({ post }: { post: RowPost }) {
             {post.source} · {new Date(post.publishedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
           </span>
         </div>
-        <Link href={`/news/${post.slug}`} className="font-display text-[14.5px] font-extrabold leading-[1.35] mt-1 block hover:text-blue">
+        <Link href={`/admin/news/${post.id}/edit`} className="font-display text-[14.5px] font-extrabold leading-[1.35] mt-1 block hover:text-blue">
           {post.headline}
         </Link>
         {err && <div className="text-xs mt-1" style={{ color: "#dc2626" }}>{err}</div>}
@@ -92,6 +92,13 @@ export function AdminRow({ post }: { post: RowPost }) {
         <span className="font-display text-xs font-bold uppercase tracking-[.06em]" style={{ color: STATUS_COLOR[post.status] }}>
           {post.status}
         </span>
+        <Link
+          href={`/admin/news/${post.id}/edit`}
+          className="font-display text-[11.5px] font-bold px-3 py-[5px] rounded-pill transition-colors"
+          style={{ color: "var(--blue)", border: "1.5px solid var(--blue)" }}
+        >
+          Edit
+        </Link>
         {NEXT_STATUS[post.status].map((next) => (
           <button
             key={next}

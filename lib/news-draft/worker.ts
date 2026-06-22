@@ -39,16 +39,20 @@ function slugify(input: string): string {
     .slice(0, 80);
 }
 
-/** Topic mapping from outline → news_topic enum (defensive). */
+/**
+ * Outline-side topic → news_topic enum.
+ * Enum is: llm | image | video | code | audio | policy | research | cybersecurity | startup
+ * Anything unmapped falls through to 'llm' as the safest catch-all (most AI news).
+ */
 const TOPIC_MAP: Record<string, string> = {
-  "model-release": "product",
-  funding: "funding",
-  partnership: "partnership",
-  product: "product",
+  "model-release": "llm",
+  funding: "startup",
+  partnership: "startup",
+  product: "llm",
   research: "research",
-  policy: "regulation",
-  security: "vulnerability",
-  ecosystem: "product",
+  policy: "policy",
+  security: "cybersecurity",
+  ecosystem: "llm",
 };
 
 export async function runDraftWorker(): Promise<WorkerRunResult> {
@@ -117,7 +121,7 @@ export async function runDraftWorker(): Promise<WorkerRunResult> {
     }
 
     const draft = result.draft;
-    const topic = TOPIC_MAP[draft.topic] ?? "product";
+    const topic = TOPIC_MAP[draft.topic] ?? "llm";
     const baseSlug = slugify(draft.headline || event.title);
     // Suffix with short hash so re-runs don't collide on the same headline.
     const slug = `${baseSlug}-${crypto.createHash("sha1").update(event.urlHash).digest("hex").slice(0, 6)}`;

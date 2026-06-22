@@ -128,13 +128,20 @@ function CategoryPill({ category }: { category: string }) {
   );
 }
 
+/**
+ * Render the stored error compactly without losing cascade context.
+ * Cascade errors look like:
+ *   "All AI providers failed → gemini: 429 Quota exceeded || anthropic: 400 {...credit balance...}"
+ * We keep that whole prefix so the editor can tell *which* provider
+ * is broken. Just strip oversized JSON blobs inside.
+ */
 function shortErr(s: string | null): string {
   if (!s) return "—";
-  try {
-    const m = s.match(/"message":"([^"]+)"/);
-    if (m) return m[1];
-  } catch {}
-  return s.length > 140 ? s.slice(0, 140) + "…" : s;
+  // Collapse any JSON blob `{ ... }` longer than 80 chars to just its "message" field.
+  let cleaned = s.replace(/\{[^{}]*"message":"([^"]+)"[^{}]*\}/g, (_, msg) => `"${msg}"`);
+  // Final safety truncation.
+  if (cleaned.length > 380) cleaned = cleaned.slice(0, 380) + "…";
+  return cleaned;
 }
 
 export default async function PipelinePage() {

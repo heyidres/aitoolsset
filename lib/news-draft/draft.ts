@@ -372,20 +372,25 @@ async function runWithFallback(args: {
   const active = chain.filter((p) => p.enabled);
   if (active.length === 0) return null;
 
-  let lastErr: unknown = null;
+  const errors: string[] = [];
   for (const p of active) {
     try {
       const text = await p.run();
       if (text && text.trim()) return { text, provider: p.id };
+      errors.push(`${p.id}: returned empty response`);
     } catch (e) {
-      lastErr = e;
-      if (!isProviderUnavailable(e)) throw e;
-      console.warn(`[news-draft] ${p.id} unavailable, trying next provider…`, e instanceof Error ? e.message : e);
+      const msg = e instanceof Error ? e.message : String(e);
+      // Strip the bulky Anthropic JSON blob, keep just the human message.
+      const short = msg.length > 220 ? msg.slice(0, 220) + "…" : msg;
+      errors.push(`${p.id}: ${short}`);
+      if (!isProviderUnavailable(e)) {
+        console.error(`[news-draft] ${p.id} hard error (not retried):`, msg);
+        throw e;
+      }
+      console.warn(`[news-draft] ${p.id} unavailable → falling through:`, short);
     }
   }
-  throw lastErr instanceof Error
-    ? new Error(`All AI providers exhausted. Last error from ${active[active.length - 1].id}: ${lastErr.message}`)
-    : new Error("All AI providers exhausted.");
+  throw new Error(`All AI providers failed → ${errors.join(" || ")}`);
 }
 
 // ── Gemini ──────────────────────────────────────────────────
