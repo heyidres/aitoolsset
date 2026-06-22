@@ -1,47 +1,47 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { LogoMark } from "./Logo";
 import { NewsletterSignup } from "./NewsletterSignup";
 import { getSlots } from "@/lib/site-content";
 
-const COLUMNS = [
-  {
-    title: "Explore",
-    links: [
-      { href: "/ai-tools", label: "All Tools" },
-      { href: "/ai-tools", label: "Categories" },
-      { href: "/trending", label: "Trending" },
-      { href: "/new", label: "New Arrivals" },
-      { href: "/top-rated", label: "Top Rated" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
-      { href: "/about", label: "About" },
-      { href: "/blog", label: "Blog" },
-      { href: "/submit", label: "Submit Tool" },
-      { href: "/advertise", label: "Advertise" },
-      { href: "/newsletter", label: "Newsletter" },
-    ],
-  },
-  {
-    title: "Legal",
-    links: [
-      { href: "/privacy", label: "Privacy Policy" },
-      { href: "/terms", label: "Terms of Service" },
-      { href: "/cookies", label: "Cookies" },
-      { href: "/contact", label: "Contact" },
-    ],
-  },
-];
-
 export async function Footer() {
+  const t = await getTranslations();
   const s = await getSlots([
     "footer.tagline",
     "footer.newsletter_title",
     "footer.newsletter_sub",
     "footer.copyright",
   ]);
+
+  const COLUMNS = [
+    {
+      title: t("footer.discover"),
+      links: [
+        { href: "/ai-tools", label: t("nav.tools") },
+        { href: "/ai-tools", label: t("nav.categories") },
+        { href: "/news",     label: t("nav.news") },
+        { href: "/blog",     label: t("nav.blog") },
+        { href: "/deals",    label: t("nav.deals") },
+      ],
+    },
+    {
+      title: t("footer.company"),
+      links: [
+        { href: "/about",      label: t("footer.about") },
+        { href: "/blog",       label: t("nav.blog") },
+        { href: "/submit",     label: t("footer.submit_a_tool") },
+        { href: "/contact",    label: t("footer.contact") },
+      ],
+    },
+    {
+      title: t("footer.legal"),
+      links: [
+        { href: "/privacy", label: t("footer.privacy") },
+        { href: "/terms",   label: t("footer.terms") },
+        { href: "/cookies", label: t("footer.cookies") },
+      ],
+    },
+  ];
   return (
     <footer
       className="px-9 pt-[60px] pb-9 section-pad-x"

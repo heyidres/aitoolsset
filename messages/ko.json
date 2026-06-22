@@ -10,10 +10,12 @@
     "leaderboard": "리더보드",
     "glossary": "용어집",
     "submit": "등록하기",
+    "submit_a_tool": "도구 등록",
     "saved": "저장됨",
     "signIn": "로그인",
     "signOut": "로그아웃",
-    "search_placeholder": "1,400개 이상의 AI 도구 검색…"
+    "subscribe": "구독하기",
+    "search_placeholder": "AI 도구 검색…"
   },
   "footer": {
     "tagline": "개발자, 마케터, 보안팀을 위한 AI 도구 디렉토리.",
@@ -30,6 +32,7 @@
     "terms": "이용약관",
     "cookies": "쿠키",
     "contact": "문의",
+    "about": "소개",
     "submit_a_tool": "도구 등록",
     "all_rights_reserved": "All rights reserved."
   },

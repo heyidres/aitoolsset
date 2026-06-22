@@ -2,17 +2,26 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { LogoMark } from "./Logo";
 import { MegaPanel, PANELS } from "./MegaMenu";
 import { MobileDrawer } from "./MobileDrawer";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
-const DIRECT_LINKS = [
-  { label: "Leaderboard", href: "/leaderboard" },
-  { label: "Submit a Tool", href: "/submit" },
-];
-
 export function Nav() {
+  const t = useTranslations("nav");
+  // Direct links — re-derived inside the component so locale switching
+  // re-translates without a hard refresh.
+  const DIRECT_LINKS = [
+    { labelKey: "leaderboard", href: "/leaderboard" },
+    { labelKey: "submit_a_tool", href: "/submit" },
+  ];
+  // Mega-menu top-level labels translated via key matching on PANELS[].key
+  const PANEL_LABEL_KEYS: Record<string, string> = {
+    tools: "tools",
+    discover: "categories",
+    learn: "blog",
+  };
   const [open, setOpen] = useState<string | null>(null);
   const [drawer, setDrawer] = useState(false);
   const [query, setQuery] = useState("");
@@ -86,7 +95,7 @@ export function Nav() {
                   aria-expanded={isOpen}
                   aria-haspopup="true"
                 >
-                  {p.label}
+                  {PANEL_LABEL_KEYS[p.key] ? t(PANEL_LABEL_KEYS[p.key]) : p.label}
                   <svg className="chev" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
@@ -94,8 +103,8 @@ export function Nav() {
               );
             })}
             {DIRECT_LINKS.map((l) => (
-              <Link key={l.label} href={l.href} className="nav-link" onClick={close}>
-                {l.label}
+              <Link key={l.labelKey} href={l.href} className="nav-link" onClick={close}>
+                {t(l.labelKey)}
               </Link>
             ))}
           </div>
@@ -121,8 +130,8 @@ export function Nav() {
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search tools…"
-                aria-label="Search tools"
+                placeholder={t("search_placeholder")}
+                aria-label={t("search_placeholder")}
                 className="nav-search-input"
               />
             </form>
@@ -131,13 +140,13 @@ export function Nav() {
               className="font-display text-[13.5px] font-semibold px-4 py-[7px] rounded-pill transition-colors hover:text-text"
               style={{ color: "var(--text-2)" }}
             >
-              Sign in
+              {t("signIn")}
             </button>
             <button
               className="font-display text-[13.5px] font-bold text-white px-5 py-2 rounded-pill transition-colors hover:bg-blue-h"
               style={{ background: "var(--blue)" }}
             >
-              Subscribe
+              {t("subscribe")}
             </button>
           </div>
 

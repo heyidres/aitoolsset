@@ -10,10 +10,12 @@
     "leaderboard": "Leaderboard",
     "glossary": "Glossary",
     "submit": "Submit",
+    "submit_a_tool": "Submit a Tool",
     "saved": "Saved",
     "signIn": "Sign in",
     "signOut": "Sign out",
-    "search_placeholder": "Search 1,400+ AI tools…"
+    "subscribe": "Subscribe",
+    "search_placeholder": "Search tools…"
   },
   "footer": {
     "tagline": "The AI tools directory built for builders, marketers, and security teams.",
@@ -30,6 +32,7 @@
     "terms": "Terms",
     "cookies": "Cookies",
     "contact": "Contact",
+    "about": "About",
     "submit_a_tool": "Submit a tool",
     "all_rights_reserved": "All rights reserved."
   },
