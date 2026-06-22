@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Breadcrumb } from "../Breadcrumb";
 import { MARKETING_FACTS } from "@/lib/category-detail";
 
@@ -6,7 +7,19 @@ type Props = {
   count: number;
 };
 
-export function CategoryHero({ categoryName, count }: Props) {
+// Map English fact labels (from lib/category-detail.ts) to message keys.
+const FACT_LABEL_KEYS: Record<string, string> = {
+  "Total tools":        "facts_total_tools",
+  "Free tools":         "facts_free_tools",
+  "Freemium":           "facts_freemium",
+  "Paid only":          "facts_paid_only",
+  "Avg starting price": "facts_avg_price",
+  "Top use case":       "facts_top_use_case",
+};
+
+export async function CategoryHero({ categoryName, count }: Props) {
+  const t = await getTranslations("category_page");
+  const lower = categoryName.toLowerCase();
   return (
     <section
       className="relative overflow-hidden px-9 pt-12 pb-14 text-white section-pad-x"
@@ -25,8 +38,8 @@ export function CategoryHero({ categoryName, count }: Props) {
       <div className="max-w-[1320px] mx-auto relative">
         <Breadcrumb
           items={[
-            { label: "Home", href: "/" },
-            { label: "AI Tools", href: "/ai-tools" },
+            { label: t("breadcrumb_home"), href: "/" },
+            { label: t("breadcrumb_ai_tools"), href: "/ai-tools" },
             { label: categoryName },
           ]}
           theme="dark"
@@ -42,7 +55,7 @@ export function CategoryHero({ categoryName, count }: Props) {
                 color: "#f9a8d4",
               }}
             >
-              📈 Category · {categoryName}
+              📈 {t("eyebrow", { name: categoryName })}
             </div>
             <h1
               className="font-display font-black mb-4"
@@ -52,7 +65,7 @@ export function CategoryHero({ categoryName, count }: Props) {
                 lineHeight: 1.05,
               }}
             >
-              Best{" "}
+              {t("headline_lead")}{" "}
               <span
                 style={{
                   background: "linear-gradient(120deg, #f472b6, #a78bfa)",
@@ -62,29 +75,29 @@ export function CategoryHero({ categoryName, count }: Props) {
                   color: "transparent",
                 }}
               >
-                AI {categoryName.toLowerCase()} tools
+                {t("headline_accent", { nameLower: lower })}
               </span>
               <br />
-              for 2026, ranked &amp; reviewed
+              {t("headline_tail")}
             </h1>
             <p className="text-base leading-[1.65] max-w-[620px] mb-6" style={{ color: "rgba(255,255,255,.65)" }}>
-              Hand-picked AI {categoryName.toLowerCase()} software for SEO, content, ad copy, email automation, social media, and analytics. Every tool below has been tested by our editors and rated by real users — compare pricing, features, and reviews side-by-side.
+              {t("description", { nameLower: lower })}
             </p>
             <div className="flex items-center gap-[18px] flex-wrap text-[13px]" style={{ color: "rgba(255,255,255,.6)" }}>
               <div className="flex items-center gap-[6px]">
-                📂 <strong className="font-display font-extrabold text-white tnum">{count} tools</strong> listed
+                📂 <strong className="font-display font-extrabold text-white tnum">{t("stat_tools_listed", { count })}</strong>
               </div>
               <span className="w-[3px] h-[3px] rounded-full" style={{ background: "rgba(255,255,255,.3)" }} />
               <div className="flex items-center gap-[6px]">
-                ⭐ <strong className="font-display font-extrabold text-white tnum">4.6</strong> avg rating
+                ⭐ <strong className="font-display font-extrabold text-white tnum">{t("stat_avg_rating", { rating: "4.6" })}</strong>
               </div>
               <span className="w-[3px] h-[3px] rounded-full" style={{ background: "rgba(255,255,255,.3)" }} />
               <div className="flex items-center gap-[6px]">
-                🔄 Updated <strong className="font-display font-extrabold text-white">May 8, 2026</strong>
+                🔄 <strong className="font-display font-extrabold text-white">{t("stat_updated", { date: "May 8, 2026" })}</strong>
               </div>
               <span className="w-[3px] h-[3px] rounded-full" style={{ background: "rgba(255,255,255,.3)" }} />
               <div className="flex items-center gap-[6px]" style={{ color: "#34d399" }}>
-                ⬆ <strong className="font-display font-extrabold tnum" style={{ color: "#34d399" }}>14 added</strong> this month
+                ⬆ <strong className="font-display font-extrabold tnum" style={{ color: "#34d399" }}>{t("stat_added_this_month", { count: 14 })}</strong>
               </div>
             </div>
           </div>
@@ -98,7 +111,7 @@ export function CategoryHero({ categoryName, count }: Props) {
               style={{ color: "rgba(255,255,255,.5)" }}
             >
               <span className="w-[5px] h-[5px] rounded-full" style={{ background: "#f472b6" }} />
-              {categoryName} AI at a glance
+              {t("at_a_glance", { name: categoryName })}
             </div>
             {MARKETING_FACTS.map((f, i) => (
               <div
@@ -107,7 +120,7 @@ export function CategoryHero({ categoryName, count }: Props) {
                 style={{ borderBottom: i < MARKETING_FACTS.length - 1 ? "1px dashed rgba(255,255,255,.08)" : "none" }}
               >
                 <span className="text-[13px]" style={{ color: "rgba(255,255,255,.55)" }}>
-                  {f.label}
+                  {FACT_LABEL_KEYS[f.label] ? t(FACT_LABEL_KEYS[f.label]) : f.label}
                 </span>
                 <span className="font-display text-sm font-extrabold text-white tnum">{f.val}</span>
               </div>

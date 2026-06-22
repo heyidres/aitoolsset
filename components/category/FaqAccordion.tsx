@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 type Item = { q: string; a: string };
 
@@ -19,6 +20,7 @@ function renderMd(text: string) {
 }
 
 export function FaqAccordion({ items, categoryName }: { items: Item[]; categoryName: string }) {
+  const t = useTranslations("category_page");
   const [open, setOpen] = useState(0);
   return (
     <section
@@ -29,10 +31,10 @@ export function FaqAccordion({ items, categoryName }: { items: Item[]; categoryN
       <div className="max-w-[880px] mx-auto">
         <div className="text-center mb-8">
           <div className="eyebrow mb-2" style={{ letterSpacing: ".09em" }}>
-            Common questions
+            {t("faq_eyebrow")}
           </div>
           <h2 className="font-display font-black" style={{ fontSize: 36, letterSpacing: "-1.4px", lineHeight: 1.1 }}>
-            AI {categoryName.toLowerCase()} tools FAQ
+            {t("faq_heading", { nameLower: categoryName.toLowerCase() })}
           </h2>
         </div>
 

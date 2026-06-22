@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Link } from "@/lib/i18n/navigation";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { CategoryHero } from "@/components/category/CategoryHero";
@@ -11,6 +12,8 @@ import { FaqAccordion } from "@/components/category/FaqAccordion";
 import { CategoryOutro } from "@/components/category/CategoryOutro";
 import { RelatedCategories } from "@/components/category/RelatedCategories";
 import { ALL_CATS } from "@/lib/categories";
+import { getLocale } from "next-intl/server";
+import { i18n } from "@/lib/i18n/config";
 import { MARKETING_FAQ_TEXT } from "@/lib/category-detail";
 import { getToolsByCategory, getCategoryBySlug, type CmsCategory, type CmsTool } from "@/lib/cms";
 import { cmsToolToDetail, cmsToolToLegacy } from "@/lib/cms-adapters";
@@ -78,7 +81,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function CategoryDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const found = await findCategory(slug);
+  const [found, t] = await Promise.all([findCategory(slug), getTranslations("category_page")]);
   if (!found) notFound();
 
   // Pull every CMS tool tagged with this category slug. We need
@@ -99,8 +102,12 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
       : [];
 
   const cms = found.cms;
-  const hasCustomHero = !!(cms?.heroTitle || cms?.heroSubtitle || cms?.heroEyebrow || cms?.bannerImageUrl);
-  const hasIntro = !!cms?.introHtml?.trim();
+  const locale = await getLocale();
+  // Non-default locales skip the CMS-edited (English) hero/intro and use
+  // the translated standard variants. Default locale honors CMS overrides.
+  const isDefaultLocale = locale === i18n.defaultLocale;
+  const hasCustomHero = isDefaultLocale && !!(cms?.heroTitle || cms?.heroSubtitle || cms?.heroEyebrow || cms?.bannerImageUrl);
+  const hasIntro = isDefaultLocale && !!cms?.introHtml?.trim();
 
   // Sanitize once on the server. If DOMPurify throws (rare — happens
   // when jsdom can't init in a constrained runtime), fall back to a
@@ -160,13 +167,13 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
                   className="font-display font-bold mb-1"
                   style={{ fontSize: 11.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--blue)" }}
                 >
-                  ★ Editor&rsquo;s picks
+                  {t("editors_pick_eyebrow")}
                 </div>
                 <h2
                   className="font-display font-black"
                   style={{ fontSize: 28, letterSpacing: "-.6px", lineHeight: 1.15 }}
                 >
-                  Our team&rsquo;s top {found.name.toLowerCase()} tools
+                  {t("editors_pick_heading", { nameLower: found.name.toLowerCase() })}
                 </h2>
               </div>
             </div>

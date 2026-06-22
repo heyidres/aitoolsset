@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Favicon } from "../Favicon";
 import { MARKETING_TOOLS, SUB_CATEGORIES, FEATURE_FILTERS, POPULAR_TAGS, type DetailTool } from "@/lib/category-detail";
 
@@ -26,6 +27,7 @@ export function CategoryBrowser({
   // empty list (clean install or category has no DB tools yet)
   // falls back to the hardcoded marketing sample so the page
   // never looks broken.
+  const t = useTranslations("category_page");
   const TOOLS_DATA = toolsOverride && toolsOverride.length > 0 ? toolsOverride : MARKETING_TOOLS;
   const [pricing, setPricing] = useState<Set<string>>(new Set());
   const [subs, setSubs] = useState<Set<string>>(new Set());
@@ -116,8 +118,8 @@ export function CategoryBrowser({
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder={`Search in ${categoryName}…`}
-                  aria-label={`Search ${categoryName}`}
+                  placeholder={`${t("browser_search_placeholder", { name: categoryName })}…`}
+                  aria-label={t("browser_search_placeholder", { name: categoryName })}
                   className="w-full h-[38px] rounded text-[13.5px] outline-none pl-9 pr-[14px] transition-colors focus:border-[var(--blue)] focus:bg-white"
                   style={{
                     background: "var(--surface)",
@@ -130,7 +132,7 @@ export function CategoryBrowser({
 
             {/* Pricing */}
             <FilterSection
-              title="Pricing"
+              title={t("browser_filter_pricing")}
               onClear={() => setPricing(new Set())}
               showClear={pricing.size > 0}
             >
@@ -146,7 +148,7 @@ export function CategoryBrowser({
             </FilterSection>
 
             {/* Sub-category */}
-            <FilterSection title="Sub-category">
+            <FilterSection title={t("browser_filter_subcategory")}>
               {SUB_CATEGORIES.map((s) => (
                 <CheckRow
                   key={s.key}
@@ -159,7 +161,7 @@ export function CategoryBrowser({
             </FilterSection>
 
             {/* Rating */}
-            <FilterSection title="Minimum rating">
+            <FilterSection title={t("browser_filter_min_rating")}>
               <div className="flex gap-1 flex-wrap">
                 {[4.5, 4.0, 3.5].map((r) => {
                   const active = rating === r;
@@ -183,7 +185,7 @@ export function CategoryBrowser({
             </FilterSection>
 
             {/* Features */}
-            <FilterSection title="Features">
+            <FilterSection title={t("browser_filter_features")}>
               {FEATURE_FILTERS.map((f) => (
                 <CheckRow
                   key={f.key}
@@ -198,7 +200,7 @@ export function CategoryBrowser({
             {/* Tags */}
             <div>
               <div className="font-display text-[11.5px] font-extrabold uppercase tracking-[.08em] mb-3" style={{ color: "var(--text-3)" }}>
-                Popular tags
+                {t("browser_filter_popular_tags")}
               </div>
               <div className="flex gap-[5px] flex-wrap">
                 {POPULAR_TAGS.map((t) => {
@@ -229,7 +231,10 @@ export function CategoryBrowser({
           <div className="flex items-center justify-between gap-4 mb-[18px] flex-wrap">
             <div className="flex items-center gap-[14px] flex-wrap">
               <div className="font-display text-sm font-bold" style={{ color: "var(--text)" }}>
-                Showing <strong className="tnum" style={{ color: "var(--blue)" }}>{filtered.length}</strong> of {TOOLS_DATA.length} tools
+                {t.rich("browser_showing", {
+                  n: filtered.length,
+                  total: TOOLS_DATA.length,
+                })}
               </div>
               <div className="flex gap-[6px] flex-wrap">
                 {chips.map((c) => (
@@ -263,7 +268,7 @@ export function CategoryBrowser({
                   border: "1.5px solid var(--border)",
                 }}
               >
-                Sort: <strong>Editor's pick</strong>
+                {t("browser_sort_editors_pick")}
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
@@ -343,10 +348,10 @@ export function CategoryBrowser({
               </p>
               <div className="flex gap-2 relative flex-wrap">
                 <a className="font-display text-[13px] font-bold bg-white px-[18px] py-[9px] rounded-pill cursor-pointer" style={{ color: "var(--near-black)" }}>
-                  Visit Jasper →
+                  {t("browser_visit")} Jasper →
                 </a>
                 <a className="font-display text-[13px] font-bold px-[18px] py-[9px] rounded-pill cursor-pointer" style={{ background: "rgba(255,255,255,.08)", color: "#fff", border: "1px solid rgba(255,255,255,.12)" }}>
-                  Read full review
+                  {t("browser_read_review")}
                 </a>
               </div>
             </div>
@@ -385,13 +390,14 @@ export function CategoryBrowser({
                 gridTemplateColumns: view === "list" ? "1fr" : "repeat(3, 1fr)",
               }}
             >
-              {filtered.map((t) => (
+              {filtered.map((dt) => (
                 <ToolDetailCard
-                  key={t.name}
-                  tool={t}
-                  saved={saved.has(t.name)}
-                  onToggleSave={() => toggleSaved(t.name)}
+                  key={dt.name}
+                  tool={dt}
+                  saved={saved.has(dt.name)}
+                  onToggleSave={() => toggleSaved(dt.name)}
                   view={view}
+                  visitLabel={t("browser_visit")}
                 />
               ))}
             </div>
@@ -484,11 +490,13 @@ function ToolDetailCard({
   saved,
   onToggleSave,
   view,
+  visitLabel,
 }: {
   tool: DetailTool;
   saved: boolean;
   onToggleSave: () => void;
   view: "grid" | "list";
+  visitLabel: string;
 }) {
   const cls = PRICE_CLASS[tool.price];
   return (
@@ -568,7 +576,7 @@ function ToolDetailCard({
           </span>
         ))}
         <span className="font-display text-xs font-bold ml-auto hover:underline" style={{ color: "var(--blue)" }}>
-          Visit →
+          {visitLabel} →
         </span>
       </div>
     </div>

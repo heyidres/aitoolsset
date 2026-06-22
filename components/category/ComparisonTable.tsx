@@ -1,21 +1,27 @@
+import { getTranslations } from "next-intl/server";
 import { favicon } from "@/lib/tools";
 import { MARKETING_COMPARE } from "@/lib/category-detail";
 
 const FEATURES = ["SEO", "Copywriting", "Brand Voice", "API"];
 
-export function ComparisonTable({ categoryName }: { categoryName: string }) {
+export async function ComparisonTable({ categoryName }: { categoryName: string }) {
+  const t = await getTranslations("category_page");
+  const lower = categoryName.toLowerCase();
+  // Feature column headers stay in English since they're proper terms;
+  // only the table-meta columns (Pricing / Free Tier / Rating / Tool) translate.
+  const headers = [t("comparison_col_pricing"), t("comparison_col_free_tier"), ...FEATURES, t("comparison_col_rating")];
   return (
     <section className="py-16 px-9 section-pad-x" style={{ background: "var(--sand)", borderTop: "1px solid var(--border)" }}>
       <div className="max-w-[1320px] mx-auto">
         <div className="mb-[30px]">
           <div className="eyebrow mb-2" style={{ letterSpacing: ".09em" }}>
-            Side-by-side
+            {t("comparison_eyebrow")}
           </div>
           <h2 className="font-display font-black mb-2" style={{ fontSize: 32, letterSpacing: "-1.2px", lineHeight: 1.1 }}>
-            Top 6 AI {categoryName.toLowerCase()} tools compared
+            {t("comparison_heading", { nameLower: lower })}
           </h2>
           <p className="text-[14.5px] leading-[1.55] max-w-[680px]" style={{ color: "var(--text-2)" }}>
-            A quick reference of the top-rated tools in this category — pricing, free tier, key features, and our editor rating in one view.
+            {t("comparison_sub")}
           </p>
         </div>
 
@@ -27,9 +33,9 @@ export function ComparisonTable({ categoryName }: { categoryName: string }) {
                   className="font-display text-[11.5px] font-extrabold uppercase tracking-[.06em] px-[18px] py-[14px] text-left sticky left-0"
                   style={{ background: "var(--surface)", color: "var(--text-2)", borderBottom: "1px solid var(--border)" }}
                 >
-                  Tool
+                  {t("comparison_col_tool")}
                 </th>
-                {["Pricing", "Free Tier", ...FEATURES, "Rating"].map((h) => (
+                {headers.map((h) => (
                   <th
                     key={h}
                     className="font-display text-[11.5px] font-extrabold uppercase tracking-[.06em] px-[18px] py-[14px] text-left"

@@ -145,6 +145,8 @@ export function ToolHeader({
             </div>
             {badges.length > 0 && (
               <div className="flex items-center gap-[7px] flex-wrap mb-3">
+                {/* Translate the well-known pricing pills emitted by
+                    buildHeaderOverrides — Free / Free tier available / Paid. */}
                 {badges.map((b, i) =>
                   // Index 0 = pricing pill (Free / Free tier available / Paid) — non-clickable status badge.
                   // Index 1+ = tags — clickable links to search results for that tag.
@@ -154,7 +156,10 @@ export function ToolHeader({
                       className="text-[11.5px] font-bold px-[10px] py-1 rounded-pill"
                       style={{ color: "var(--green)", background: "var(--green-bg)", border: "1px solid var(--green-border)" }}
                     >
-                      {b}
+                      {b === "Free" ? t("header_free")
+                        : b === "Free tier available" ? t("header_free_tier")
+                        : b === "Paid" ? t("header_paid")
+                        : b}
                     </span>
                   ) : (
                     <Link
