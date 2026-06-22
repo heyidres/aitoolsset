@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import { Link } from "@/lib/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { TOOLS, FILTER_PILLS, type Tool } from "@/lib/tools";
 import { ToolCard } from "./ToolCard";

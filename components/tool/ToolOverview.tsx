@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import type { ToolDetail } from "@/lib/tool-detail";
 import { sanitizeHtml } from "@/lib/sanitize";
 
@@ -37,6 +38,8 @@ export function ToolOverview({
   descriptionHtml?: string;
   overrides?: ToolOverviewOverrides;
 }) {
+  const t = useTranslations("tool_page");
+  const tc = useTranslations("common");
   const [expanded, setExpanded] = useState(false);
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const hasCustomDescription = !!descriptionHtml && descriptionHtml.trim().length > 0;
@@ -57,14 +60,14 @@ export function ToolOverview({
           className="font-display font-extrabold mb-[10px]"
           style={{ fontSize: 20, letterSpacing: "-.4px", color: "var(--text)" }}
         >
-          What is {name}?
+          {t("what_is", { name })}
         </h2>
         <div className="flex items-center gap-[6px] mb-[14px] text-[12.5px]" style={{ color: "var(--text-3)" }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10" />
             <polyline points="12 6 12 12 16 14" />
           </svg>
-          Content last verified <strong style={{ color: "var(--text-2)", fontWeight: 600 }}>May 4, 2026</strong> by the AI Tools Set Research Team
+          {t("content_last_verified", { date: "May 4, 2026" })} <span style={{ color: "var(--text-3)" }}>· {t("by_research_team")}</span>
         </div>
 
         {hasCustomDescription ? (
@@ -90,7 +93,7 @@ export function ToolOverview({
               className="font-display text-[13.5px] font-bold inline-flex items-center gap-[5px] cursor-pointer mt-3"
               style={{ color: "var(--blue)" }}
             >
-              {expanded ? "Show less ↑" : "Read more ↓"}
+              {expanded ? `${tc("show_less")} ↑` : `${tc("show_more")} ↓`}
             </button>
           </div>
         )}
@@ -103,7 +106,7 @@ export function ToolOverview({
           className="font-display font-extrabold mb-[10px]"
           style={{ fontSize: 20, letterSpacing: "-.4px", color: "var(--text)" }}
         >
-          Key Features of {name}
+          {t("key_features_of", { name })}
         </h2>
         <ul className="list-disc pl-5 my-2 min-w-0 flex flex-col gap-[4px]">
           {features.map((f, i) => (
@@ -131,7 +134,7 @@ export function ToolOverview({
           className="font-display font-extrabold mb-[10px]"
           style={{ fontSize: 20, letterSpacing: "-.4px", color: "var(--text)" }}
         >
-          What you can do with {name}
+          {t("use_cases_of", { name })}
         </h2>
         <ul className="list-disc pl-5 my-2 min-w-0 flex flex-col gap-[4px]">
           {useCases.map((uc) => (
@@ -153,7 +156,7 @@ export function ToolOverview({
           className="font-display font-extrabold mb-[10px]"
           style={{ fontSize: 20, letterSpacing: "-.4px", color: "var(--text)" }}
         >
-          Pros &amp; Cons
+          {t("pros_and_cons")}
         </h2>
         <div className="grid grid-cols-2 gap-5 my-3 min-w-0 pc-grid-2">
           <div>
@@ -162,7 +165,7 @@ export function ToolOverview({
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
-              Pros
+              {t("pros")}
             </div>
             <div className="flex flex-col gap-2">
               {pros.map((p) => (
@@ -185,7 +188,7 @@ export function ToolOverview({
                 <line x1="15" y1="9" x2="9" y2="15" />
                 <line x1="9" y1="9" x2="15" y2="15" />
               </svg>
-              Cons
+              {t("cons")}
             </div>
             <div className="flex flex-col gap-2">
               {cons.map((c) => (
@@ -212,7 +215,7 @@ export function ToolOverview({
           className="font-display font-extrabold mb-[10px]"
           style={{ fontSize: 20, letterSpacing: "-.4px", color: "var(--text)" }}
         >
-          Pricing
+          {t("pricing")}
         </h2>
         <div className="flex gap-[6px] mb-4">
           {(["monthly", "annual"] as const).map((b) => (
@@ -226,7 +229,7 @@ export function ToolOverview({
                 border: `1.5px solid ${billing === b ? "var(--blue)" : "var(--border)"}`,
               }}
             >
-              {b === "monthly" ? "Monthly" : "Annual (save 20%)"}
+              {b === "monthly" ? t("pricing_monthly") : t("pricing_annual")}
             </button>
           ))}
         </div>
@@ -245,7 +248,7 @@ export function ToolOverview({
                   className="text-[10px] font-extrabold uppercase tracking-[.06em] mb-[6px]"
                   style={{ color: "var(--blue)" }}
                 >
-                  Most popular
+                  {t("pricing_most_popular")}
                 </div>
               )}
               <div className="font-display text-[15px] font-extrabold mb-1">{p.name}</div>

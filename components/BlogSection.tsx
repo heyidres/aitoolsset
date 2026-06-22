@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/lib/i18n/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
 import { BLOG_POSTS } from "@/lib/tools";
 import { localizeBlogPosts } from "@/lib/i18n/seed-i18n";

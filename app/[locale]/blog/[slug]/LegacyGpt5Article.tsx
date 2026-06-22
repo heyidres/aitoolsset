@@ -6,7 +6,7 @@
  * that exact slug is requested.
  */
 
-import Link from "next/link";
+import { Link } from "@/lib/i18n/navigation";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { ReadingProgress } from "@/components/blog/ReadingProgress";

@@ -1,9 +1,11 @@
 "use client";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import type { Tool } from "@/lib/tools";
 import { favicon } from "@/lib/tools";
 
 export function EmbedSection({ tool }: { tool: Tool }) {
+  const t = useTranslations("tool_page");
   const [copied, setCopied] = useState(false);
 
   const code = `<a href="https://aitoolsset.com/ai-tool/${tool.id}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e8e8e4;border-radius:10px;padding:8px 14px;font-family:sans-serif;text-decoration:none;"><img src="https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32" style="width:20px;height:20px;border-radius:5px;"/><span style="font-size:11px;color:#9aa0ae;display:block;line-height:1;">Featured on</span><span style="font-size:13px;font-weight:700;color:#0a0b0d;">AI Tools Set</span></a>`;
@@ -28,7 +30,7 @@ export function EmbedSection({ tool }: { tool: Tool }) {
             style={{ top: -40, right: -40, width: 200, height: 200, background: "rgba(255,255,255,.06)" }}
           />
           <div className="font-display text-base font-extrabold text-white mb-[18px] relative">
-            Promote {tool.name} on your site
+            {t("embed_promote_on_site", { name: tool.name })}
           </div>
           <div className="flex items-center gap-3 flex-wrap min-w-0 relative">
             <button
@@ -44,7 +46,7 @@ export function EmbedSection({ tool }: { tool: Tool }) {
               </div>
               <div className="leading-tight text-left">
                 <div className="text-[10px] font-semibold uppercase tracking-[.05em]" style={{ color: "rgba(255,255,255,.65)" }}>
-                  Featured on
+                  {t("embed_featured_on")}
                 </div>
                 <div className="font-display text-[13px] font-extrabold text-white">AI Tools Set</div>
               </div>
@@ -66,11 +68,11 @@ export function EmbedSection({ tool }: { tool: Tool }) {
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
               </svg>
-              {copied ? "Copied!" : "Copy Embed Code"}
+              {copied ? t("embed_copied") : t("embed_copy_code")}
             </button>
             <div className="flex items-center gap-2 ml-auto">
               <span className="text-xs" style={{ color: "rgba(255,255,255,.5)" }}>
-                Share
+                {t("share")}
               </span>
               {["x", "facebook", "linkedin"].map((s) => (
                 <div

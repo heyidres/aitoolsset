@@ -1,18 +1,21 @@
 "use client";
 import { useState } from "react";
-
-const TABS = [
-  { key: "overview", label: "Overview", target: "#overview" },
-  { key: "reviews", label: "Reviews", target: "#reviews" },
-  { key: "alternatives", label: "Alternatives", target: "#related-tools" },
-  { key: "pricing", label: "Pricing", target: "#pricing" },
-];
+import { useTranslations } from "next-intl";
 
 export function ToolTabs({ reviewCount }: { reviewCount: number }) {
+  const t = useTranslations("tool_page");
   const [active, setActive] = useState("overview");
-  const onClick = (k: string, t: string) => {
+
+  const TABS = [
+    { key: "overview",     label: t("tab_overview"),    target: "#overview" },
+    { key: "reviews",      label: t("tab_reviews", { count: reviewCount.toLocaleString() }), target: "#reviews" },
+    { key: "alternatives", label: t("tab_alternatives"), target: "#related-tools" },
+    { key: "pricing",      label: t("tab_pricing"),     target: "#pricing" },
+  ];
+
+  const onClick = (k: string, target: string) => {
     setActive(k);
-    const el = document.querySelector(t);
+    const el = document.querySelector(target);
     if (el) {
       const y = el.getBoundingClientRect().top + window.scrollY - 110;
       window.scrollTo({ top: y, behavior: "smooth" });
@@ -24,20 +27,19 @@ export function ToolTabs({ reviewCount }: { reviewCount: number }) {
       style={{ top: 58, borderBottom: "1px solid var(--border)" }}
     >
       <div className="max-w-page mx-auto flex gap-0 overflow-x-auto no-scrollbar">
-        {TABS.map((t) => {
-          const isActive = active === t.key;
+        {TABS.map((tab) => {
+          const isActive = active === tab.key;
           return (
             <button
-              key={t.key}
-              onClick={() => onClick(t.key, t.target)}
+              key={tab.key}
+              onClick={() => onClick(tab.key, tab.target)}
               className="font-display text-[13.5px] font-bold px-[18px] py-[14px] whitespace-nowrap transition-colors"
               style={{
                 color: isActive ? "var(--blue)" : "var(--text-2)",
                 borderBottom: `2px solid ${isActive ? "var(--blue)" : "transparent"}`,
               }}
             >
-              {t.label}
-              {t.key === "reviews" && <span> ({reviewCount.toLocaleString()})</span>}
+              {tab.label}
             </button>
           );
         })}

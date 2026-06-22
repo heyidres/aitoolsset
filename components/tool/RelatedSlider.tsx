@@ -1,6 +1,7 @@
 "use client";
 import { useRef } from "react";
-import Link from "next/link";
+import { Link } from "@/lib/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { Favicon } from "../Favicon";
 
 const RELATED = [
@@ -14,6 +15,8 @@ const RELATED = [
 ];
 
 export function RelatedSlider({ category }: { category: string }) {
+  const t = useTranslations("tool_page");
+  const tc = useTranslations("tool_card");
   const trackRef = useRef<HTMLDivElement>(null);
   const slide = (dir: number) => {
     if (trackRef.current) trackRef.current.scrollLeft += dir * 220;
@@ -27,10 +30,10 @@ export function RelatedSlider({ category }: { category: string }) {
       <div className="max-w-page mx-auto overflow-hidden">
         <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
           <div className="font-display font-extrabold" style={{ fontSize: 24, letterSpacing: "-.6px" }}>
-            Related {category} Tools
+            {t("related_tools_category", { category })}
           </div>
           <Link href="/ai-tools" className="font-display text-[13.5px] font-bold" style={{ color: "var(--blue)" }}>
-            View all →
+            {t("view_all")} →
           </Link>
         </div>
         <div className="relative w-full max-w-full overflow-hidden">
@@ -49,10 +52,10 @@ export function RelatedSlider({ category }: { category: string }) {
             className="flex gap-[14px] overflow-x-auto no-scrollbar pb-1 max-w-full"
             style={{ scrollBehavior: "smooth" }}
           >
-            {RELATED.map((t) => (
+            {RELATED.map((rt) => (
               <Link
-                key={t.name}
-                href={`/ai-tool/${t.name.toLowerCase().replace(/\s+/g, "-")}`}
+                key={rt.name}
+                href={`/ai-tool/${rt.name.toLowerCase().replace(/\s+/g, "-")}`}
                 className="tc-hover bg-white rounded-lg p-[18px] cursor-pointer flex-shrink-0"
                 style={{ minWidth: 200, maxWidth: 200 }}
               >
@@ -60,11 +63,11 @@ export function RelatedSlider({ category }: { category: string }) {
                   className="w-10 h-10 rounded-[9px] overflow-hidden flex items-center justify-center mb-[10px]"
                   style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
                 >
-                  <Favicon domain={t.domain} name={t.name} size={40} />
+                  <Favicon domain={rt.domain} name={rt.name} size={40} />
                 </div>
-                <div className="font-display text-[13.5px] font-extrabold mb-[3px]">{t.name}</div>
+                <div className="font-display text-[13.5px] font-extrabold mb-[3px]">{rt.name}</div>
                 <div className="text-[11.5px] mb-2" style={{ color: "var(--text-3)" }}>
-                  {t.cat}
+                  {rt.cat}
                 </div>
                 <div
                   className="text-xs leading-[1.45] mb-[10px] overflow-hidden"
@@ -75,14 +78,14 @@ export function RelatedSlider({ category }: { category: string }) {
                     WebkitBoxOrient: "vertical",
                   }}
                 >
-                  {t.desc}
+                  {rt.desc}
                 </div>
-                {t.free && (
+                {rt.free && (
                   <span
                     className="text-[11px] font-bold px-2 py-[2px] rounded-pill inline-flex"
                     style={{ color: "var(--green)", background: "var(--green-bg)", border: "1px solid var(--green-border)" }}
                   >
-                    Free
+                    {tc("free")}
                   </span>
                 )}
               </Link>

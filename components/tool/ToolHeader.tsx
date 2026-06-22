@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "@/lib/i18n/navigation";
+import { useTranslations } from "next-intl";
 import type { Tool } from "@/lib/tools";
 import { favicon } from "@/lib/tools";
 import type { ToolDetail } from "@/lib/tool-detail";
@@ -79,6 +80,7 @@ export function ToolHeader({
   detail: ToolDetail;
   overrides?: ToolHeaderOverrides;
 }) {
+  const t = useTranslations("tool_page");
   const { saved, toggle } = useSaved(tool.id);
   const [copied, setCopied] = useState(false);
 
@@ -203,7 +205,7 @@ export function ToolHeader({
                 <polyline points="15 3 21 3 21 9" />
                 <line x1="10" y1="14" x2="21" y2="3" />
               </svg>
-              Visit {tool.name}
+              {t("visit_tool_named", { name: tool.name })}
             </a>
             <button
               onClick={toggle}
@@ -212,19 +214,19 @@ export function ToolHeader({
                 background: saved ? "#fef2f2" : "var(--surface)",
                 color: saved ? "#ef4444" : "var(--text)",
               }}
-              aria-label={saved ? "Unsave" : "Save"}
+              aria-label={saved ? t("saved") : t("save")}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
               </svg>
-              {saved ? "Saved" : "Save"}
+              {saved ? t("saved") : t("save")}
             </button>
             <button
               onClick={copyLink}
               className="w-[42px] h-[42px] rounded-pill flex items-center justify-center transition-colors"
               style={{ background: "var(--surface)", color: "var(--text-2)" }}
-              aria-label="Share"
-              title="Share"
+              aria-label={t("share")}
+              title={t("share")}
             >
               {copied ? (
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -249,11 +251,11 @@ export function ToolHeader({
             isCms
               ? null
               : { val: <><span style={{ color: "#f59e0b", fontSize: 12, letterSpacing: 1 }}>★★★★★</span> 4.8</>, label: `${tool.saves.toLocaleString()} reviews` },
-            { val: tool.saves.toLocaleString(), label: "Saves" },
-            weeklyUsers ? { val: weeklyUsers, label: "Weekly users" } : null,
-            startingPrice ? { val: <span style={{ color: "var(--green)" }}>{startingPrice}</span>, label: "Starting price" } : null,
-            launched ? { val: launched, label: "Launched" } : null,
-            madeBy ? { val: madeBy, label: "Made by" } : null,
+            { val: tool.saves.toLocaleString(), label: t("header_saves_unit") },
+            weeklyUsers ? { val: weeklyUsers, label: t("header_weekly_users") } : null,
+            startingPrice ? { val: <span style={{ color: "var(--green)" }}>{startingPrice}</span>, label: t("header_starting_price") } : null,
+            launched ? { val: launched, label: t("sidebar_launched") } : null,
+            madeBy ? { val: madeBy, label: t("header_made_by") } : null,
           ];
           const cells = raw.filter((c): c is Cell => c !== null);
 

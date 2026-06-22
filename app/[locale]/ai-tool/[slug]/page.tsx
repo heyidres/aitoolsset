@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Link } from "@/lib/i18n/navigation";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { ToolHeader, type ToolHeaderOverrides } from "@/components/tool/ToolHeader";
@@ -232,7 +233,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ToolDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [found, session] = await Promise.all([findTool(slug), auth()]);
+  const [found, session, t] = await Promise.all([findTool(slug), auth(), getTranslations("tool_page")]);
   if (!found) notFound();
   const { tool, descriptionHtml, headerOverrides, overviewOverrides, sidebarOverrides, cmsToolId, reviewsOverride } = found;
   const detail = DEFAULT_TOOL_DETAIL;
@@ -269,11 +270,11 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
       <div className="bg-white px-9 section-pad-x" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="max-w-page mx-auto flex items-center gap-[6px] text-[13px] h-[44px]" style={{ color: "var(--text-3)" }}>
           <Link href="/" className="transition-colors hover:text-blue" style={{ color: "var(--text-3)" }}>
-            Home
+            {t("breadcrumb_home")}
           </Link>
           <span style={{ color: "var(--border-2)" }}>›</span>
           <Link href="/ai-tools" className="transition-colors hover:text-blue" style={{ color: "var(--text-3)" }}>
-            AI Tools
+            {t("breadcrumb_ai_tools")}
           </Link>
           <span style={{ color: "var(--border-2)" }}>›</span>
           <span className="font-semibold" style={{ color: "var(--text-2)" }}>
@@ -311,20 +312,20 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
                 <line x1="8" y1="21" x2="16" y2="21" />
                 <line x1="12" y1="17" x2="12" y2="21" />
               </svg>
-              Product screenshot
+              {t("product_screenshot")}
             </div>
             <div className="absolute bottom-[14px] right-[14px] flex gap-2">
               <button
                 className="font-display text-xs font-bold px-[14px] py-[7px] rounded-pill cursor-pointer transition-colors hover:bg-white"
                 style={{ background: "rgba(255,255,255,.9)", color: "var(--text)" }}
               >
-                View gallery
+                {t("view_gallery")}
               </button>
               <button
                 className="font-display text-xs font-bold px-[14px] py-[7px] rounded-pill cursor-pointer transition-colors hover:bg-white"
                 style={{ background: "rgba(255,255,255,.9)", color: "var(--text)" }}
               >
-                Watch demo
+                {t("watch_demo")}
               </button>
             </div>
           </div>

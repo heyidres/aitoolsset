@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/lib/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { TOOLS, type Tool } from "@/lib/tools";
 import { Favicon } from "./Favicon";

@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import type { ToolDetail } from "@/lib/tool-detail";
 import { REVIEW_BREAKDOWN } from "@/lib/tool-detail";
 import { submitReview } from "@/lib/user-actions";
@@ -35,6 +36,7 @@ export function ToolReviews({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [rating, setRating] = useState(0);
+  const t = useTranslations("tool_page");
   const [hoverRating, setHoverRating] = useState(0);
   const [author, setAuthor] = useState(currentUser?.name ?? "");
   const [role, setRole] = useState("");
@@ -96,7 +98,7 @@ export function ToolReviews({
           style={{ borderBottom: "1px solid var(--border)" }}
         >
           <div className="font-display font-extrabold" style={{ fontSize: 24, letterSpacing: "-.6px" }}>
-            User Reviews
+            {t("reviews_title")}
           </div>
           {currentUser ? (
             <button
@@ -104,7 +106,7 @@ export function ToolReviews({
               className="font-display text-[13px] font-bold text-white px-5 py-[10px] rounded-pill whitespace-nowrap transition-colors hover:bg-blue-h"
               style={{ background: "var(--blue)" }}
             >
-              Write a Review
+              {t("reviews_write_a_review")}
             </button>
           ) : (
             <a
@@ -198,7 +200,7 @@ export function ToolReviews({
                 className="font-display text-[13.5px] font-bold text-white px-[22px] py-[10px] rounded-pill transition-colors hover:bg-blue-h disabled:opacity-60"
                 style={{ background: "var(--blue)" }}
               >
-                {pending ? "Posting…" : "Submit Review"}
+                {pending ? "…" : t("submit_review")}
               </button>
               {error && (
                 <span className="text-xs font-semibold" style={{ color: "var(--red)" }}>
@@ -224,7 +226,7 @@ export function ToolReviews({
                   <div className="text-xs flex items-center gap-2 flex-wrap" style={{ color: "var(--text-3)" }}>
                     <span>{r.role}</span>
                     <span>·</span>
-                    <span>Verified user</span>
+                    <span>{t("reviews_verified_user")}</span>
                     <span>·</span>
                     <span>{r.date}</span>
                   </div>
@@ -238,18 +240,18 @@ export function ToolReviews({
                 &ldquo;{r.text}&rdquo;
               </div>
               <div className="flex items-center gap-[10px] mt-[10px] text-xs" style={{ color: "var(--text-3)" }}>
-                Was this helpful?
+                {t("reviews_was_this_helpful")}
                 <button
                   className="text-xs font-semibold px-[10px] py-[3px] rounded-[5px] transition-colors hover:border-blue hover:text-blue"
                   style={{ color: "var(--text-3)", border: "1px solid var(--border)" }}
                 >
-                  👍 Yes ({r.helpful})
+                  👍 {t("reviews_yes")} ({r.helpful})
                 </button>
                 <button
                   className="text-xs font-semibold px-[10px] py-[3px] rounded-[5px] transition-colors hover:border-blue hover:text-blue"
                   style={{ color: "var(--text-3)", border: "1px solid var(--border)" }}
                 >
-                  👎 No ({r.notHelpful})
+                  👎 {t("reviews_no")} ({r.notHelpful})
                 </button>
               </div>
             </div>
@@ -259,7 +261,7 @@ export function ToolReviews({
           className="mt-5 font-display text-[13.5px] font-bold px-[22px] py-[10px] rounded-pill"
           style={{ color: "var(--blue)", background: "var(--blue-soft)", border: "1px solid rgba(0,82,255,.15)" }}
         >
-          Load more reviews
+          {t("reviews_load_more")}
         </button>
       </div>
     </section>
