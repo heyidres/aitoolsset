@@ -64,8 +64,9 @@
   },
   "limits": {
     "maxEventsPerDetectionRun": 80,
-    "maxDraftsPerWorkerRun": 6,
+    "maxDraftsPerWorkerRun": 3,
     "rawContentChars": 12000,
-    "groundingCharsPerSource": 4000
+    "groundingCharsPerSource": 4000,
+    "interEventDelayMs": 5000
   }
 }

@@ -1,30 +1,110 @@
 /**
- * Route protection for /admin/*.
+ * Composed middleware: i18n locale handling for public routes,
+ * NextAuth role gating for `/admin/*`.
  *
- * Only signed-in users with role "editor" or "admin" can hit
- * those routes. Unauthenticated users are redirected to /signin;
- * regular users land on /.
+ * Order matters:
+ *   1. Skip middleware entirely for static files, API routes,
+ *      OG/icon endpoints, and crawlers (Google crawls each locale
+ *      URL on its own — we must NOT auto-redirect bots).
+ *   2. If path is /admin/* → run NextAuth gate, then pass through
+ *      (admin pages are English-only — no i18n routing).
+ *   3. Otherwise → run next-intl locale negotiation (detects best
+ *      locale from URL, cookie, accept-language, or GeoIP, then
+ *      either passes through or 302-redirects with cookie set).
  */
 
+import { NextResponse, type NextRequest } from "next/server";
+import createIntlMiddleware from "next-intl/middleware";
 import { auth } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import { routing } from "@/lib/i18n/routing";
+import { i18n, isLocale } from "@/lib/i18n/config";
+
+// next-intl returns a middleware-fn. We wrap it so we can also
+// honor GeoIP (Vercel sets x-vercel-ip-country) on first visit.
+const intlMiddleware = createIntlMiddleware({
+  ...routing,
+  // We do our own negotiation in `geoFirstLocaleRedirect` below
+  // so we can layer GeoIP on top of next-intl's accept-language
+  // detection. localeDetection still runs as a fallback.
+  localeDetection: true,
+});
+
+const BOT_UA_RE = /bot|crawl|slurp|spider|facebookexternalhit|whatsapp|telegram|skypeuripreview|linkedinbot/i;
+
+function isBot(req: NextRequest): boolean {
+  return BOT_UA_RE.test(req.headers.get("user-agent") ?? "");
+}
+
+/**
+ * If the visitor has no locale cookie, no locale prefix in the URL,
+ * and their Vercel-edge country maps to a non-default locale, send
+ * them there. This is the GeoIP layer that fires BEFORE next-intl's
+ * accept-language detection.
+ */
+function geoFirstLocaleRedirect(req: NextRequest): NextResponse | null {
+  // Already on a locale prefix? — let next-intl handle.
+  const firstSegment = req.nextUrl.pathname.split("/")[1] ?? "";
+  if (isLocale(firstSegment)) return null;
+
+  // Bots are NEVER auto-redirected — Google crawls each URL on its own.
+  if (isBot(req)) return null;
+
+  // Cookie set? — respect the user's prior choice; let next-intl handle.
+  if (req.cookies.has(i18n.cookieName)) return null;
+
+  const country = req.headers.get("x-vercel-ip-country");
+  if (!country) return null;
+
+  const mappedLocale = i18n.countryToLocale[country];
+  if (!mappedLocale || mappedLocale === i18n.defaultLocale) return null;
+
+  // Soft 302 redirect — user can still switch back manually.
+  const url = req.nextUrl.clone();
+  url.pathname = `/${mappedLocale}${req.nextUrl.pathname}`;
+  const res = NextResponse.redirect(url, 302);
+  // Persist the choice so we don't redirect again on the next visit.
+  res.cookies.set(i18n.cookieName, mappedLocale, {
+    maxAge: i18n.cookieMaxAge,
+    path: "/",
+    sameSite: "lax",
+  });
+  return res;
+}
 
 export default auth((req) => {
-  const isAdminRoute = req.nextUrl.pathname.startsWith("/admin");
-  if (!isAdminRoute) return NextResponse.next();
+  const { pathname } = req.nextUrl;
 
-  const session = req.auth;
-  if (!session?.user) {
-    const url = new URL("/api/auth/signin", req.url);
-    url.searchParams.set("callbackUrl", req.nextUrl.pathname);
-    return NextResponse.redirect(url);
+  // ── 1. Admin gate ─────────────────────────────────────────
+  if (pathname.startsWith("/admin")) {
+    const session = req.auth;
+    if (!session?.user) {
+      const url = new URL("/api/auth/signin", req.url);
+      url.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(url);
+    }
+    if (session.user.role !== "admin" && session.user.role !== "editor") {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+    return NextResponse.next();
   }
-  if (session.user.role !== "admin" && session.user.role !== "editor") {
-    return NextResponse.redirect(new URL("/", req.url));
-  }
-  return NextResponse.next();
+
+  // ── 2. Public routes — i18n negotiation ───────────────────
+  // GeoIP first (only for first-time visitors).
+  const geo = geoFirstLocaleRedirect(req as unknown as NextRequest);
+  if (geo) return geo;
+
+  // next-intl handles everything else (locale prefix detection,
+  // accept-language fallback, cookie write).
+  return intlMiddleware(req as unknown as NextRequest);
 });
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  // Match everything EXCEPT:
+  //   - static assets (/_next, /favicon, /assets, files with extensions)
+  //   - API routes (/api/*)
+  //   - SEO endpoints (/robots.txt, /sitemap.xml)
+  //   - Image / OG endpoints
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|opengraph-image|.*\\..*).*)",
+  ],
 };

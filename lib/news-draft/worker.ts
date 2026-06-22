@@ -65,7 +65,16 @@ export async function runDraftWorker(): Promise<WorkerRunResult> {
   let skipped = 0;
   const perEvent: WorkerRunResult["perEvent"] = [];
 
-  for (const event of events) {
+  const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+  for (let i = 0; i < events.length; i++) {
+    const event = events[i];
+    // Free-tier LLM rate limits (Gemini 15 RPM, Groq 30 RPM) burn out
+    // when 3 events fire 6+ calls in seconds. Pause between events
+    // EXCEPT the first one.
+    if (i > 0 && cfg.limits.interEventDelayMs > 0) {
+      await sleep(cfg.limits.interEventDelayMs);
+    }
     const job = await db
       .insert(newsDraftJobs)
       .values({

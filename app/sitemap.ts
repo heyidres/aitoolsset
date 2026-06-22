@@ -18,26 +18,61 @@ import {
   getAllGlossaryTerms,
   getPublishedSitePages,
 } from "@/lib/cms";
+import { i18n } from "@/lib/i18n/config";
+import { localeUrl } from "@/lib/i18n/hreflang";
 
 export const revalidate = 21600; // 6 hours
 export const runtime = "nodejs";
 
 const BASE = process.env.SITE_URL ?? "https://aitoolsset.com";
 
+/**
+ * Build `alternates.languages` for a path that has translations
+ * in EVERY supported locale (the static UI-chrome routes).
+ *
+ * For per-row content (tools, blog posts, etc.) we DON'T emit
+ * cross-locale alternates yet — that's wired in Phase 4 once each
+ * row's `translations.<locale>` JSONB starts landing. Emitting a
+ * Korean URL that serves English content would create duplicate
+ * content signals and hurt SEO.
+ */
+function fullyTranslatedAlternates(path: string) {
+  const languages: Record<string, string> = {};
+  for (const l of i18n.locales) languages[l] = localeUrl(l, path);
+  languages["x-default"] = localeUrl(i18n.defaultLocale, path);
+  return { languages };
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Static top-level routes
+  // Static top-level routes — UI chrome is translated in every locale,
+  // so we emit one sitemap entry per locale-URL plus xhtml:link alternates.
   const now = new Date();
-  const staticRoutes: MetadataRoute.Sitemap = [
-    { url: `${BASE}/`, lastModified: now, changeFrequency: "daily", priority: 1.0 },
-    { url: `${BASE}/ai-tools`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
-    { url: `${BASE}/blog`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
-    { url: `${BASE}/deals`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
-    { url: `${BASE}/glossary`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${BASE}/news`, lastModified: now, changeFrequency: "hourly", priority: 0.7 },
-    { url: `${BASE}/submit`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${BASE}/leaderboard`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
-    { url: `${BASE}/search`, lastModified: now, changeFrequency: "weekly", priority: 0.4 },
+  const staticPaths: Array<{ path: string; freq: MetadataRoute.Sitemap[number]["changeFrequency"]; priority: number }> = [
+    { path: "/",            freq: "daily",   priority: 1.0 },
+    { path: "/ai-tools",    freq: "weekly",  priority: 0.9 },
+    { path: "/blog",        freq: "daily",   priority: 0.8 },
+    { path: "/deals",       freq: "daily",   priority: 0.8 },
+    { path: "/glossary",    freq: "weekly",  priority: 0.7 },
+    { path: "/news",        freq: "hourly",  priority: 0.7 },
+    { path: "/submit",      freq: "monthly", priority: 0.5 },
+    { path: "/leaderboard", freq: "weekly",  priority: 0.6 },
+    { path: "/search",      freq: "weekly",  priority: 0.4 },
   ];
+  const staticRoutes: MetadataRoute.Sitemap = [];
+  for (const sp of staticPaths) {
+    const alternates = fullyTranslatedAlternates(sp.path);
+    // Emit one sitemap entry PER locale so Google sees the Korean URL too;
+    // each entry references the full language matrix.
+    for (const locale of i18n.locales) {
+      staticRoutes.push({
+        url: localeUrl(locale, sp.path),
+        lastModified: now,
+        changeFrequency: sp.freq,
+        priority: sp.priority,
+        alternates,
+      });
+    }
+  }
 
   // Tools — DB published + hardcoded seeds (dedup by slug)
   const cmsTools = await getPublishedTools().catch(() => []);

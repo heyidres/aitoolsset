@@ -1,6 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
-import { submitTool } from "@/app/submit/actions";
+import { submitTool } from "@/app/[locale]/submit/actions";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 const PLAN_OPTIONS = [

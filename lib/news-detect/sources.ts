@@ -43,6 +43,10 @@ export type WatchlistConfig = {
     maxDraftsPerWorkerRun: number;
     rawContentChars: number;
     groundingCharsPerSource: number;
+    /** Sleep between events in the draft worker — keeps free-tier
+     *  LLM rate limits happy. 5 events × 2 calls = 10 calls, with a
+     *  5s gap that's 2 calls/sec average — well under 10 RPM. */
+    interEventDelayMs: number;
   };
 };
 
@@ -61,9 +65,10 @@ export function loadWatchlist(): WatchlistConfig {
     },
     limits: {
       maxEventsPerDetectionRun: parsed.limits?.maxEventsPerDetectionRun ?? 80,
-      maxDraftsPerWorkerRun: parsed.limits?.maxDraftsPerWorkerRun ?? 6,
+      maxDraftsPerWorkerRun: parsed.limits?.maxDraftsPerWorkerRun ?? 3,
       rawContentChars: parsed.limits?.rawContentChars ?? 12000,
       groundingCharsPerSource: parsed.limits?.groundingCharsPerSource ?? 4000,
+      interEventDelayMs: parsed.limits?.interEventDelayMs ?? 5000,
     },
   };
 }

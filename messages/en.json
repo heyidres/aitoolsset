@@ -1,0 +1,150 @@
+{
+  "nav": {
+    "home": "Home",
+    "tools": "Tools",
+    "categories": "Categories",
+    "news": "News",
+    "blog": "Blog",
+    "images": "Images",
+    "deals": "Deals",
+    "leaderboard": "Leaderboard",
+    "glossary": "Glossary",
+    "submit": "Submit",
+    "saved": "Saved",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "search_placeholder": "Search 1,400+ AI tools…"
+  },
+  "footer": {
+    "tagline": "The AI tools directory built for builders, marketers, and security teams.",
+    "newsletter_heading": "Get the brief",
+    "newsletter_body": "One short email a week. New tools, breaking news, deals.",
+    "newsletter_email_placeholder": "your@email.com",
+    "newsletter_submit": "Subscribe",
+    "newsletter_success": "Thanks — check your inbox.",
+    "follow_us": "Follow",
+    "discover": "Discover",
+    "company": "Company",
+    "legal": "Legal",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "cookies": "Cookies",
+    "contact": "Contact",
+    "submit_a_tool": "Submit a tool",
+    "all_rights_reserved": "All rights reserved."
+  },
+  "tool_card": {
+    "save": "Save",
+    "saved": "Saved",
+    "visit_tool": "Visit tool",
+    "verified": "Verified",
+    "free": "Free",
+    "freemium": "Freemium",
+    "paid": "Paid",
+    "trial": "Free trial",
+    "deal": "Deal",
+    "saves_count": "{count, plural, one {# save} other {# saves}}",
+    "votes_count": "{count, plural, one {# vote} other {# votes}}"
+  },
+  "tool_page": {
+    "key_features_of": "Key Features of {name}",
+    "use_cases_of": "Use Cases for {name}",
+    "pricing": "Pricing",
+    "alternatives": "Alternatives to {name}",
+    "related_tools": "Related tools",
+    "share": "Share",
+    "report": "Report",
+    "embed": "Embed",
+    "reviews": "Reviews",
+    "leave_review": "Leave a review",
+    "write_review_placeholder": "Tell us what you used {name} for…",
+    "submit_review": "Submit review",
+    "no_reviews_yet": "No reviews yet — be the first.",
+    "faq": "Frequently asked questions",
+    "back_to_category": "Back to {category}"
+  },
+  "category_page": {
+    "tools_count": "{count, plural, one {# tool} other {# tools}}",
+    "filter_by_pricing": "Pricing",
+    "filter_by_use_case": "Use case",
+    "filter_by_audience": "Audience",
+    "sort_label": "Sort",
+    "sort_popular": "Most popular",
+    "sort_newest": "Newest",
+    "sort_top_rated": "Top rated",
+    "no_tools_match": "No tools match those filters.",
+    "reset_filters": "Reset filters"
+  },
+  "search": {
+    "page_title": "Search",
+    "placeholder": "Search 1,400+ AI tools…",
+    "results_count": "{count, plural, =0 {No results} one {1 result} other {# results}}",
+    "no_results_heading": "Nothing matched that search.",
+    "no_results_body": "Try a broader query, or browse {categoriesLink}.",
+    "browse_categories": "browse all categories"
+  },
+  "saved": {
+    "page_title": "Your saved tools",
+    "empty_heading": "You haven’t saved anything yet.",
+    "empty_body": "Tap the bookmark icon on any tool to save it here.",
+    "remove": "Remove",
+    "browse_tools": "Browse tools"
+  },
+  "submit": {
+    "page_title": "Submit your tool",
+    "lead": "Get your AI tool in front of {audience} builders, marketers, and security teams.",
+    "name_label": "Tool name",
+    "website_label": "Website URL",
+    "tagline_label": "One-line tagline",
+    "description_label": "Description",
+    "category_label": "Primary category",
+    "pricing_label": "Pricing",
+    "submitter_email_label": "Your email",
+    "agree_terms": "I agree to the listing terms",
+    "submit": "Submit for review",
+    "success_heading": "Got it — we’ll review and email you.",
+    "success_body": "Most listings publish within 48 hours."
+  },
+  "news": {
+    "page_title": "AI news",
+    "subtitle": "Breaking AI announcements, security advisories, and policy moves.",
+    "filter_all": "All",
+    "filter_breaking": "Breaking",
+    "read_more": "Read more",
+    "back_to_news": "Back to news"
+  },
+  "blog": {
+    "page_title": "Blog",
+    "subtitle": "Long-form guides and comparisons.",
+    "by_author": "by {author}",
+    "reading_time": "{minutes}-min read",
+    "back_to_blog": "Back to blog",
+    "related_articles": "Related articles"
+  },
+  "common": {
+    "loading": "Loading…",
+    "load_more": "Load more",
+    "error_generic": "Something went wrong. Please try again.",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "view_all": "View all",
+    "see_all": "See all",
+    "show_more": "Show more",
+    "show_less": "Show less",
+    "copy": "Copy",
+    "copied": "Copied",
+    "close": "Close",
+    "open_external": "Opens in a new tab"
+  },
+  "language": {
+    "switch_language": "Language"
+  },
+  "auth": {
+    "sign_in_title": "Sign in",
+    "sign_in_with_google": "Continue with Google",
+    "sign_in_with_email": "Continue with email",
+    "sign_in_required_heading": "Sign in to continue",
+    "sign_in_required_body": "You need an account to save tools, vote, and comment."
+  }
+}

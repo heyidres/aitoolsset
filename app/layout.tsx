@@ -1,9 +1,22 @@
-import type { Metadata } from "next";
+/**
+ * Root layout — emits the document skeleton (<html>/<body>), loads
+ * fonts, and provides the i18n message bundle to the React tree.
+ *
+ * `<html lang>` is set dynamically from the active locale so screen
+ * readers + Google get the correct signal on every public page.
+ * For unmatched routes (e.g. /admin/*) where no locale is in the URL,
+ * we fall back to the default locale's lang tag.
+ */
+
+import type { Metadata, Viewport } from "next";
 import { Manrope, DM_Sans, Lora } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import { JsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/json-ld";
+import { i18n, isLocale } from "@/lib/i18n/config";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -55,9 +68,23 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0F172A" },
+  ],
+};
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // next-intl returns the resolved locale OR the default if the request
+  // didn't have a locale segment (e.g. on /admin/*, /api/*).
+  const rawLocale = await getLocale();
+  const locale = isLocale(rawLocale) ? rawLocale : i18n.defaultLocale;
+  const htmlLang = i18n.htmlLang[locale] ?? locale;
+  const messages = await getMessages();
+
   return (
-    <html lang="en" className={`${manrope.variable} ${dmSans.variable} ${lora.variable}`}>
+    <html lang={htmlLang} className={`${manrope.variable} ${dmSans.variable} ${lora.variable}`}>
       <head>
         {/* Speed up favicon + font loads */}
         <link rel="preconnect" href="https://www.google.com" />
@@ -68,7 +95,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <JsonLd data={[websiteJsonLd(), organizationJsonLd()]} />
       </head>
       <body>
-        {children}
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {children}
+        </NextIntlClientProvider>
         <Analytics />
         <SpeedInsights />
       </body>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { LogoMark } from "./Logo";
 import { MegaPanel, PANELS } from "./MegaMenu";
 import { MobileDrawer } from "./MobileDrawer";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const DIRECT_LINKS = [
   { label: "Leaderboard", href: "/leaderboard" },
@@ -125,6 +126,7 @@ export function Nav() {
                 className="nav-search-input"
               />
             </form>
+            <LanguageSwitcher />
             <button
               className="font-display text-[13.5px] font-semibold px-4 py-[7px] rounded-pill transition-colors hover:text-text"
               style={{ color: "var(--text-2)" }}

@@ -35,9 +35,14 @@ import type { newsDetectionEvents } from "@/lib/db/schema";
 // Both stages use the same cascade. Outline naturally consumes
 // far fewer tokens so cost isn't a factor; using the same model
 // across stages keeps the JSON-shape behavior consistent.
-const GEMINI_MODEL = "gemini-2.5-flash";
-const GROQ_MODEL = "llama-3.3-70b-versatile";
-const ANTHROPIC_MODEL = "claude-haiku-4-5"; // fallback only
+// gemini-2.0-flash has the highest free-tier rate limits available
+// (15 RPM / 1M TPM / 1500 RPD vs gemini-2.5-flash's 10 RPM / 250 RPD).
+// Quality difference for short JSON-output journalism is negligible.
+const GEMINI_MODEL = "gemini-2.0-flash";
+// Use the faster + higher-RPM model for fallback (30 RPM for instant
+// vs 30 RPM for 70b — but instant has fewer 503s under load).
+const GROQ_MODEL = "llama-3.1-8b-instant";
+const ANTHROPIC_MODEL = "claude-haiku-4-5"; // last-resort fallback
 
 type Provider = "gemini" | "groq" | "anthropic";
 
