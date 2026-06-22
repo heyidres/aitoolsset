@@ -143,6 +143,25 @@
   "language": {
     "switch_language": "언어"
   },
+  "home": {
+    "hero_badge": "2,400개 이상의 도구 · 매일 업데이트",
+    "hero_eyebrow": "당신에게 필요한",
+    "hero_headline_lead": "유일한 AI",
+    "hero_headline_accent": "도구 디렉토리.",
+    "hero_subhead": "작가, 개발자, 디자이너, 팀을 위해 엄선한 최고의 AI 도구를 발견하고 비교하고 저장하세요.",
+    "hero_search_placeholder": "검색 — \"이미지 생성기\", \"코딩 어시스턴트\", \"비디오 AI\"…",
+    "hero_search_button": "검색",
+    "hero_pill_image": "이미지 AI",
+    "hero_pill_code": "코딩 어시스턴트",
+    "hero_pill_video": "비디오 도구",
+    "hero_pill_writing": "글쓰기",
+    "hero_pill_free": "무료만",
+    "hero_pill_new": "오늘의 신규",
+    "stat_tools": "AI 도구",
+    "stat_categories": "카테고리",
+    "stat_users": "월간 사용자",
+    "stat_reviews": "리뷰"
+  },
   "auth": {
     "sign_in_title": "로그인",
     "sign_in_with_google": "Google로 계속하기",

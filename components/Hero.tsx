@@ -1,35 +1,57 @@
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 import { HeroTypewriter } from "./HeroTypewriter";
 import { HeroMosaic } from "./HeroMosaic";
 import { getSlots } from "@/lib/site-content";
-
-const PILLS: Array<{ label: string; q: string }> = [
-  { label: "✦ Image AI", q: "image" },
-  { label: "✦ Code assistant", q: "code" },
-  { label: "✦ Video tools", q: "video" },
-  { label: "✦ Writing", q: "writing" },
-  { label: "✦ Free only", q: "free" },
-  { label: "✦ New today", q: "new" },
-];
-
-const STATS = [
-  { num: "2,400+", label: "AI tools" },
-  { num: "48", label: "Categories" },
-  { num: "50k+", label: "Monthly users" },
-  { num: "12k", label: "Reviews" },
-];
+import { i18n } from "@/lib/i18n/config";
 
 export async function Hero() {
-  // Pull editable copy from the slot registry (overridable from
-  // /admin/site-content; defaults live in lib/site-content.ts).
-  const s = await getSlots([
-    "home.hero.eyebrow",
-    "home.hero.headline_lead",
-    "home.hero.headline_accent",
-    "home.hero.subhead",
-    "home.hero.search_placeholder",
-    "home.hero.search_button",
-  ]);
+  // Strategy:
+  //   - Default locale (English): pull editable copy from the slot
+  //     registry — admin can still tweak it in /admin/site-content.
+  //   - Other locales: pull from messages catalog. (Per-locale CMS
+  //     overrides land in Phase 3 when the translations JSONB column
+  //     is added to site_content.)
+  const locale = await getLocale();
+  const t = await getTranslations("home");
+  const isDefault = locale === i18n.defaultLocale;
+
+  let s: Record<string, string>;
+  if (isDefault) {
+    s = await getSlots([
+      "home.hero.eyebrow",
+      "home.hero.headline_lead",
+      "home.hero.headline_accent",
+      "home.hero.subhead",
+      "home.hero.search_placeholder",
+      "home.hero.search_button",
+    ]);
+  } else {
+    s = {
+      "home.hero.eyebrow": t("hero_eyebrow"),
+      "home.hero.headline_lead": t("hero_headline_lead"),
+      "home.hero.headline_accent": t("hero_headline_accent"),
+      "home.hero.subhead": t("hero_subhead"),
+      "home.hero.search_placeholder": t("hero_search_placeholder"),
+      "home.hero.search_button": t("hero_search_button"),
+    };
+  }
+
+  const PILLS: Array<{ label: string; q: string }> = [
+    { label: `✦ ${t("hero_pill_image")}`,   q: "image" },
+    { label: `✦ ${t("hero_pill_code")}`,    q: "code" },
+    { label: `✦ ${t("hero_pill_video")}`,   q: "video" },
+    { label: `✦ ${t("hero_pill_writing")}`, q: "writing" },
+    { label: `✦ ${t("hero_pill_free")}`,    q: "free" },
+    { label: `✦ ${t("hero_pill_new")}`,     q: "new" },
+  ];
+
+  const STATS = [
+    { num: "2,400+", label: t("stat_tools") },
+    { num: "48",     label: t("stat_categories") },
+    { num: "50k+",   label: t("stat_users") },
+    { num: "12k",    label: t("stat_reviews") },
+  ];
   return (
     <section
       className="relative overflow-hidden px-9 section-pad-x"
@@ -71,7 +93,7 @@ export async function Hero() {
               className="w-[6px] h-[6px] rounded-full animate-pulse-dot"
               style={{ background: "var(--blue-h)" }}
             />
-            2,400+ tools · Updated daily
+            {t("hero_badge")}
           </div>
 
           <h1

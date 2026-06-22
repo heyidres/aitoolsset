@@ -143,6 +143,25 @@
   "language": {
     "switch_language": "Language"
   },
+  "home": {
+    "hero_badge": "2,400+ tools · Updated daily",
+    "hero_eyebrow": "The only AI",
+    "hero_headline_lead": "directory you",
+    "hero_headline_accent": "ever need.",
+    "hero_subhead": "Discover, compare, and save the best AI tools — curated for writers, coders, designers, and teams.",
+    "hero_search_placeholder": "Search — \"image generator\", \"coding assistant\", \"video AI\"…",
+    "hero_search_button": "Search",
+    "hero_pill_image": "Image AI",
+    "hero_pill_code": "Code assistant",
+    "hero_pill_video": "Video tools",
+    "hero_pill_writing": "Writing",
+    "hero_pill_free": "Free only",
+    "hero_pill_new": "New today",
+    "stat_tools": "AI tools",
+    "stat_categories": "Categories",
+    "stat_users": "Monthly users",
+    "stat_reviews": "Reviews"
+  },
   "auth": {
     "sign_in_title": "Sign in",
     "sign_in_with_google": "Continue with Google",
