@@ -12,6 +12,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { subscribeNewsletter } from "@/lib/user-actions";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 
@@ -28,6 +29,7 @@ export function NewsletterSignup({
   headline?: string;
   sub?: string;
 }) {
+  const t = useTranslations("newsletter");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "ok" | "already" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -88,7 +90,7 @@ export function NewsletterSignup({
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
+          placeholder={t("placeholder")}
           style={{
             flex: 1,
             minWidth: 0,
@@ -115,24 +117,24 @@ export function NewsletterSignup({
             cursor: "pointer",
           }}
         >
-          {pending ? "…" : status === "ok" ? "Subscribed ✓" : "Subscribe"}
+          {pending ? t("submitting") : status === "ok" ? t("subscribed") : t("submit")}
         </button>
         <TurnstileWidget siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} />
       </form>
 
       {status === "ok" && (
         <div className="mt-3 text-xs font-semibold" style={{ color: isDark ? "#4ade80" : "var(--green)" }}>
-          You&rsquo;re on the list. Check your inbox for confirmation.
+          {t("success_message")}
         </div>
       )}
       {status === "already" && (
         <div className="mt-3 text-xs font-semibold" style={{ color: isDark ? "rgba(255,255,255,.55)" : "var(--text-2)" }}>
-          Already subscribed — see you in your inbox.
+          {t("already_subscribed")}
         </div>
       )}
       {status === "error" && (
         <div className="mt-3 text-xs font-semibold" style={{ color: "var(--red)" }}>
-          {error ?? "Could not subscribe."}
+          {error ?? t("error_generic")}
         </div>
       )}
     </div>

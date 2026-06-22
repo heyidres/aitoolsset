@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { Tool } from "@/lib/tools";
 import { Favicon } from "./Favicon";
 import { VerifiedBadge } from "./VerifiedBadge";
@@ -8,6 +9,7 @@ import { DealRibbon } from "./DealRibbon";
 import { useSaved, useVote } from "@/lib/storage";
 
 export function ToolCard({ tool }: { tool: Tool }) {
+  const t = useTranslations("tool_card");
   const { saved, toggle: toggleSave } = useSaved(tool.id);
   const { voted, toggle: toggleVote } = useVote(tool.id);
   const [copied, setCopied] = useState(false);
@@ -49,7 +51,7 @@ export function ToolCard({ tool }: { tool: Tool }) {
           <ActionBtn
             active={saved}
             activeColor="#ef4444"
-            title={saved ? "Unsave" : "Save"}
+            title={saved ? t("saved") : t("save")}
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
@@ -115,12 +117,12 @@ export function ToolCard({ tool }: { tool: Tool }) {
               border: "1px solid var(--green-border)",
             }}
           >
-            Free
+            {t("free")}
           </span>
         )}
-        {tool.tags.map((t) => (
+        {tool.tags.map((tag) => (
           <span
-            key={t}
+            key={tag}
             className="text-[11px] font-semibold px-[9px] py-[3px] rounded-pill"
             style={{
               color: "var(--text-2)",
@@ -128,7 +130,7 @@ export function ToolCard({ tool }: { tool: Tool }) {
               border: "1px solid var(--border)",
             }}
           >
-            {t}
+            {tag}
           </span>
         ))}
         {tool.deal && (
@@ -136,7 +138,7 @@ export function ToolCard({ tool }: { tool: Tool }) {
             className="text-[11px] font-bold px-[8px] py-[3px] rounded-pill"
             style={{ color: "#f97316", background: "#fff7ed", border: "1px solid #fed7aa" }}
           >
-            🏷️ Deal
+            🏷️ {t("deal")}
           </span>
         )}
         <span
@@ -153,7 +155,7 @@ export function ToolCard({ tool }: { tool: Tool }) {
             border: "1px solid rgba(0,82,255,.15)",
           }}
         >
-          Visit tool →
+          {t("visit_tool")} →
         </span>
       </div>
     </Link>

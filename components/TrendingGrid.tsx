@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { TOOLS, type Tool } from "@/lib/tools";
 import { Favicon } from "./Favicon";
 
-export function TrendingGrid({ toolsOverride }: { toolsOverride?: Tool[] } = {}) {
+export async function TrendingGrid({ toolsOverride }: { toolsOverride?: Tool[] } = {}) {
+  const t = await getTranslations("home");
   // Manual pin first (lower homepageOrder = higher slot, NULL = organic).
   // Falls back to save count, then to the hardcoded `trending` flag
   // when no CMS data is around.
@@ -16,14 +18,14 @@ export function TrendingGrid({ toolsOverride }: { toolsOverride?: Tool[] } = {})
         <div className="flex items-end justify-between mb-8 flex-wrap gap-3">
           <div>
             <h2 className="font-display font-extrabold text-white tracking-[-.8px]" style={{ fontSize: 28 }}>
-              🔥 Trending this week
+              🔥 {t("trending_heading")}
             </h2>
             <div className="text-sm mt-[5px]" style={{ color: "rgba(255,255,255,.35)" }}>
-              Tools gaining the most traction in the last 7 days
+              {t("trending_sub")}
             </div>
           </div>
           <Link href="/trending" className="text-[13.5px] font-semibold" style={{ color: "var(--blue-h)" }}>
-            See all trending →
+            {t("trending_see_all")} →
           </Link>
         </div>
 

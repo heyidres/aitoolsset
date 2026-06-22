@@ -13,6 +13,8 @@ import { CtaSection } from "@/components/CtaSection";
 import { TOOLS, WRITER_TOOLS, DEV_TOOLS, WRITER_USECASES, DEV_USECASES } from "@/lib/tools";
 import { getPublishedTools, getEnabledHomeSections, type CmsTool } from "@/lib/cms";
 import { mergeToolsBySlug } from "@/lib/cms-adapters";
+import { getLocale, getTranslations } from "next-intl/server";
+import { i18n } from "@/lib/i18n/config";
 
 export const runtime = "nodejs";
 // 60-second ISR — admin publishes are also instant via revalidatePath().
@@ -20,12 +22,19 @@ export const revalidate = 60;
 
 export default async function HomePage() {
   // Pull every published tool + every enabled homepage section in parallel.
-  const [cmsTools, sections] = await Promise.all([
+  const [cmsTools, sections, locale, t] = await Promise.all([
     getPublishedTools().catch(() => []),
     getEnabledHomeSections().catch(() => []),
+    getLocale(),
+    getTranslations("home"),
   ]);
   const tools = mergeToolsBySlug(TOOLS, cmsTools);
   const toolBySlug = new Map(cmsTools.map((t) => [t.slug, t]));
+  // For non-default locales we ignore the (English) CMS-edited sections
+  // and render the translated hardcoded blocks. Phase 3 will add a
+  // per-locale translations column to home_sections so editors can
+  // localize this content too.
+  const useCmsSections = locale === i18n.defaultLocale && sections.length > 0;
 
   return (
     <main>
@@ -35,10 +44,11 @@ export default async function HomePage() {
       <FeaturedTools toolsOverride={tools} />
       <TrendingGrid toolsOverride={tools} />
 
-      {/* Editorial use-case blocks. CMS rows win; fall through to the
-          legacy hardcoded "For Writers / For Developers" pair when the
-          home_section table is empty. */}
-      {sections.length > 0 ? (
+      {/* Editorial use-case blocks. Default locale (English) shows CMS-
+          managed sections when present, falling back to the hardcoded
+          pair. Non-default locales always use the translated hardcoded
+          pair until Phase 3 adds per-locale CMS overrides. */}
+      {useCmsSections ? (
         sections.map((s) => (
           <UseCaseBlock
             key={s.id}
@@ -55,26 +65,26 @@ export default async function HomePage() {
         <>
           <UseCaseBlock
             bg="var(--mint)"
-            badge="✦ For Writers"
+            badge={t("writers_badge")}
             title={
               <>
-                Write better,<br />publish faster.
+                {t("writers_title_line1")}<br />{t("writers_title_line2")}
               </>
             }
-            description="From blog posts to screenplays — the best AI writing tools to supercharge your workflow."
+            description={t("writers_description")}
             tools={WRITER_TOOLS}
             cases={WRITER_USECASES}
             imageSide="right"
           />
           <UseCaseBlock
             bg="var(--sand)"
-            badge="✦ For Developers"
+            badge={t("devs_badge")}
             title={
               <>
-                Code smarter,<br />ship faster.
+                {t("devs_title_line1")}<br />{t("devs_title_line2")}
               </>
             }
-            description="AI tools that write, review, and deploy code — from autocomplete to full-stack generation."
+            description={t("devs_description")}
             tools={DEV_TOOLS}
             cases={DEV_USECASES}
             imageSide="left"

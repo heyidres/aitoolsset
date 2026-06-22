@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { NEWS_MAIN, NEWS_SIDE, favicon } from "@/lib/tools";
 
-export function NewsSection() {
+export async function NewsSection() {
+  const t = await getTranslations("home");
   return (
     <section className="py-16 px-9 section-pad-x" style={{ background: "var(--cream)", borderBottom: "1px solid var(--border)" }}>
       <div className="max-w-page mx-auto">
@@ -11,10 +13,10 @@ export function NewsSection() {
         >
           <div>
             <h2 className="font-display font-black tracking-[-.8px]" style={{ fontSize: 26 }}>
-              Latest AI News
+              {t("news_heading")}
             </h2>
             <div className="text-[13.5px] mt-1" style={{ color: "var(--text-2)" }}>
-              From official sources — updated daily
+              {t("news_sub")}
             </div>
           </div>
           <Link
@@ -22,7 +24,7 @@ export function NewsSection() {
             className="font-display text-[13.5px] font-bold flex items-center gap-1 flex-shrink-0"
             style={{ color: "var(--blue)" }}
           >
-            View full news feed →
+            {t("news_view_all")} →
           </Link>
         </div>
 
@@ -44,7 +46,7 @@ export function NewsSection() {
                   className="absolute top-3 left-3 text-white font-display text-[10px] font-extrabold px-[9px] py-[3px] rounded-pill uppercase tracking-[.05em]"
                   style={{ background: "#ef4444" }}
                 >
-                  Breaking
+                  {t("news_breaking")}
                 </div>
               )}
             </div>

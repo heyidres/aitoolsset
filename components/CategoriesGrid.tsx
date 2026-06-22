@@ -1,21 +1,23 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { CATEGORIES } from "@/lib/tools";
 
-export function CategoriesGrid() {
+export async function CategoriesGrid() {
+  const t = await getTranslations("home");
   return (
     <section className="py-16 px-9 section-pad-x" style={{ background: "var(--near-black)" }}>
       <div className="max-w-page mx-auto">
         <div className="flex items-end justify-between mb-8 flex-wrap gap-3">
           <div>
             <h2 className="font-display font-extrabold text-white tracking-[-.8px]" style={{ fontSize: 28 }}>
-              All Categories
+              {t("all_categories")}
             </h2>
             <div className="text-sm mt-[5px]" style={{ color: "rgba(255,255,255,.35)" }}>
-              Find tools by what you need to do
+              {t("all_categories_sub")}
             </div>
           </div>
           <Link href="/ai-tools" className="text-[13.5px] font-semibold" style={{ color: "var(--blue-h)" }}>
-            View all 48 →
+            {t("view_all_count", { count: "48" })} →
           </Link>
         </div>
 
@@ -31,7 +33,7 @@ export function CategoriesGrid() {
                   {c.name}
                 </div>
                 <div className="text-xs tnum" style={{ color: "rgba(255,255,255,.3)" }}>
-                  {c.count} tools
+                  {t("tools_count", { count: c.count.toLocaleString() })}
                 </div>
               </div>
               <div className="cat-arrow text-lg">›</div>

@@ -1,14 +1,22 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { TOOLS, FILTER_PILLS, type Tool } from "@/lib/tools";
 import { ToolCard } from "./ToolCard";
 
 export function FeaturedTools({ toolsOverride }: { toolsOverride?: Tool[] } = {}) {
+  const t = useTranslations("home");
   // Server-side merged list (DB + hardcoded) when provided;
   // empty CMS keeps the seed catalogue working out of the box.
   const TOOLS_DATA = toolsOverride && toolsOverride.length > 0 ? toolsOverride : TOOLS;
   const [filter, setFilter] = useState("all");
+
+  // Translate filter pill labels — map FILTER_PILLS.key → message key.
+  // Falls back to the original label if a key isn't found.
+  const translateFilter = (key: string, fallback: string) => {
+    try { return t(`filter_${key}`); } catch { return fallback; }
+  };
 
   const tools = useMemo(() => {
     return TOOLS_DATA.filter((t) => {
@@ -39,7 +47,7 @@ export function FeaturedTools({ toolsOverride }: { toolsOverride?: Tool[] } = {}
                   border: `1.5px solid ${active ? "var(--blue)" : "var(--border)"}`,
                 }}
               >
-                {p.label}
+                {translateFilter(p.key, p.label)}
               </button>
             );
           })}
@@ -52,12 +60,12 @@ export function FeaturedTools({ toolsOverride }: { toolsOverride?: Tool[] } = {}
           <section className="py-16" style={{ borderBottom: "1px solid var(--border)" }}>
             <div className="flex items-end justify-between mb-7 flex-wrap gap-3">
               <div>
-                <div className="eyebrow mb-[6px]">Editor's picks</div>
+                <div className="eyebrow mb-[6px]">{t("featured_eyebrow")}</div>
                 <h2
                   className="font-display font-extrabold tracking-[-.8px] leading-[1.1]"
                   style={{ fontSize: 28 }}
                 >
-                  Featured AI Tools
+                  {t("featured_heading")}
                 </h2>
               </div>
               <Link
@@ -65,7 +73,7 @@ export function FeaturedTools({ toolsOverride }: { toolsOverride?: Tool[] } = {}
                 className="text-[13.5px] font-semibold transition-colors flex items-center gap-1"
                 style={{ color: "var(--blue)" }}
               >
-                Browse all 2,400+ tools →
+                {t("featured_browse_all", { count: "2,400" })} →
               </Link>
             </div>
             <div className="grid grid-cols-3 gap-4 tool-grid-3">

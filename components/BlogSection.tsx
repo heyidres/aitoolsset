@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { BLOG_POSTS } from "@/lib/tools";
 
-export function BlogSection() {
+export async function BlogSection() {
+  const t = await getTranslations("home");
   return (
     <section
       className="py-16 px-9 section-pad-x"
@@ -14,10 +16,10 @@ export function BlogSection() {
         >
           <div>
             <h2 className="font-display font-black tracking-[-.8px]" style={{ fontSize: 26 }}>
-              From the Blog
+              {t("blog_heading")}
             </h2>
             <div className="text-[13.5px] mt-1" style={{ color: "var(--text-2)" }}>
-              Guides, reviews, and deep dives — written by humans
+              {t("blog_sub")}
             </div>
           </div>
           <Link
@@ -25,7 +27,7 @@ export function BlogSection() {
             className="font-display text-[13.5px] font-bold flex items-center gap-1 flex-shrink-0"
             style={{ color: "var(--blue)" }}
           >
-            View all articles →
+            {t("blog_view_all")} →
           </Link>
         </div>
 

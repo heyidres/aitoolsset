@@ -1,6 +1,8 @@
+import { getTranslations } from "next-intl/server";
 import { TRUSTED_LOGOS, favicon } from "@/lib/tools";
 
-export function TrustedTicker() {
+export async function TrustedTicker() {
+  const t = await getTranslations("home");
   const items = [...TRUSTED_LOGOS, ...TRUSTED_LOGOS];
   return (
     <div
@@ -12,7 +14,7 @@ export function TrustedTicker() {
           className="font-display font-bold text-[11.5px] uppercase tracking-[.08em] whitespace-nowrap px-8 flex-shrink-0"
           style={{ color: "var(--text-3)" }}
         >
-          Trusted by teams at
+          {t("trusted_by")}
         </div>
         <div className="flex-1 overflow-hidden">
           <div
