@@ -1,0 +1,71 @@
+{
+  "_comment": "Newsroom watchlist — hand-editable. Add/remove/reorder freely. priority: higher = polled first + auto-drafted first. kind: 'rss' | 'atom' | 'json' | 'html'. category: 'ai' | 'security' | 'policy' | 'research' | 'media' | 'funding'. enabled:false skips a source without deleting it.",
+  "sources": [
+    { "slug": "openai-news",       "name": "OpenAI News",            "domain": "openai.com",         "category": "ai",       "kind": "rss",  "feedUrl": "https://openai.com/news/rss.xml",                                              "priority": 10, "enabled": true },
+    { "slug": "anthropic-news",    "name": "Anthropic News",         "domain": "anthropic.com",      "category": "ai",       "kind": "rss",  "feedUrl": "https://www.anthropic.com/news/rss.xml",                                       "priority": 10, "enabled": true },
+    { "slug": "google-deepmind",   "name": "Google DeepMind Blog",   "domain": "deepmind.google",    "category": "ai",       "kind": "rss",  "feedUrl": "https://deepmind.google/discover/blog/rss.xml",                                "priority": 10, "enabled": true },
+    { "slug": "google-ai-blog",    "name": "Google AI Blog",         "domain": "blog.google",        "category": "ai",       "kind": "rss",  "feedUrl": "https://blog.google/technology/ai/rss/",                                       "priority": 9,  "enabled": true },
+    { "slug": "microsoft-ai-blog", "name": "Microsoft AI Blog",      "domain": "microsoft.com",      "category": "ai",       "kind": "rss",  "feedUrl": "https://blogs.microsoft.com/ai/feed/",                                         "priority": 9,  "enabled": true },
+    { "slug": "meta-ai-blog",      "name": "Meta AI Blog",           "domain": "ai.meta.com",        "category": "ai",       "kind": "rss",  "feedUrl": "https://ai.meta.com/blog/rss/",                                                "priority": 9,  "enabled": true },
+    { "slug": "aws-ml-blog",       "name": "AWS Machine Learning",   "domain": "aws.amazon.com",     "category": "ai",       "kind": "rss",  "feedUrl": "https://aws.amazon.com/blogs/machine-learning/feed/",                          "priority": 8,  "enabled": true },
+    { "slug": "huggingface-blog",  "name": "Hugging Face Blog",      "domain": "huggingface.co",     "category": "ai",       "kind": "rss",  "feedUrl": "https://huggingface.co/blog/feed.xml",                                         "priority": 8,  "enabled": true },
+    { "slug": "mistral-news",      "name": "Mistral AI News",        "domain": "mistral.ai",         "category": "ai",       "kind": "html", "feedUrl": "https://mistral.ai/news",                "selectors": { "item": "article a", "title": "h2, h3", "link": "a" },                  "priority": 8,  "enabled": true },
+    { "slug": "cohere-blog",       "name": "Cohere Blog",            "domain": "cohere.com",         "category": "ai",       "kind": "rss",  "feedUrl": "https://cohere.com/blog/rss.xml",                                              "priority": 7,  "enabled": true },
+    { "slug": "xai-news",          "name": "xAI News",               "domain": "x.ai",               "category": "ai",       "kind": "html", "feedUrl": "https://x.ai/news",                       "selectors": { "item": "article", "title": "h2, h3", "link": "a" },                     "priority": 7,  "enabled": true },
+    { "slug": "stability-news",    "name": "Stability AI News",      "domain": "stability.ai",       "category": "ai",       "kind": "html", "feedUrl": "https://stability.ai/news",               "selectors": { "item": "article", "title": "h2, h3", "link": "a" },                     "priority": 6,  "enabled": true },
+    { "slug": "groq-blog",         "name": "Groq Blog",              "domain": "groq.com",           "category": "ai",       "kind": "rss",  "feedUrl": "https://groq.com/feed/",                                                       "priority": 6,  "enabled": true },
+    { "slug": "perplexity-blog",   "name": "Perplexity Blog",        "domain": "perplexity.ai",      "category": "ai",       "kind": "html", "feedUrl": "https://www.perplexity.ai/hub",            "selectors": { "item": "article a", "title": "h2, h3", "link": "a" },                  "priority": 6,  "enabled": true },
+    { "slug": "replicate-blog",    "name": "Replicate Blog",         "domain": "replicate.com",      "category": "ai",       "kind": "rss",  "feedUrl": "https://replicate.com/blog/rss.xml",                                           "priority": 5,  "enabled": true },
+
+    { "slug": "cisa-advisories",   "name": "CISA Cyber Advisories",  "domain": "cisa.gov",           "category": "security", "kind": "rss",  "feedUrl": "https://www.cisa.gov/cybersecurity-advisories/all.xml",                        "priority": 10, "enabled": true },
+    { "slug": "nist-cyber",        "name": "NIST Cybersecurity",     "domain": "nist.gov",           "category": "security", "kind": "rss",  "feedUrl": "https://www.nist.gov/news-events/cybersecurity/rss.xml",                       "priority": 8,  "enabled": true },
+    { "slug": "github-advisories", "name": "GitHub Security",        "domain": "github.com",         "category": "security", "kind": "rss",  "feedUrl": "https://github.blog/category/security/feed/",                                  "priority": 8,  "enabled": true },
+    { "slug": "ms-security",       "name": "Microsoft Security",     "domain": "microsoft.com",      "category": "security", "kind": "rss",  "feedUrl": "https://www.microsoft.com/security/blog/feed/",                                "priority": 8,  "enabled": true },
+    { "slug": "google-security",   "name": "Google Security Blog",   "domain": "googleonlinesecurityblog.com", "category": "security", "kind": "rss", "feedUrl": "https://security.googleblog.com/feeds/posts/default",            "priority": 8,  "enabled": true },
+    { "slug": "cloudflare-blog",   "name": "Cloudflare Blog",        "domain": "cloudflare.com",     "category": "security", "kind": "rss",  "feedUrl": "https://blog.cloudflare.com/rss/",                                             "priority": 7,  "enabled": true },
+    { "slug": "wiz-blog",          "name": "Wiz Research",           "domain": "wiz.io",             "category": "security", "kind": "rss",  "feedUrl": "https://www.wiz.io/blog/rss.xml",                                              "priority": 7,  "enabled": true },
+    { "slug": "snyk-blog",         "name": "Snyk Blog",              "domain": "snyk.io",            "category": "security", "kind": "rss",  "feedUrl": "https://snyk.io/blog/feed/",                                                   "priority": 6,  "enabled": true },
+    { "slug": "crowdstrike-blog",  "name": "CrowdStrike Blog",       "domain": "crowdstrike.com",    "category": "security", "kind": "rss",  "feedUrl": "https://www.crowdstrike.com/blog/feed/",                                       "priority": 6,  "enabled": true },
+    { "slug": "unit42",            "name": "Palo Alto Unit 42",      "domain": "paloaltonetworks.com","category": "security", "kind": "rss", "feedUrl": "https://unit42.paloaltonetworks.com/feed/",                                    "priority": 6,  "enabled": true },
+    { "slug": "krebs-security",    "name": "Krebs on Security",      "domain": "krebsonsecurity.com","category": "security",  "kind": "rss", "feedUrl": "https://krebsonsecurity.com/feed/",                                            "priority": 6,  "enabled": true },
+
+    { "slug": "eu-commission-ai",  "name": "EU AI Office",           "domain": "ec.europa.eu",       "category": "policy",   "kind": "rss",  "feedUrl": "https://digital-strategy.ec.europa.eu/en/rss.xml",                              "priority": 8,  "enabled": true },
+    { "slug": "uk-ncsc",           "name": "UK NCSC News",           "domain": "ncsc.gov.uk",        "category": "policy",   "kind": "rss",  "feedUrl": "https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml",                    "priority": 6,  "enabled": true },
+    { "slug": "white-house-ai",    "name": "White House AI Tech",    "domain": "whitehouse.gov",     "category": "policy",   "kind": "rss",  "feedUrl": "https://www.whitehouse.gov/ostp/news-updates/feed/",                            "priority": 6,  "enabled": true },
+
+    { "slug": "techcrunch-ai",     "name": "TechCrunch AI",          "domain": "techcrunch.com",     "category": "media",    "kind": "rss",  "feedUrl": "https://techcrunch.com/category/artificial-intelligence/feed/",                 "priority": 9,  "enabled": true },
+    { "slug": "verge-ai",          "name": "The Verge AI",           "domain": "theverge.com",       "category": "media",    "kind": "rss",  "feedUrl": "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml",             "priority": 9,  "enabled": true },
+    { "slug": "ars-security",      "name": "Ars Technica Security",  "domain": "arstechnica.com",    "category": "media",    "kind": "rss",  "feedUrl": "https://feeds.arstechnica.com/arstechnica/security",                            "priority": 8,  "enabled": true },
+    { "slug": "ars-tech-policy",   "name": "Ars Technica Policy",    "domain": "arstechnica.com",    "category": "media",    "kind": "rss",  "feedUrl": "https://feeds.arstechnica.com/arstechnica/tech-policy",                         "priority": 7,  "enabled": true },
+    { "slug": "wired-ai",          "name": "WIRED AI",               "domain": "wired.com",          "category": "media",    "kind": "rss",  "feedUrl": "https://www.wired.com/feed/tag/ai/latest/rss",                                  "priority": 8,  "enabled": true },
+    { "slug": "mit-tech-review-ai","name": "MIT Tech Review AI",     "domain": "technologyreview.com","category": "media",   "kind": "rss",  "feedUrl": "https://www.technologyreview.com/feed/",                                        "priority": 8,  "enabled": true },
+    { "slug": "the-information",   "name": "The Information",        "domain": "theinformation.com", "category": "media",    "kind": "rss",  "feedUrl": "https://www.theinformation.com/feed",                                          "priority": 7,  "enabled": true },
+    { "slug": "semafor-tech",      "name": "Semafor Tech",           "domain": "semafor.com",        "category": "media",    "kind": "rss",  "feedUrl": "https://www.semafor.com/feed/technology.xml",                                  "priority": 6,  "enabled": true },
+    { "slug": "bleepingcomputer",  "name": "Bleeping Computer",      "domain": "bleepingcomputer.com","category": "media",   "kind": "rss",  "feedUrl": "https://www.bleepingcomputer.com/feed/",                                       "priority": 7,  "enabled": true },
+    { "slug": "the-record",        "name": "The Record (Recorded Future)", "domain": "therecord.media","category": "media", "kind": "rss",  "feedUrl": "https://therecord.media/feed/",                                                "priority": 7,  "enabled": true },
+    { "slug": "404-media",         "name": "404 Media",              "domain": "404media.co",        "category": "media",    "kind": "rss",  "feedUrl": "https://www.404media.co/rss/",                                                 "priority": 6,  "enabled": true },
+
+    { "slug": "stanford-hai",      "name": "Stanford HAI",           "domain": "hai.stanford.edu",   "category": "research", "kind": "rss",  "feedUrl": "https://hai.stanford.edu/news/rss.xml",                                        "priority": 8,  "enabled": true },
+    { "slug": "mit-csail",         "name": "MIT CSAIL News",         "domain": "csail.mit.edu",      "category": "research", "kind": "rss",  "feedUrl": "https://www.csail.mit.edu/rss.xml",                                            "priority": 7,  "enabled": true },
+    { "slug": "berkeley-bair",     "name": "Berkeley BAIR Blog",     "domain": "bair.berkeley.edu",  "category": "research", "kind": "rss",  "feedUrl": "https://bair.berkeley.edu/blog/feed.xml",                                      "priority": 7,  "enabled": true },
+    { "slug": "ai2-news",          "name": "Allen Institute for AI", "domain": "allenai.org",        "category": "research", "kind": "html", "feedUrl": "https://allenai.org/news",                "selectors": { "item": "article", "title": "h2, h3", "link": "a" },                     "priority": 7,  "enabled": true },
+    { "slug": "arxiv-cs-ai",       "name": "arXiv cs.AI",            "domain": "arxiv.org",          "category": "research", "kind": "rss",  "feedUrl": "https://export.arxiv.org/rss/cs.AI",                                           "priority": 5,  "enabled": false, "_note": "High volume — enable cautiously" },
+    { "slug": "arxiv-cs-cr",       "name": "arXiv cs.CR (Security)", "domain": "arxiv.org",          "category": "research", "kind": "rss",  "feedUrl": "https://export.arxiv.org/rss/cs.CR",                                           "priority": 5,  "enabled": false, "_note": "High volume — enable cautiously" },
+    { "slug": "openai-research",   "name": "OpenAI Research",        "domain": "openai.com",         "category": "research", "kind": "rss",  "feedUrl": "https://openai.com/research/rss.xml",                                          "priority": 8,  "enabled": true },
+    { "slug": "anthropic-research","name": "Anthropic Research",     "domain": "anthropic.com",      "category": "research", "kind": "rss",  "feedUrl": "https://www.anthropic.com/research/rss.xml",                                   "priority": 8,  "enabled": true }
+  ],
+  "ignore": {
+    "_comment": "Stop drafts for items whose title contains any of these. Case-insensitive. Useful for filtering out paywalls, low-signal updates, or off-topic items.",
+    "titleSubstrings": [
+      "newsletter",
+      "podcast episode",
+      "sponsored post"
+    ]
+  },
+  "limits": {
+    "maxEventsPerDetectionRun": 80,
+    "maxDraftsPerWorkerRun": 6,
+    "rawContentChars": 12000,
+    "groundingCharsPerSource": 4000
+  }
+}

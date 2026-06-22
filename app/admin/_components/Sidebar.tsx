@@ -196,6 +196,7 @@ export function Sidebar({ counts, user }: { counts: SidebarCounts; user: Sidebar
           <div className="adm-sb-group-title">Content</div>
           {item("/admin/tools", "Tools", Icon.Tools, { value: compactCount(counts.tools) })}
           {item("/admin/news", "News", Icon.News)}
+          {item("/admin/news/pipeline", "News pipeline", Icon.News)}
           {item("/admin/blog", "Blog", Icon.Blog)}
           {item("/admin/authors", "Authors", Icon.Authors)}
           {item("/admin/categories", "Categories", Icon.Categories)}

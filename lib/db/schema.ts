@@ -596,6 +596,107 @@ export const auditLog = pgTable("audit_log", {
   at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// ── Newsroom pipeline ───────────────────────────────────────
+/**
+ * Every announcement detected by the news-detect cron lands here.
+ * Dedup key = url_hash (sha1 of source_url). Provenance trail —
+ * never deleted, used for the pipeline observability dashboard.
+ */
+export const newsDetectionEvents = pgTable(
+  "news_detection_event",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    /** Source slug from sources.config.json (e.g. "openai-blog"). */
+    sourceSlug: text("source_slug").notNull(),
+    sourceName: text("source_name").notNull(),
+    sourceDomain: text("source_domain").notNull(),
+    sourceCategory: text("source_category").notNull(), // 'ai' | 'security' | 'policy' | 'research' | 'media'
+    sourcePriority: integer("source_priority").notNull().default(5),
+    /** The actual URL of the announcement. */
+    url: text("url").notNull(),
+    /** sha1(url) — dedup index. Matches news_posts.source_hash for traceability. */
+    urlHash: text("url_hash").notNull().unique(),
+    /** Feed-provided id if any (RSS guid, atom id). */
+    externalId: text("external_id"),
+    title: text("title").notNull(),
+    summary: text("summary"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    /** First 12k chars of fetched body, for the outliner. */
+    rawContent: text("raw_content"),
+    /**
+     * 'new'         — just detected, awaiting drafting
+     * 'queued'      — claimed by a draft job (in flight)
+     * 'drafted'     — draft created (news_post_id populated)
+     * 'rejected'    — editor rejected the draft
+     * 'failed'      — drafting failed; see latest news_draft_job.error
+     * 'ignored'     — skipped (e.g. paywalled, off-topic per LLM gate)
+     */
+    status: text("status").notNull().default("new"),
+    rejectionReason: text("rejection_reason"),
+    /** FK to news_posts once a draft is created. */
+    newsPostId: text("news_post_id"),
+    detectedAt: timestamp("detected_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    statusIdx: index("news_detection_status_idx").on(t.status),
+    detectedAtIdx: index("news_detection_detected_at_idx").on(t.detectedAt),
+    sourceIdx: index("news_detection_source_idx").on(t.sourceSlug),
+  })
+);
+
+/**
+ * Every draft attempt — successful or failed. Lets editors regenerate,
+ * see which model / prompt was used, and audit cost.
+ */
+export const newsDraftJobs = pgTable(
+  "news_draft_job",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => newsDetectionEvents.id, { onDelete: "cascade" }),
+    newsPostId: text("news_post_id"),
+    /**
+     * 'pending'    — created, waiting for worker
+     * 'outlining'  — Haiku is generating outline
+     * 'researching'— fetching grounding URLs
+     * 'drafting'   — Opus is writing the article
+     * 'done'       — news_post_id populated
+     * 'failed'     — error logged
+     */
+    status: text("status").notNull().default("pending"),
+    provider: text("provider"), // 'claude-opus-4-7' | 'claude-haiku-4-5' | 'gemini' | 'groq'
+    outline: jsonb("outline").$type<{
+      workingTitle: string;
+      angle: string;
+      keyFacts: string[];
+      whyMatters: string;
+      whoAffected: string[];
+      citationsToFetch: string[];
+      proposedTopic: string;
+      proposedCategories: string[];
+    } | null>(),
+    /** URLs we actually fetched for grounding + their extracted text length. */
+    researchSources: jsonb("research_sources")
+      .$type<Array<{ url: string; chars: number; ok: boolean }>>()
+      .notNull()
+      .default([]),
+    /** Concatenated user prompt sent to the drafting model, truncated for logs. */
+    promptPreview: text("prompt_preview"),
+    /** Raw model JSON response, kept for diffing on regenerate. */
+    rawResponse: text("raw_response"),
+    error: text("error"),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    eventIdx: index("news_draft_event_idx").on(t.eventId),
+    statusIdx: index("news_draft_status_idx").on(t.status),
+  })
+);
+
 // ── Home page editorial sections ────────────────────────────
 /**
  * The "For Writers / For Developers / …" blocks on the homepage.
