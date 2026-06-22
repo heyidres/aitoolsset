@@ -96,7 +96,7 @@ OUTPUT FORMAT — strict JSON, no prose, no markdown fence:
 
 RULES:
 - BANNED in workingTitle: 'unveils', 'introduces', 'announces', 'showcases', 'revolutionary', 'cutting-edge', 'game-changing'. These read as press-release rewrites.
-- If the announcement is genuinely non-newsworthy (a minor docs update, a podcast episode, a recap blog), set workingTitle to "" — the worker will skip drafting.
+- DEFAULT IS TO DRAFT. Only skip (workingTitle = "") if the post is OBVIOUSLY off-topic for an AI + cybersecurity industry newsroom — e.g. a job listing, a generic company holiday note, a podcast trailer with no substance, a duplicate of a wire story. Product launches, research papers, vendor blogs about AI/security topics, funding rounds, partnerships, model releases, regulatory news, CVE writeups, threat-actor reports — ALL of these are newsworthy. Vendor opinion pieces and explainers that share concrete technical detail count too. When in doubt, draft.
 - proposedTopic must be one of the listed values verbatim.
 - citationsToFetch must be valid http(s) URLs from credible sources. Empty array is fine if you don't know any.`;
 

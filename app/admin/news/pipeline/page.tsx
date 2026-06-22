@@ -148,8 +148,10 @@ export default async function PipelinePage() {
   const eventTotal = counts.events.reduce((sum, r) => sum + r.n, 0);
   const postsInReview = counts.posts.find((p) => p.status === "review")?.n ?? 0;
   const jobsFailed = counts.jobs.find((j) => j.status === "failed")?.n ?? 0;
+  const jobsSkipped = counts.jobs.find((j) => j.status === "skipped")?.n ?? 0;
   const draftedEvents = counts.events.find((e) => e.status === "drafted")?.n ?? 0;
   const newEvents = counts.events.find((e) => e.status === "new")?.n ?? 0;
+  const ignoredEvents = counts.events.find((e) => e.status === "ignored")?.n ?? 0;
 
   // Detect the "Anthropic credit balance too low" condition so we can show a banner.
   const creditBalanceFailure = recentFailures.some((j) =>
@@ -256,6 +258,16 @@ export default async function PipelinePage() {
             value={counts.posts.find((p) => p.status === "published")?.n ?? 0}
             color="#16a34a"
           />
+          {(ignoredEvents > 0 || jobsSkipped > 0) && (
+            <>
+              <div style={{ width: 1, alignSelf: "stretch", background: "var(--border)", margin: "0 4px" }} />
+              <FunnelStep
+                label="Skipped (off-topic)"
+                value={Math.max(ignoredEvents, jobsSkipped)}
+                color="#94a3b8"
+              />
+            </>
+          )}
         </div>
       </div>
 

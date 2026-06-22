@@ -98,7 +98,7 @@ export async function runDraftWorker(): Promise<WorkerRunResult> {
         await db
           .update(newsDraftJobs)
           .set({
-            status: "failed",
+            status: isSkip ? "skipped" : "failed",
             provider: result.provider,
             error: result.error ?? "unknown",
             finishedAt: new Date(),
