@@ -1,7 +1,7 @@
 /**
- * Drafting pipeline — three stages:
+ * Drafting pipeline — three stages, cascading-provider model layer:
  *
- *   Stage 1 — OUTLINE   (Claude Haiku, cheap)
+ *   Stage 1 — OUTLINE   (Gemini → Groq → Anthropic)
  *     Reads the event title + summary + source URL. Returns a JSON
  *     outline: working title, angle, key facts, citations to fetch.
  *
@@ -9,21 +9,37 @@
  *     Fetches the original announcement + each citation URL the
  *     outline named. Strips to text. Caps total grounding text.
  *
- *   Stage 3 — DRAFT     (Claude Opus 4.7, your spec)
+ *   Stage 3 — DRAFT     (Gemini → Groq → Anthropic)
  *     Writes the article from outline + research. Output matches
  *     the news_posts.draft jsonb shape so the editor's existing
  *     news admin form can render it without changes.
+ *
+ * Provider priority: Gemini 2.5 Flash (free, 1500 req/day) →
+ * Groq Llama 3.3 70B (free, 14400 req/day) → Anthropic Claude
+ * (paid). On a quota / rate-limit / auth failure for one provider
+ * we transparently fall through to the next. Configure via env:
+ *   GEMINI_API_KEY (recommended)
+ *   GROQ_API_KEY   (recommended fallback)
+ *   ANTHROPIC_API_KEY (optional — kept for parity with the rest of the app)
  *
  * The whole pipeline is wrapped in try/catch — failures land in the
  * news_draft_jobs.error column for the observability dashboard.
  */
 
 import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI } from "@google/genai";
 import { fetchSourceBody } from "@/lib/news-detect/adapters";
 import type { newsDetectionEvents } from "@/lib/db/schema";
 
-const OUTLINE_MODEL = "claude-haiku-4-5";
-const DRAFT_MODEL = "claude-opus-4-7"; // per your spec
+// ── Per-stage model picks ────────────────────────────────────
+// Both stages use the same cascade. Outline naturally consumes
+// far fewer tokens so cost isn't a factor; using the same model
+// across stages keeps the JSON-shape behavior consistent.
+const GEMINI_MODEL = "gemini-2.5-flash";
+const GROQ_MODEL = "llama-3.3-70b-versatile";
+const ANTHROPIC_MODEL = "claude-haiku-4-5"; // fallback only
+
+type Provider = "gemini" | "groq" | "anthropic";
 
 export type Outline = {
   workingTitle: string;
@@ -84,8 +100,8 @@ RULES:
 - proposedTopic must be one of the listed values verbatim.
 - citationsToFetch must be valid http(s) URLs from credible sources. Empty array is fine if you don't know any.`;
 
-async function generateOutline(event: DetectionEvent, client: Anthropic): Promise<Outline | null> {
-  const user = `SOURCE: ${event.sourceName} (${event.sourceCategory})
+function buildOutlinePrompt(event: DetectionEvent): string {
+  return `SOURCE: ${event.sourceName} (${event.sourceCategory})
 URL: ${event.url}
 TITLE: ${event.title}
 PUBLISHED: ${event.publishedAt?.toISOString() ?? "unknown"}
@@ -97,25 +113,23 @@ RAW CONTENT (truncated):
 ${event.rawContent ?? "(none)"}
 
 Now output the editorial outline JSON.`;
+}
 
-  const response = await client.messages.create({
-    model: OUTLINE_MODEL,
-    max_tokens: 1500,
+async function generateOutline(event: DetectionEvent): Promise<{ outline: Outline | null; provider: Provider } | null> {
+  const prompt = buildOutlinePrompt(event);
+  const result = await runWithFallback({
     system: OUTLINE_SYSTEM,
-    messages: [{ role: "user", content: user }],
+    user: prompt,
+    maxTokens: 1500,
   });
-
-  const blocks = response.content as Array<{ type: string; text?: string }>;
-  const block = blocks.find((b) => b.type === "text" && typeof b.text === "string");
-  if (!block?.text) return null;
-
-  const cleaned = block.text.trim().replace(/^```json\s*|\s*```$/g, "");
+  if (!result) return null;
+  const cleaned = result.text.trim().replace(/^```json\s*|\s*```$/g, "");
   try {
     const parsed = JSON.parse(cleaned) as Outline;
-    if (!parsed.workingTitle?.trim()) return null; // editor said skip
-    return parsed;
+    if (!parsed.workingTitle?.trim()) return { outline: null, provider: result.provider };
+    return { outline: parsed, provider: result.provider };
   } catch {
-    return null;
+    return { outline: null, provider: result.provider };
   }
 }
 
@@ -212,9 +226,8 @@ ABSOLUTE RULES:
 export async function generateArticle(
   event: DetectionEvent,
   outline: Outline,
-  research: ResearchBundle,
-  client: Anthropic
-): Promise<{ draft: DraftResult; raw: string; prompt: string }> {
+  research: ResearchBundle
+): Promise<{ draft: DraftResult; raw: string; prompt: string; provider: Provider }> {
   const groundingText = [
     `=== PRIMARY SOURCE ===\nURL: ${research.primarySource.url}\n${research.primarySource.text || "(could not fetch — work from event.rawContent)"}`,
     ...research.groundingSources
@@ -235,20 +248,16 @@ Published at: ${event.publishedAt?.toISOString() ?? "unknown"}
 
 Now write the article JSON. Remember: every URL in body / faqs / citations MUST be a real URL from the research bundle. Output ONLY the JSON.`;
 
-  const response = await client.messages.create({
-    model: DRAFT_MODEL,
-    max_tokens: 6000,
+  const result = await runWithFallback({
     system: DRAFT_SYSTEM,
-    messages: [{ role: "user", content: user }],
+    user,
+    maxTokens: 6000,
   });
+  if (!result) throw new Error("All AI providers exhausted (drafting)");
 
-  const blocks = response.content as Array<{ type: string; text?: string }>;
-  const block = blocks.find((b) => b.type === "text" && typeof b.text === "string");
-  if (!block?.text) throw new Error("Claude returned no text content");
-
-  const cleaned = block.text.trim().replace(/^```json\s*|\s*```$/g, "");
+  const cleaned = result.text.trim().replace(/^```json\s*|\s*```$/g, "");
   const parsed = JSON.parse(cleaned) as DraftResult;
-  return { draft: parsed, raw: block.text, prompt: user };
+  return { draft: parsed, raw: result.text, prompt: user, provider: result.provider };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -270,25 +279,177 @@ export async function runDraftPipeline(
   event: DetectionEvent,
   charsPerSource: number
 ): Promise<RunDraftResult> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return { ok: false, provider: "none", error: "ANTHROPIC_API_KEY is not set" };
+  if (!hasAnyProvider()) {
+    return {
+      ok: false,
+      provider: "none",
+      error:
+        "No AI provider configured. Set GEMINI_API_KEY (free, https://aistudio.google.com/apikey) or GROQ_API_KEY (free, https://console.groq.com/keys) or ANTHROPIC_API_KEY in your env.",
+    };
   }
-  const client = new Anthropic({ apiKey });
 
   try {
-    const outline = await generateOutline(event, client);
-    if (!outline) {
-      return { ok: false, provider: OUTLINE_MODEL, error: "outline skipped — story not newsworthy" };
+    const outlineResult = await generateOutline(event);
+    if (!outlineResult || !outlineResult.outline) {
+      return {
+        ok: false,
+        provider: outlineResult?.provider ?? "none",
+        error: "outline skipped — story not newsworthy",
+      };
     }
-    const research = await fetchResearch(event, outline, charsPerSource);
-    const { draft, raw, prompt } = await generateArticle(event, outline, research, client);
-    return { ok: true, outline, research, draft, raw, prompt, provider: DRAFT_MODEL };
+    const research = await fetchResearch(event, outlineResult.outline, charsPerSource);
+    const { draft, raw, prompt, provider } = await generateArticle(event, outlineResult.outline, research);
+    return {
+      ok: true,
+      outline: outlineResult.outline,
+      research,
+      draft,
+      raw,
+      prompt,
+      provider: `${provider}/${activeModel(provider)}`,
+    };
   } catch (e) {
     return {
       ok: false,
-      provider: DRAFT_MODEL,
+      provider: "draft-stage",
       error: e instanceof Error ? e.message : String(e),
     };
   }
+}
+
+// ─────────────────────────────────────────────────────────────
+// PROVIDER CASCADE
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Errors that mean "this provider is unavailable RIGHT NOW — try
+ * the next one." Anything else (parse error, malformed prompt) is
+ * deterministic and bubbles up.
+ */
+function isProviderUnavailable(err: unknown): boolean {
+  const msg = String(err instanceof Error ? err.message : err).toLowerCase();
+  return (
+    msg.includes("quota") ||
+    msg.includes("rate limit") ||
+    msg.includes("rate_limit") ||
+    msg.includes("resource_exhausted") ||
+    msg.includes("credit balance") ||
+    msg.includes("429") ||
+    msg.includes("503") ||
+    msg.includes("overloaded") ||
+    msg.includes("authentication") ||
+    msg.includes("unauthorized") ||
+    msg.includes("401") ||
+    msg.includes("invalid api key")
+  );
+}
+
+function hasAnyProvider(): boolean {
+  return !!(process.env.GEMINI_API_KEY || process.env.GROQ_API_KEY || process.env.ANTHROPIC_API_KEY);
+}
+
+function activeModel(p: Provider): string {
+  if (p === "gemini") return GEMINI_MODEL;
+  if (p === "groq") return GROQ_MODEL;
+  return ANTHROPIC_MODEL;
+}
+
+/**
+ * Run a single LLM call with cascading providers. Returns the first
+ * provider that succeeds. On a quota/auth failure for one provider
+ * the next is tried. Any other error bubbles up.
+ */
+async function runWithFallback(args: {
+  system: string;
+  user: string;
+  maxTokens: number;
+}): Promise<{ text: string; provider: Provider } | null> {
+  const chain: Array<{ id: Provider; enabled: boolean; run: () => Promise<string> }> = [
+    { id: "gemini",    enabled: !!process.env.GEMINI_API_KEY,    run: () => runGemini(args) },
+    { id: "groq",      enabled: !!process.env.GROQ_API_KEY,      run: () => runGroq(args) },
+    { id: "anthropic", enabled: !!process.env.ANTHROPIC_API_KEY, run: () => runAnthropic(args) },
+  ];
+  const active = chain.filter((p) => p.enabled);
+  if (active.length === 0) return null;
+
+  let lastErr: unknown = null;
+  for (const p of active) {
+    try {
+      const text = await p.run();
+      if (text && text.trim()) return { text, provider: p.id };
+    } catch (e) {
+      lastErr = e;
+      if (!isProviderUnavailable(e)) throw e;
+      console.warn(`[news-draft] ${p.id} unavailable, trying next provider…`, e instanceof Error ? e.message : e);
+    }
+  }
+  throw lastErr instanceof Error
+    ? new Error(`All AI providers exhausted. Last error from ${active[active.length - 1].id}: ${lastErr.message}`)
+    : new Error("All AI providers exhausted.");
+}
+
+// ── Gemini ──────────────────────────────────────────────────
+async function runGemini({ system, user, maxTokens }: { system: string; user: string; maxTokens: number }): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
+  const ai = new GoogleGenAI({ apiKey });
+  const response = await ai.models.generateContent({
+    model: GEMINI_MODEL,
+    contents: user,
+    config: {
+      systemInstruction: system,
+      responseMimeType: "application/json",
+      maxOutputTokens: maxTokens,
+      temperature: 0.3,
+    },
+  });
+  const text = response.text;
+  if (!text) throw new Error("Gemini returned no content");
+  return text;
+}
+
+// ── Groq (OpenAI-compatible REST) ───────────────────────────
+async function runGroq({ system, user, maxTokens }: { system: string; user: string; maxTokens: number }): Promise<string> {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error("GROQ_API_KEY is not set");
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      response_format: { type: "json_object" },
+      temperature: 0.3,
+      max_tokens: maxTokens,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+    }),
+    signal: AbortSignal.timeout(120_000),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Groq ${res.status}: ${body.slice(0, 300) || res.statusText}`);
+  }
+  const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+  const text = json.choices?.[0]?.message?.content;
+  if (!text) throw new Error("Groq returned no content");
+  return text;
+}
+
+// ── Anthropic (fallback only) ───────────────────────────────
+async function runAnthropic({ system, user, maxTokens }: { system: string; user: string; maxTokens: number }): Promise<string> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set");
+  const client = new Anthropic({ apiKey });
+  const response = await client.messages.create({
+    model: ANTHROPIC_MODEL,
+    max_tokens: maxTokens,
+    system,
+    messages: [{ role: "user", content: user }],
+  });
+  const blocks = response.content as Array<{ type: string; text?: string }>;
+  const block = blocks.find((b) => b.type === "text" && typeof b.text === "string");
+  if (!block?.text) throw new Error("Claude returned no text content");
+  return block.text;
 }
