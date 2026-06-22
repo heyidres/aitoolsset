@@ -1,9 +1,13 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { NEWS_MAIN, NEWS_SIDE, favicon } from "@/lib/tools";
+import { localizeNewsItem, localizeNewsList } from "@/lib/i18n/seed-i18n";
 
 export async function NewsSection() {
   const t = await getTranslations("home");
+  const locale = await getLocale();
+  const main = localizeNewsItem(NEWS_MAIN, locale);
+  const side = localizeNewsList(NEWS_SIDE, locale);
   return (
     <section className="py-16 px-9 section-pad-x" style={{ background: "var(--cream)", borderBottom: "1px solid var(--border)" }}>
       <div className="max-w-page mx-auto">
@@ -37,11 +41,11 @@ export async function NewsSection() {
             className="nf-main nf-main-hover cursor-pointer"
             style={{ borderRight: "1px solid var(--border)" }}
           >
-            <div className="relative flex items-center justify-center overflow-hidden" style={{ height: 200, background: NEWS_MAIN.imgGrad }}>
+            <div className="relative flex items-center justify-center overflow-hidden" style={{ height: 200, background: main.imgGrad }}>
               <div className="font-display font-black text-white" style={{ fontSize: 44, letterSpacing: "-2px", opacity: 0.13 }}>
-                {NEWS_MAIN.imgLabel}
+                {main.imgLabel}
               </div>
-              {NEWS_MAIN.breaking && (
+              {main.breaking && (
                 <div
                   className="absolute top-3 left-3 text-white font-display text-[10px] font-extrabold px-[9px] py-[3px] rounded-pill uppercase tracking-[.05em]"
                   style={{ background: "#ef4444" }}
@@ -56,14 +60,14 @@ export async function NewsSection() {
                 style={{ color: "var(--blue)" }}
               >
                 <img
-                  src={favicon(NEWS_MAIN.sourceDomain, 32)}
-                  alt={NEWS_MAIN.source}
+                  src={favicon(main.sourceDomain, 32)}
+                  alt={main.source}
                   className="w-[13px] h-[13px] rounded-[3px]"
                 />
-                {NEWS_MAIN.source} · {NEWS_MAIN.category}
+                {main.source} · {main.category}
               </div>
               <h3 className="nf-title-h font-display font-extrabold text-[17px] tracking-[-.4px] leading-[1.25] mb-2">
-                {NEWS_MAIN.title}
+                {main.title}
               </h3>
               <p
                 className="text-[13px] leading-[1.55] mb-3 overflow-hidden"
@@ -74,14 +78,14 @@ export async function NewsSection() {
                   WebkitBoxOrient: "vertical",
                 }}
               >
-                {NEWS_MAIN.excerpt}
+                {main.excerpt}
               </p>
               <div className="text-xs flex items-center gap-[6px] flex-wrap" style={{ color: "var(--text-3)" }}>
-                <span>{NEWS_MAIN.time}</span>
+                <span>{main.time}</span>
                 <span>·</span>
-                <span>{NEWS_MAIN.read}</span>
+                <span>{main.read}</span>
               </div>
-              {NEWS_MAIN.toolChip && (
+              {main.toolChip && (
                 <div className="flex gap-[5px] flex-wrap mt-2">
                   <div
                     className="flex items-center gap-1 rounded-pill px-[9px] py-[3px] text-[11.5px] font-semibold"
@@ -92,11 +96,11 @@ export async function NewsSection() {
                     }}
                   >
                     <img
-                      src={favicon(NEWS_MAIN.toolChip.domain, 32)}
-                      alt={NEWS_MAIN.toolChip.name}
+                      src={favicon(main.toolChip.domain, 32)}
+                      alt={main.toolChip.name}
                       className="w-[13px] h-[13px] rounded-[3px]"
                     />
-                    {NEWS_MAIN.toolChip.name}
+                    {main.toolChip.name}
                   </div>
                 </div>
               )}
@@ -104,12 +108,12 @@ export async function NewsSection() {
           </Link>
 
           <div className="flex flex-col">
-            {NEWS_SIDE.map((n, i) => (
+            {side.map((n, i) => (
               <Link
                 key={n.title}
                 href="/news"
                 className="nf-side-item-hover flex gap-3 px-[18px] py-4 cursor-pointer items-start"
-                style={{ borderBottom: i < NEWS_SIDE.length - 1 ? "1px solid var(--border)" : "none" }}
+                style={{ borderBottom: i < side.length - 1 ? "1px solid var(--border)" : "none" }}
               >
                 <div
                   className="w-[68px] h-[52px] rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center"

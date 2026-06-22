@@ -15,6 +15,12 @@ import { getPublishedTools, getEnabledHomeSections, type CmsTool } from "@/lib/c
 import { mergeToolsBySlug } from "@/lib/cms-adapters";
 import { getLocale, getTranslations } from "next-intl/server";
 import { i18n } from "@/lib/i18n/config";
+import {
+  localizeTools,
+  localizeToolList,
+  localizeUseCases,
+  localizePricingTag,
+} from "@/lib/i18n/seed-i18n";
 
 export const runtime = "nodejs";
 // 60-second ISR — admin publishes are also instant via revalidatePath().
@@ -28,13 +34,24 @@ export default async function HomePage() {
     getLocale(),
     getTranslations("home"),
   ]);
-  const tools = mergeToolsBySlug(TOOLS, cmsTools);
+  const mergedTools = mergeToolsBySlug(TOOLS, cmsTools);
+  // Apply the per-locale overlay to tool desc + tags so cards show
+  // Korean copy for the seed catalogue (CMS-managed tools fall back
+  // until Phase 3 wires the translations JSONB column).
+  const tools = localizeTools(mergedTools, locale);
   const toolBySlug = new Map(cmsTools.map((t) => [t.slug, t]));
   // For non-default locales we ignore the (English) CMS-edited sections
   // and render the translated hardcoded blocks. Phase 3 will add a
   // per-locale translations column to home_sections so editors can
   // localize this content too.
   const useCmsSections = locale === i18n.defaultLocale && sections.length > 0;
+
+  // Pre-localize the writer/dev use-case data + tool lists so the
+  // hardcoded fallback panels are fully Korean.
+  const WRITER_TOOLS_L  = localizeToolList(WRITER_TOOLS, locale);
+  const DEV_TOOLS_L     = localizeToolList(DEV_TOOLS, locale);
+  const WRITER_CASES_L  = localizeUseCases(WRITER_USECASES, locale, "writer");
+  const DEV_CASES_L     = localizeUseCases(DEV_USECASES, locale, "dev");
 
   return (
     <main>
@@ -72,8 +89,8 @@ export default async function HomePage() {
               </>
             }
             description={t("writers_description")}
-            tools={WRITER_TOOLS}
-            cases={WRITER_USECASES}
+            tools={WRITER_TOOLS_L}
+            cases={WRITER_CASES_L}
             imageSide="right"
           />
           <UseCaseBlock
@@ -85,8 +102,8 @@ export default async function HomePage() {
               </>
             }
             description={t("devs_description")}
-            tools={DEV_TOOLS}
-            cases={DEV_USECASES}
+            tools={DEV_TOOLS_L}
+            cases={DEV_CASES_L}
             imageSide="left"
           />
         </>

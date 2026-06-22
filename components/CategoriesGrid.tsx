@@ -1,9 +1,12 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { CATEGORIES } from "@/lib/tools";
+import { localizeCategories } from "@/lib/i18n/seed-i18n";
 
 export async function CategoriesGrid() {
   const t = await getTranslations("home");
+  const locale = await getLocale();
+  const categories = localizeCategories(CATEGORIES, locale);
   return (
     <section className="py-16 px-9 section-pad-x" style={{ background: "var(--near-black)" }}>
       <div className="max-w-page mx-auto">
@@ -22,7 +25,7 @@ export async function CategoriesGrid() {
         </div>
 
         <div className="grid grid-cols-4 gap-[10px] cat-grid-4">
-          {CATEGORIES.map((c) => (
+          {categories.map((c) => (
             <Link
               key={c.name}
               href="/ai-tools"

@@ -1,9 +1,12 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { BLOG_POSTS } from "@/lib/tools";
+import { localizeBlogPosts } from "@/lib/i18n/seed-i18n";
 
 export async function BlogSection() {
   const t = await getTranslations("home");
+  const locale = await getLocale();
+  const posts = localizeBlogPosts(BLOG_POSTS, locale);
   return (
     <section
       className="py-16 px-9 section-pad-x"
@@ -32,7 +35,7 @@ export async function BlogSection() {
         </div>
 
         <div className="grid grid-cols-3 gap-5 blog-row-3">
-          {BLOG_POSTS.map((p) => (
+          {posts.map((p) => (
             <Link
               key={p.slug}
               href={`/blog/${p.slug}`}
