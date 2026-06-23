@@ -1,9 +1,8 @@
 import { Link } from "@/lib/i18n/navigation";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { PRICING_TIERS } from "@/lib/categories";
 import { CategoriesSectionHeader } from "./SectionHeader";
-import { localizePricingTag } from "@/lib/i18n/seed-i18n";
-import { getLocale } from "next-intl/server";
+import { localizePricingTag, localizePricingTiers } from "@/lib/i18n/seed-i18n";
 
 /** Maps the display tag to the pricing-column value used by /search?pricing=. */
 const TAG_TO_VALUE: Record<string, string> = {
@@ -17,6 +16,7 @@ export async function PricingGrid() {
   const t = await getTranslations("categories_landing");
   const home = await getTranslations("home");
   const locale = await getLocale();
+  const tiers = localizePricingTiers(PRICING_TIERS, locale);
   return (
     <section id="pricing" className="py-[72px] px-9 section-pad-x" style={{ background: "var(--mint)" }}>
       <div className="max-w-page mx-auto">
@@ -26,7 +26,7 @@ export async function PricingGrid() {
           sub={t("pricing_sub")}
         />
         <div className="grid grid-cols-4 gap-4 pr-grid-4">
-          {PRICING_TIERS.map((p) => (
+          {tiers.map((p) => (
             <Link
               key={p.tag}
               href={`/search?pricing=${TAG_TO_VALUE[p.tag] ?? "free"}`}

@@ -1,6 +1,7 @@
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { Breadcrumb } from "../Breadcrumb";
 import { MARKETING_FACTS } from "@/lib/category-detail";
+import { localizeMarketingFacts } from "@/lib/i18n/seed-i18n";
 
 type Props = {
   categoryName: string;
@@ -19,6 +20,8 @@ const FACT_LABEL_KEYS: Record<string, string> = {
 
 export async function CategoryHero({ categoryName, count }: Props) {
   const t = await getTranslations("category_page");
+  const locale = await getLocale();
+  const facts = localizeMarketingFacts(MARKETING_FACTS, locale);
   const lower = categoryName.toLowerCase();
   return (
     <section
@@ -113,14 +116,14 @@ export async function CategoryHero({ categoryName, count }: Props) {
               <span className="w-[5px] h-[5px] rounded-full" style={{ background: "#f472b6" }} />
               {t("at_a_glance", { name: categoryName })}
             </div>
-            {MARKETING_FACTS.map((f, i) => (
+            {facts.map((f, i) => (
               <div
                 key={f.label}
                 className="flex justify-between items-center py-[10px]"
-                style={{ borderBottom: i < MARKETING_FACTS.length - 1 ? "1px dashed rgba(255,255,255,.08)" : "none" }}
+                style={{ borderBottom: i < facts.length - 1 ? "1px dashed rgba(255,255,255,.08)" : "none" }}
               >
                 <span className="text-[13px]" style={{ color: "rgba(255,255,255,.55)" }}>
-                  {FACT_LABEL_KEYS[f.label] ? t(FACT_LABEL_KEYS[f.label]) : f.label}
+                  {f.label}
                 </span>
                 <span className="font-display text-sm font-extrabold text-white tnum">{f.val}</span>
               </div>

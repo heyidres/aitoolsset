@@ -1,8 +1,9 @@
 "use client";
 import { useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Favicon } from "../Favicon";
 import { MARKETING_TOOLS, SUB_CATEGORIES, FEATURE_FILTERS, POPULAR_TAGS, type DetailTool } from "@/lib/category-detail";
+import { localizeSubCategories } from "@/lib/i18n/seed-i18n";
 
 const PRICING_OPTIONS: { value: DetailTool["price"]; count: number }[] = [
   { value: "Free", count: 31 },
@@ -28,6 +29,8 @@ export function CategoryBrowser({
   // falls back to the hardcoded marketing sample so the page
   // never looks broken.
   const t = useTranslations("category_page");
+  const locale = useLocale();
+  const subCategories = useMemo(() => localizeSubCategories(SUB_CATEGORIES, locale), [locale]);
   const TOOLS_DATA = toolsOverride && toolsOverride.length > 0 ? toolsOverride : MARKETING_TOOLS;
   const [pricing, setPricing] = useState<Set<string>>(new Set());
   const [subs, setSubs] = useState<Set<string>>(new Set());
@@ -149,7 +152,7 @@ export function CategoryBrowser({
 
             {/* Sub-category */}
             <FilterSection title={t("browser_filter_subcategory")}>
-              {SUB_CATEGORIES.map((s) => (
+              {subCategories.map((s) => (
                 <CheckRow
                   key={s.key}
                   checked={subs.has(s.key)}

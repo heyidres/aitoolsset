@@ -1,13 +1,17 @@
 import { Link } from "@/lib/i18n/navigation";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { POPULAR_CATS, type PopularCategory } from "@/lib/categories";
 import { favicon } from "@/lib/tools";
 import { CategoriesSectionHeader } from "./SectionHeader";
+import { localizeCategories, localizePopularCategoryDescs } from "@/lib/i18n/seed-i18n";
 
 export async function PopularCategoriesGrid({ catsOverride }: { catsOverride?: PopularCategory[] } = {}) {
   const t = await getTranslations("categories_landing");
   const home = await getTranslations("home");
-  const cats = catsOverride && catsOverride.length > 0 ? catsOverride : POPULAR_CATS;
+  const locale = await getLocale();
+  const raw = catsOverride && catsOverride.length > 0 ? catsOverride : POPULAR_CATS;
+  // Apply name + desc overlay so popular cards render fully Korean copy.
+  const cats = localizePopularCategoryDescs(localizeCategories(raw, locale), locale);
   return (
     <section id="popular" className="py-[72px] px-9 bg-white section-pad-x">
       <div className="max-w-page mx-auto">

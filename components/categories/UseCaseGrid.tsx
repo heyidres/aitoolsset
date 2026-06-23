@@ -1,7 +1,8 @@
 import { Link } from "@/lib/i18n/navigation";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { USE_CASES } from "@/lib/categories";
 import { CategoriesSectionHeader } from "./SectionHeader";
+import { localizeUseCasesByName } from "@/lib/i18n/seed-i18n";
 
 /**
  * Extract the most distinctive 2-word keyword from a use-case name so
@@ -24,6 +25,8 @@ function useCaseKeyword(name: string): string {
 export async function UseCaseGrid() {
   const t = await getTranslations("categories_landing");
   const home = await getTranslations("home");
+  const locale = await getLocale();
+  const uses = localizeUseCasesByName(USE_CASES, locale);
   return (
     <section id="usecase" className="py-[72px] px-9 section-pad-x" style={{ background: "var(--cream)" }}>
       <div className="max-w-page mx-auto">
@@ -33,7 +36,7 @@ export async function UseCaseGrid() {
           sub={t("usecase_sub")}
         />
         <div className="grid grid-cols-4 gap-[18px] uc-grid-4">
-          {USE_CASES.map((u) => (
+          {uses.map((u) => (
             <Link
               key={u.name}
               href={`/search?q=${encodeURIComponent(useCaseKeyword(u.name))}`}

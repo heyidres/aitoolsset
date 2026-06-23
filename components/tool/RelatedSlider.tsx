@@ -1,8 +1,9 @@
 "use client";
 import { useRef } from "react";
 import { Link } from "@/lib/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Favicon } from "../Favicon";
+import { localizeRelatedSliderTools } from "@/lib/i18n/seed-i18n";
 
 const RELATED = [
   { name: "Claude", domain: "claude.ai", cat: "AI Chat", desc: "Nuanced reasoning and long-context analysis by Anthropic.", free: true },
@@ -17,6 +18,8 @@ const RELATED = [
 export function RelatedSlider({ category }: { category: string }) {
   const t = useTranslations("tool_page");
   const tc = useTranslations("tool_card");
+  const locale = useLocale();
+  const related = localizeRelatedSliderTools(RELATED, locale);
   const trackRef = useRef<HTMLDivElement>(null);
   const slide = (dir: number) => {
     if (trackRef.current) trackRef.current.scrollLeft += dir * 220;
@@ -52,7 +55,7 @@ export function RelatedSlider({ category }: { category: string }) {
             className="flex gap-[14px] overflow-x-auto no-scrollbar pb-1 max-w-full"
             style={{ scrollBehavior: "smooth" }}
           >
-            {RELATED.map((rt) => (
+            {related.map((rt) => (
               <Link
                 key={rt.name}
                 href={`/ai-tool/${rt.name.toLowerCase().replace(/\s+/g, "-")}`}
