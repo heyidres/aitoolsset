@@ -170,15 +170,19 @@ async function requireEditor() {
 }
 
 /**
- * Translate the given tool's editorial fields into `targetLocale`
- * and store them under tool.translations[targetLocale].
+ * Unguarded core. Used by:
+ *  - autoTranslateTool (editor-triggered admin button — guards then calls this)
+ *  - backgroundTranslateAllLocales (fires post-save, runs as the same editor)
+ *  - public tool detail page (runtime safety net on cache miss)
+ *
+ * Returns { ok, fieldsTranslated } or { ok:false, error }.
  */
-export async function autoTranslateTool(
+export async function translateToolUnauthenticated(
   toolId: string,
   targetLocale: string,
+  actorId: string | null,
 ): Promise<{ ok: true; fieldsTranslated: number } | { ok: false; error: string }> {
   try {
-    const user = await requireEditor();
     if (!isLocale(targetLocale) || targetLocale === i18n.defaultLocale) {
       return { ok: false, error: `targetLocale must be a non-default supported locale (got '${targetLocale}')` };
     }
@@ -224,18 +228,36 @@ export async function autoTranslateTool(
       .set({ translations: next, updatedAt: new Date() })
       .where(eq(tools.id, toolId));
 
-    await db.insert(auditLog).values({
-      actorId: user.id,
-      action: `tool.translate.${targetLocale}`,
-      target: `tool:${toolId}`,
-      meta: { fieldsTranslated, slug: row.slug },
-    });
+    if (actorId) {
+      await db.insert(auditLog).values({
+        actorId,
+        action: `tool.translate.${targetLocale}`,
+        target: `tool:${toolId}`,
+        meta: { fieldsTranslated, slug: row.slug },
+      });
+    }
 
     revalidatePath(`/admin/tools/${toolId}/edit`);
     revalidatePath(`/ai-tool/${row.slug}`);
     revalidatePath(`/${targetLocale}/ai-tool/${row.slug}`);
 
     return { ok: true, fieldsTranslated };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+/**
+ * Editor-triggered admin action. Wraps the unguarded core with
+ * the auth check and passes the actor's id for the audit log.
+ */
+export async function autoTranslateTool(
+  toolId: string,
+  targetLocale: string,
+): Promise<{ ok: true; fieldsTranslated: number } | { ok: false; error: string }> {
+  try {
+    const user = await requireEditor();
+    return await translateToolUnauthenticated(toolId, targetLocale, user.id);
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }

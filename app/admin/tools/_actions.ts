@@ -13,6 +13,13 @@
  *    extract structured editorial detail from the homepage.
  *    Returns the data; the form merges it into client state
  *    (it does NOT persist on its own — user reviews + saves).
+ *
+ *  • create + update trigger a FIRE-AND-FORGET background job
+ *    that translates the editorial fields into every non-default
+ *    locale via Gemini. The editor doesn't wait. Translations
+ *    land in tool.translations[locale] within ~10 seconds, so
+ *    /ko/ai-tool/<slug> serves Korean HTML before any Korean
+ *    visitor (or Googlebot) hits the URL.
  */
 
 "use server";
@@ -27,6 +34,25 @@ import { tools } from "@/lib/db/schema";
 import { slugify } from "@/lib/cms";
 import { autofillToolDetail, type AutofillResult } from "@/lib/tool-ai-fill";
 import { logAdmin } from "@/lib/audit";
+import { i18n } from "@/lib/i18n/config";
+import { translateToolUnauthenticated } from "./_translate-actions";
+
+/**
+ * Fire-and-forget background translation. Triggers the unguarded core
+ * for every non-default locale in parallel, doesn't await the result,
+ * and swallows errors so a translation failure never breaks save.
+ *
+ * Editor doesn't wait. Audit log gets one row per locale tagged with
+ * the editor's id, so the activity is still traceable.
+ */
+function backgroundTranslateAllLocales(toolId: string, actorId: string): void {
+  const targets = i18n.locales.filter((l) => l !== i18n.defaultLocale);
+  for (const locale of targets) {
+    translateToolUnauthenticated(toolId, locale, actorId).catch((err) => {
+      console.error(`[admin/tools] background translate to ${locale} failed for tool ${toolId}:`, err);
+    });
+  }
+}
 
 async function requireEditor() {
   const session = await auth();
@@ -34,7 +60,7 @@ async function requireEditor() {
   if (session.user.role !== "admin" && session.user.role !== "editor") {
     throw new Error("Not authorised");
   }
-  return session;
+  return session.user;
 }
 
 const ToolInput = z.object({
@@ -238,14 +264,22 @@ function valuesFromInput(input: z.infer<typeof ToolInput>) {
 
 // ── CREATE ───────────────────────────────────────────────────
 export async function createTool(formData: FormData) {
-  await requireEditor();
+  const user = await requireEditor();
   const input = parseFormData(formData);
 
   const [existing] = await db.select({ id: tools.id }).from(tools).where(eq(tools.slug, input.slug)).limit(1);
   if (existing) throw new Error(`A tool with slug "${input.slug}" already exists`);
 
-  await db.insert(tools).values(valuesFromInput(input));
+  const [inserted] = await db
+    .insert(tools)
+    .values(valuesFromInput(input))
+    .returning({ id: tools.id });
   await logAdmin("tool.create", `tool:${input.slug}`, { name: input.name, status: input.status });
+
+  // Kick off background translation for every non-default locale so
+  // /ko/, /ja/, etc. URLs serve localized HTML by the time anyone
+  // (or Googlebot) visits. Editor does NOT wait — the next line redirects.
+  if (inserted?.id) backgroundTranslateAllLocales(inserted.id, user.id);
 
   revalidatePath("/admin/tools");
   revalidatePath(`/ai-tool/${input.slug}`);
@@ -255,7 +289,7 @@ export async function createTool(formData: FormData) {
 
 // ── UPDATE ───────────────────────────────────────────────────
 export async function updateTool(id: string, formData: FormData) {
-  await requireEditor();
+  const user = await requireEditor();
   const input = parseFormData(formData);
 
   const [conflict] = await db
@@ -273,6 +307,12 @@ export async function updateTool(id: string, formData: FormData) {
     .where(eq(tools.id, id));
 
   await logAdmin("tool.update", `tool:${id}`, { slug: input.slug, status: input.status });
+
+  // Refresh the locale translations — content changed, so the cached
+  // Korean/etc copy is now stale. Editor doesn't wait; this runs in
+  // the background and overwrites translations[locale] within ~10s.
+  backgroundTranslateAllLocales(id, user.id);
+
   revalidatePath("/admin/tools");
   revalidatePath(`/ai-tool/${input.slug}`);
   revalidatePath("/");

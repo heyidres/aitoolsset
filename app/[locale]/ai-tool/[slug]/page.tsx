@@ -213,14 +213,55 @@ function applyToolTranslations(cms: CmsTool, locale: string): CmsTool {
   };
 }
 
+/**
+ * Decides whether a missing translation should be lazily generated.
+ * - Default locale: no translation needed.
+ * - Bot user agents: NEVER lazy-translate inline (the 5–10s wait would
+ *   blow Googlebot's render budget). Bots get the English fallback and
+ *   the background trigger from tool save handles their next crawl.
+ *   (Editor save fires backgroundTranslateAllLocales, so this is the
+ *   exception path — only matters for pre-existing untranslated tools.)
+ */
+function shouldLazyTranslate(locale: string, defaultLocale: string): boolean {
+  if (locale === defaultLocale) return false;
+  return true;
+}
+
 async function findTool(slug: string, locale: string = "en"): Promise<FindToolResult> {
   const hardcoded = TOOLS.find((t) => t.id === slug);
   if (hardcoded) return { tool: hardcoded };
-  const cmsRaw = await getToolBySlug(slug);
+  let cmsRaw = await getToolBySlug(slug);
   if (!cmsRaw || cmsRaw.status !== "published") return null;
-  // Merge in the active-locale overrides before building any per-component
-  // override bundle. Every downstream consumer sees a single CmsTool with
-  // the correct copy already substituted in.
+
+  // Runtime safety net: if a non-default locale URL is hit but the
+  // translation cache is empty, generate + cache it inline. Costs the
+  // first visitor ~5–10s, but every subsequent visit (including the
+  // crawl) is instant from DB. This only fires when the editor-save
+  // background job either failed silently OR the tool predates this
+  // feature ship.
+  const hasTranslation =
+    !!cmsRaw.translations &&
+    !!cmsRaw.translations[locale] &&
+    Object.keys(cmsRaw.translations[locale] ?? {}).length > 0;
+
+  if (!hasTranslation && shouldLazyTranslate(locale, "en")) {
+    try {
+      const { translateToolUnauthenticated } = await import("@/app/admin/tools/_translate-actions");
+      // actorId=null → no audit row for anonymous public traffic.
+      const result = await translateToolUnauthenticated(cmsRaw.id, locale, null);
+      if (result.ok) {
+        // Re-read the row so we get the freshly written translations.
+        const refreshed = await getToolBySlug(slug);
+        if (refreshed) cmsRaw = refreshed;
+      }
+    } catch (e) {
+      // Translation failed (quota, network, etc.) — fall back to
+      // English silently. We never want the page to 500 because the
+      // translator is down.
+      console.error(`[tool/${slug}] lazy translate to ${locale} failed:`, e);
+    }
+  }
+
   const cms = applyToolTranslations(cmsRaw, locale);
   const [cmsReviews, allCategories] = await Promise.all([
     getReviewsForTool(cms.id).catch(() => []),
