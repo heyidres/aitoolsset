@@ -193,6 +193,26 @@ export const tools = pgTable(
     seoTitle: text("seo_title"),
     seoDescription: text("seo_description"),
 
+    /**
+     * Per-locale overrides for editor-managed fields.
+     * Shape: { ko: { tagline?: string, description?: string, features?: [...], pros?: [...], cons?: [...], plans?: [...], seoTitle?, seoDescription? }, ja: {...}, ... }
+     * The render path reads translations[locale]?.field first, then falls
+     * back to the canonical English column. So if Korean is missing
+     * `features`, the English `features` shows; the rest of the page
+     * still renders Korean for fields that ARE translated.
+     */
+    translations: jsonb("translations").$type<Record<string, {
+      tagline?: string;
+      description?: string;
+      features?: Array<{ title: string; desc: string }>;
+      useCases?: string[];
+      pros?: string[];
+      cons?: string[];
+      plans?: Array<{ name: string; price: string; period: string; popular?: boolean; feats: string[] }>;
+      seoTitle?: string;
+      seoDescription?: string;
+    }>>().notNull().default({}),
+
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

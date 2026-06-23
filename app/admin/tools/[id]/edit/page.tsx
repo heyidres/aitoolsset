@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import { getToolById, getCategoryOptions } from "@/lib/cms";
 import { ToolForm, type ToolFormValues } from "../../ToolForm";
 import { updateTool } from "../../_actions";
+import { TranslatePanel } from "./TranslatePanel";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -64,8 +65,16 @@ export default async function EditToolPage({ params }: { params: Promise<{ id: s
     await updateTool(id, formData);
   };
 
+  // Which locales already have a stored translation? (drives the
+  // "Re-translate" vs "Translate now" CTA on each row).
+  const existingTranslations = (tool as unknown as { translations?: Record<string, unknown> }).translations ?? {};
+  const existingLocales = Object.keys(existingTranslations).filter(
+    (k) => existingTranslations[k] && Object.keys(existingTranslations[k] as object).length > 0,
+  );
+
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+      <TranslatePanel toolId={id} existingLocales={existingLocales} />
       <ToolForm mode="edit" initial={initial} action={action} categoryOptions={categoryOptions} />
     </div>
   );

@@ -177,11 +177,51 @@ function buildSidebarOverrides(t: CmsTool): ToolSidebarOverrides {
   };
 }
 
-async function findTool(slug: string): Promise<FindToolResult> {
+/**
+ * Apply per-locale translations to a CmsTool. For each translatable field,
+ * use the locale override when present, otherwise pass through the English
+ * canonical column. Mutates a copy — never the original row.
+ *
+ * The fields covered here mirror the `translations` JSONB shape in
+ * lib/db/schema.ts (tool table). Adding a new translatable field is a
+ * two-step process: declare it on the JSONB type, then merge it here.
+ */
+function applyToolTranslations(cms: CmsTool, locale: string): CmsTool {
+  const tr = (cms as unknown as { translations?: Record<string, {
+    tagline?: string;
+    description?: string;
+    features?: Array<{ title: string; desc: string }>;
+    useCases?: string[];
+    pros?: string[];
+    cons?: string[];
+    plans?: Array<{ name: string; price: string; period: string; popular?: boolean; feats: string[] }>;
+    seoTitle?: string;
+    seoDescription?: string;
+  }> }).translations?.[locale];
+  if (!tr) return cms;
+  return {
+    ...cms,
+    tagline:        tr.tagline        ?? cms.tagline,
+    description:    tr.description    ?? cms.description,
+    features:       tr.features       ?? cms.features,
+    useCases:       tr.useCases       ?? cms.useCases,
+    pros:           tr.pros           ?? cms.pros,
+    cons:           tr.cons           ?? cms.cons,
+    plans:          tr.plans          ?? cms.plans,
+    seoTitle:       tr.seoTitle       ?? cms.seoTitle,
+    seoDescription: tr.seoDescription ?? cms.seoDescription,
+  };
+}
+
+async function findTool(slug: string, locale: string = "en"): Promise<FindToolResult> {
   const hardcoded = TOOLS.find((t) => t.id === slug);
   if (hardcoded) return { tool: hardcoded };
-  const cms = await getToolBySlug(slug);
-  if (!cms || cms.status !== "published") return null;
+  const cmsRaw = await getToolBySlug(slug);
+  if (!cmsRaw || cmsRaw.status !== "published") return null;
+  // Merge in the active-locale overrides before building any per-component
+  // override bundle. Every downstream consumer sees a single CmsTool with
+  // the correct copy already substituted in.
+  const cms = applyToolTranslations(cmsRaw, locale);
   const [cmsReviews, allCategories] = await Promise.all([
     getReviewsForTool(cms.id).catch(() => []),
     getCategoryOptions().catch(() => []),
@@ -203,10 +243,10 @@ export function generateStaticParams() {
   return TOOLS.map((t) => ({ slug: t.id }));
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Metadata> {
   try {
-    const { slug } = await params;
-    const found = await findTool(slug);
+    const { locale, slug } = await params;
+    const found = await findTool(slug, locale);
     if (!found) return { title: "Tool not found" };
     const { tool, seoTitle, seoDescription } = found;
     const defaultTitle = `${tool.name} Reviews: Detail, Pricing & Features`;
@@ -231,9 +271,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 
-export default async function ToolDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const [found, session, t] = await Promise.all([findTool(slug), auth(), getTranslations("tool_page")]);
+export default async function ToolDetailPage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
+  const { locale, slug } = await params;
+  const [found, session, t] = await Promise.all([findTool(slug, locale), auth(), getTranslations("tool_page")]);
   if (!found) notFound();
   const { tool, descriptionHtml, headerOverrides, overviewOverrides, sidebarOverrides, cmsToolId, reviewsOverride } = found;
   const detail = DEFAULT_TOOL_DETAIL;

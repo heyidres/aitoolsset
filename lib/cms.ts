@@ -92,6 +92,22 @@ export type CmsTool = {
   /** Per-tool SEO overrides — public page falls back to name + tagline. */
   seoTitle: string | null;
   seoDescription: string | null;
+  /**
+   * Per-locale translations for editorial fields. Keys are locale codes.
+   * Render path reads `translations[locale]?.<field>` and falls back to
+   * the canonical English column when a field is missing.
+   */
+  translations: Record<string, {
+    tagline?: string;
+    description?: string;
+    features?: CmsFeature[];
+    useCases?: string[];
+    pros?: string[];
+    cons?: string[];
+    plans?: CmsPlan[];
+    seoTitle?: string;
+    seoDescription?: string;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -139,6 +155,7 @@ function toCmsTool(row: typeof tools.$inferSelect): CmsTool {
     plans: row.plans,
     seoTitle: row.seoTitle,
     seoDescription: row.seoDescription,
+    translations: (row.translations ?? {}) as CmsTool["translations"],
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
