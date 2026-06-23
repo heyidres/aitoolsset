@@ -1,15 +1,37 @@
 "use client";
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import { Link } from "@/lib/i18n/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { ALL_CATS, type SmallCategory } from "@/lib/categories";
 import { CategoriesSectionHeader } from "./SectionHeader";
+import { localizeCategories } from "@/lib/i18n/seed-i18n";
 
 const TABS = ["All", "Most Popular", "Newest", "Free"] as const;
+const TAB_KEYS: Record<typeof TABS[number], string> = {
+  "All": "filter_all",
+  "Most Popular": "sort_popular",
+  "Newest": "sort_newest",
+  "Free": "filter_free",
+};
 
 export function AZList({ catsOverride }: { catsOverride?: SmallCategory[] } = {}) {
-  const CATS_DATA = catsOverride && catsOverride.length > 0 ? catsOverride : ALL_CATS;
+  const t = useTranslations("categories_landing");
+  const home = useTranslations("home");
+  const cp = useTranslations("category_page");
+  const search = useTranslations("search");
+  const locale = useLocale();
+  const raw = catsOverride && catsOverride.length > 0 ? catsOverride : ALL_CATS;
+  const CATS_DATA = useMemo(() => localizeCategories(raw, locale), [raw, locale]);
   const [tab, setTab] = useState<(typeof TABS)[number]>("All");
   const [query, setQuery] = useState("");
+  // Maps tab labels to message keys across the right namespaces.
+  const tabLabel = (k: typeof TABS[number]): string => {
+    if (k === "All") return home("filter_all");
+    if (k === "Most Popular") return cp("browser_sort_most_popular");
+    if (k === "Newest") return cp("browser_sort_newest");
+    if (k === "Free") return home("filter_free");
+    return k;
+  };
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
@@ -38,19 +60,19 @@ export function AZList({ catsOverride }: { catsOverride?: SmallCategory[] } = {}
     <section id="az" className="py-[72px] px-9 bg-white section-pad-x">
       <div className="max-w-page mx-auto">
         <CategoriesSectionHeader
-          eyebrow="Alphabetical"
-          title="A–Z Categories"
-          sub="Every category, organised alphabetically. Use the jumper to skip ahead."
+          eyebrow={t("az_eyebrow")}
+          title={t("az_heading")}
+          sub={t("az_sub")}
         />
 
         <div className="flex items-center gap-4 mb-8 flex-wrap">
           <div className="flex p-1 rounded-pill" style={{ background: "var(--surface)" }}>
-            {TABS.map((t) => {
-              const active = tab === t;
+            {TABS.map((tk) => {
+              const active = tab === tk;
               return (
                 <button
-                  key={t}
-                  onClick={() => setTab(t)}
+                  key={tk}
+                  onClick={() => setTab(tk)}
                   className="font-display text-[13px] font-bold px-4 py-[7px] rounded-pill transition-all"
                   style={{
                     background: active ? "var(--white)" : "transparent",
@@ -58,7 +80,7 @@ export function AZList({ catsOverride }: { catsOverride?: SmallCategory[] } = {}
                     boxShadow: active ? "0 2px 8px rgba(0,0,0,.06)" : "none",
                   }}
                 >
-                  {t}
+                  {tabLabel(tk)}
                 </button>
               );
             })}
@@ -82,10 +104,10 @@ export function AZList({ catsOverride }: { catsOverride?: SmallCategory[] } = {}
             </svg>
             <input
               type="text"
-              placeholder="Filter categories…"
+              placeholder={`${search("placeholder")}`}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              aria-label="Filter categories"
+              aria-label={`${search("placeholder")}`}
               className="w-full h-[42px] rounded-pill text-[14px] outline-none pl-[42px] pr-4 transition-colors focus:border-[var(--blue)] focus:bg-white placeholder:text-[var(--text-3)]"
               style={{
                 background: "var(--surface)",

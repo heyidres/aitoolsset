@@ -1,23 +1,25 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/lib/i18n/navigation";
 
 const INTENTS = [
-  { key: "popular", label: "Popular", target: "#popular" },
-  { key: "all", label: "All Categories", target: "#all" },
-  { key: "usecase", label: "By Use Case", target: "#usecase" },
-  { key: "pricing", label: "By Pricing", target: "#pricing" },
-  { key: "az", label: "A–Z List", target: "#az" },
-  { key: "toprated", label: "Top Rated", target: "/top-rated", external: true },
-  { key: "new", label: "New This Week", target: "/new", external: true },
-];
+  { key: "popular",  labelKey: "intent_popular",   target: "#popular" },
+  { key: "all",      labelKey: "intent_all",       target: "#all" },
+  { key: "usecase",  labelKey: "intent_usecase",   target: "#usecase" },
+  { key: "pricing",  labelKey: "intent_pricing",   target: "#pricing" },
+  { key: "az",       labelKey: "intent_az",        target: "#az" },
+  { key: "toprated", labelKey: "intent_top_rated", target: "/top-rated", external: true },
+  { key: "new",      labelKey: "intent_new",       target: "/new",       external: true },
+] as const;
 
 export function IntentBar() {
+  const t = useTranslations("categories_landing");
   const [active, setActive] = useState("popular");
 
   const onClick = (intent: (typeof INTENTS)[number]) => {
     setActive(intent.key);
-    if (intent.external) return;
+    if ("external" in intent && intent.external) return;
     const el = document.querySelector(intent.target);
     if (!el) return;
     const y = el.getBoundingClientRect().top + window.scrollY - 120;
@@ -31,16 +33,16 @@ export function IntentBar() {
     >
       <div className="max-w-page mx-auto flex items-center gap-4 overflow-x-auto no-scrollbar">
         <div className="font-display text-[13px] font-bold flex-shrink-0" style={{ color: "var(--text-2)" }}>
-          Quick browse
+          {t("intent_label")}
         </div>
         <div className="flex gap-[6px] flex-nowrap">
           {INTENTS.map((i) => {
             const isActive = active === i.key;
             const cls = `intent-pill-hover font-display text-[12.5px] font-semibold px-[14px] py-[7px] rounded-pill whitespace-nowrap flex-shrink-0 cursor-pointer ${isActive ? "active" : ""}`;
-            if (i.external) {
+            if ("external" in i && i.external) {
               return (
                 <Link key={i.key} href={i.target} className={cls} style={{ color: isActive ? "#fff" : "var(--text-2)" }}>
-                  {i.label}
+                  {t(i.labelKey)}
                 </Link>
               );
             }
@@ -51,7 +53,7 @@ export function IntentBar() {
                 className={cls}
                 style={{ color: isActive ? "#fff" : "var(--text-2)" }}
               >
-                {i.label}
+                {t(i.labelKey)}
               </button>
             );
           })}

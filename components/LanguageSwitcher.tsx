@@ -63,11 +63,17 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
     // Allow CMD/CTRL-click to open in new tab without overriding.
     if (e.metaKey || e.ctrlKey || e.shiftKey) return;
     e.preventDefault();
+    if (locale === current) {
+      setOpen(false);
+      return;
+    }
     // Persist the manual choice — 1 year.
     document.cookie = `${i18n.cookieName}=${locale}; max-age=${i18n.cookieMaxAge}; path=/; samesite=lax`;
     setOpen(false);
-    router.push(href);
-    router.refresh();
+    // Hard navigation (not router.push) — Server Components must re-render
+    // top to bottom with the new locale, and we want the URL bar to update
+    // instantly without React's transition flash.
+    window.location.href = href;
   };
 
   return (

@@ -1,13 +1,14 @@
+import { getTranslations } from "next-intl/server";
 import { Breadcrumb } from "../Breadcrumb";
 import { POPULAR_SEARCHES } from "@/lib/categories";
 
-const STATS = [
-  { num: "48", label: "categories" },
-  { num: "2,400+", label: "tools listed" },
-  { num: "12k", label: "reviews" },
-];
-
-export function CategoriesHero() {
+export async function CategoriesHero() {
+  const t = await getTranslations("categories_landing");
+  const STATS = [
+    { num: "48",     label: t("hero_stat_categories") },
+    { num: "2,400+", label: t("hero_stat_tools") },
+    { num: "12k",    label: t("hero_stat_reviews") },
+  ];
   return (
     <section
       className="relative overflow-hidden px-9 pt-[72px] pb-[88px] text-white section-pad-x"
@@ -36,8 +37,8 @@ export function CategoriesHero() {
       <div className="max-w-page mx-auto relative">
         <Breadcrumb
           items={[
-            { label: "Home", href: "/" },
-            { label: "All Categories" },
+            { label: t("breadcrumb_home"), href: "/" },
+            { label: t("breadcrumb_all") },
           ]}
           theme="dark"
         />
@@ -51,7 +52,7 @@ export function CategoriesHero() {
                 color: "rgba(255,255,255,.7)",
               }}
             >
-              All AI Tool Categories
+              {t("hero_eyebrow")}
             </div>
             <h1
               className="font-display font-black mb-[18px]"
@@ -61,12 +62,14 @@ export function CategoriesHero() {
                 lineHeight: 1,
               }}
             >
-              Find the right AI
+              {t("hero_headline_lead")}
               <br />
-              tool for <span className="gradient-text">any task</span>
+              {t.rich("hero_headline_tail", {
+                accent: () => <span className="gradient-text">{t("hero_headline_accent")}</span>,
+              })}
             </h1>
             <p className="text-[17px] leading-[1.65] max-w-[540px] mb-[30px]" style={{ color: "rgba(255,255,255,.55)" }}>
-              Browse 2,400+ AI tools across 48 categories — organised by what they do, who they're for, and how much they cost.
+              {t("hero_sub")}
             </p>
 
             <form className="relative max-w-[540px] mb-6" role="search">
@@ -87,8 +90,8 @@ export function CategoriesHero() {
               </svg>
               <input
                 type="text"
-                placeholder="Search categories: writing, image, video…"
-                aria-label="Search categories"
+                placeholder={t("hero_search_placeholder")}
+                aria-label={t("hero_search_placeholder")}
                 className="w-full h-[54px] rounded-pill text-[15px] text-white outline-none pl-[50px] pr-[90px] transition-colors placeholder:text-white/40 focus:border-[var(--blue)] focus:bg-white/10"
                 style={{
                   background: "rgba(255,255,255,.07)",
@@ -133,7 +136,7 @@ export function CategoriesHero() {
                 <strong className="font-display font-extrabold" style={{ color: "var(--green)" }}>
                   ⬆ 32
                 </strong>
-                added this week
+                {t("hero_stat_added")}
               </div>
             </div>
           </div>
@@ -143,7 +146,7 @@ export function CategoriesHero() {
               className="font-display text-[11px] font-bold uppercase tracking-[.08em] mb-[14px]"
               style={{ color: "rgba(255,255,255,.4)" }}
             >
-              Most searched
+              {t("hero_most_searched")}
             </div>
             <div className="flex flex-wrap gap-[7px]">
               {POPULAR_SEARCHES.map((q) => (

@@ -1,6 +1,9 @@
-import Link from "next/link";
+import { Link } from "@/lib/i18n/navigation";
+import { getTranslations } from "next-intl/server";
 import { PRICING_TIERS } from "@/lib/categories";
 import { CategoriesSectionHeader } from "./SectionHeader";
+import { localizePricingTag } from "@/lib/i18n/seed-i18n";
+import { getLocale } from "next-intl/server";
 
 /** Maps the display tag to the pricing-column value used by /search?pricing=. */
 const TAG_TO_VALUE: Record<string, string> = {
@@ -10,14 +13,17 @@ const TAG_TO_VALUE: Record<string, string> = {
   Enterprise: "enterprise",
 };
 
-export function PricingGrid() {
+export async function PricingGrid() {
+  const t = await getTranslations("categories_landing");
+  const home = await getTranslations("home");
+  const locale = await getLocale();
   return (
     <section id="pricing" className="py-[72px] px-9 section-pad-x" style={{ background: "var(--mint)" }}>
       <div className="max-w-page mx-auto">
         <CategoriesSectionHeader
-          eyebrow="Filter by Cost"
-          title="Browse by Pricing"
-          sub="Tools sorted by what they cost — from completely free to enterprise plans."
+          eyebrow={t("pricing_eyebrow")}
+          title={t("pricing_heading")}
+          sub={t("pricing_sub")}
         />
         <div className="grid grid-cols-4 gap-4 pr-grid-4">
           {PRICING_TIERS.map((p) => (
@@ -35,7 +41,7 @@ export function PricingGrid() {
                   border: `1px solid ${p.tagBorder}`,
                 }}
               >
-                {p.tag}
+                {localizePricingTag(p.tag, locale)}
               </div>
               <div className="font-display font-black mb-[6px]" style={{ fontSize: 18, letterSpacing: "-.4px", color: "var(--text)" }}>
                 {p.name}
@@ -47,7 +53,7 @@ export function PricingGrid() {
                 className="font-display text-[13px] font-bold flex items-center gap-[6px] tnum"
                 style={{ color: "var(--text)" }}
               >
-                {p.count.toLocaleString()} tools
+                {home("tools_count", { count: p.count.toLocaleString() })}
                 <span className="ml-auto" style={{ color: "var(--text-3)" }}>
                   →
                 </span>

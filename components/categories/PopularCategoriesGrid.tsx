@@ -1,18 +1,21 @@
-import Link from "next/link";
+import { Link } from "@/lib/i18n/navigation";
+import { getTranslations } from "next-intl/server";
 import { POPULAR_CATS, type PopularCategory } from "@/lib/categories";
 import { favicon } from "@/lib/tools";
 import { CategoriesSectionHeader } from "./SectionHeader";
 
-export function PopularCategoriesGrid({ catsOverride }: { catsOverride?: PopularCategory[] } = {}) {
+export async function PopularCategoriesGrid({ catsOverride }: { catsOverride?: PopularCategory[] } = {}) {
+  const t = await getTranslations("categories_landing");
+  const home = await getTranslations("home");
   const cats = catsOverride && catsOverride.length > 0 ? catsOverride : POPULAR_CATS;
   return (
     <section id="popular" className="py-[72px] px-9 bg-white section-pad-x">
       <div className="max-w-page mx-auto">
         <CategoriesSectionHeader
-          eyebrow="Most Browsed"
-          title="Popular Categories"
-          sub="The most-visited categories on AI Tools Set this week — based on real traffic from 50,000+ monthly users."
-          link={{ label: "View all 48 →", href: "#all" }}
+          eyebrow={t("popular_eyebrow")}
+          title={t("popular_heading")}
+          sub={t("popular_sub")}
+          link={{ label: `${home("view_all_count", { count: "48" })} →`, href: "#all" }}
         />
 
         <div className="grid grid-cols-3 gap-5 popular-grid-3">
@@ -42,14 +45,14 @@ export function PopularCategoriesGrid({ catsOverride }: { catsOverride?: Popular
 
               <div className="flex items-center gap-[10px] relative">
                 <span className="font-display text-[13px] font-bold tnum" style={{ color: "var(--text)" }}>
-                  {c.count} tools
+                  {home("tools_count", { count: c.count.toLocaleString() })}
                 </span>
                 <span className="w-[3px] h-[3px] rounded-full" style={{ background: "var(--border)" }} />
                 <span
                   className="text-xs font-bold flex items-center gap-[3px] tnum"
                   style={{ color: "var(--green)" }}
                 >
-                  ↑ {c.trend} this week
+                  ↑ {c.trend} {t("card_trend_this_week")}
                 </span>
                 <div className="pop-arrow-h ml-auto w-7 h-7 rounded-full flex items-center justify-center">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -83,7 +86,7 @@ export function PopularCategoriesGrid({ catsOverride }: { catsOverride?: Popular
                   ))}
                 </div>
                 <span className="text-[11.5px] font-semibold ml-[14px]" style={{ color: "var(--text-3)" }}>
-                  {c.tools.length}+ top tools
+                  {c.tools.length}+ {t("card_top_tools_suffix")}
                 </span>
               </div>
             </Link>

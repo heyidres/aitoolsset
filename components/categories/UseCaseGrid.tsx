@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { Link } from "@/lib/i18n/navigation";
+import { getTranslations } from "next-intl/server";
 import { USE_CASES } from "@/lib/categories";
 import { CategoriesSectionHeader } from "./SectionHeader";
 
@@ -20,14 +21,16 @@ function useCaseKeyword(name: string): string {
   return name;
 }
 
-export function UseCaseGrid() {
+export async function UseCaseGrid() {
+  const t = await getTranslations("categories_landing");
+  const home = await getTranslations("home");
   return (
     <section id="usecase" className="py-[72px] px-9 section-pad-x" style={{ background: "var(--cream)" }}>
       <div className="max-w-page mx-auto">
         <CategoriesSectionHeader
-          eyebrow="Find Tools Faster"
-          title="Browse by Use Case"
-          sub="Skip the categories — tell us what you're trying to do and we'll show you the right tools."
+          eyebrow={t("usecase_eyebrow")}
+          title={t("usecase_heading")}
+          sub={t("usecase_sub")}
         />
         <div className="grid grid-cols-4 gap-[18px] uc-grid-4">
           {USE_CASES.map((u) => (
@@ -44,7 +47,7 @@ export function UseCaseGrid() {
                 {u.desc}
               </div>
               <span className="font-display text-[12.5px] font-bold" style={{ color: "var(--blue)" }}>
-                {u.count} tools →
+                {home("tools_count", { count: u.count.toLocaleString() })} →
               </span>
             </Link>
           ))}
