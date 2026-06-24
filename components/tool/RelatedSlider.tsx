@@ -15,11 +15,43 @@ const RELATED = [
   { name: "Groq", domain: "groq.com", cat: "AI API", desc: "Ultra-fast LLM inference for developers.", free: true },
 ];
 
-export function RelatedSlider({ category }: { category: string }) {
+export type RelatedSliderTool = {
+  name: string;
+  domain: string;
+  /** Slug used to build /ai-tool/<slug>. */
+  slug: string;
+  /** Tag/category label under the name. */
+  cat: string;
+  /** One-line description shown on the card. */
+  desc: string;
+  /** Renders the green "Free" pill. */
+  free: boolean;
+};
+
+export function RelatedSlider({
+  category,
+  itemsOverride,
+}: {
+  category: string;
+  /**
+   * Real same-category tools. When provided, this REPLACES the static demo
+   * list. The page passes this from `getRelatedTools`. The static list
+   * still renders as a final fallback so the slider never looks empty
+   * on a fresh install with zero published tools.
+   */
+  itemsOverride?: RelatedSliderTool[];
+}) {
   const t = useTranslations("tool_page");
   const tc = useTranslations("tool_card");
   const locale = useLocale();
-  const related = localizeRelatedSliderTools(RELATED, locale);
+  const related =
+    itemsOverride && itemsOverride.length > 0
+      ? itemsOverride
+      : localizeRelatedSliderTools(RELATED, locale).map((r) => ({
+          // Synthesise a slug from the name for the demo fallback list.
+          ...r,
+          slug: r.name.toLowerCase().replace(/\s+/g, "-"),
+        }));
   const trackRef = useRef<HTMLDivElement>(null);
   const slide = (dir: number) => {
     if (trackRef.current) trackRef.current.scrollLeft += dir * 220;
@@ -57,8 +89,8 @@ export function RelatedSlider({ category }: { category: string }) {
           >
             {related.map((rt) => (
               <Link
-                key={rt.name}
-                href={`/ai-tool/${rt.name.toLowerCase().replace(/\s+/g, "-")}`}
+                key={rt.slug}
+                href={`/ai-tool/${rt.slug}`}
                 className="tc-hover bg-white rounded-lg p-[18px] cursor-pointer flex-shrink-0"
                 style={{ minWidth: 200, maxWidth: 200 }}
               >

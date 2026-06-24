@@ -13,7 +13,7 @@ import { EmbedSection } from "@/components/tool/EmbedSection";
 import { RelatedSlider } from "@/components/tool/RelatedSlider";
 import { TOOLS, type Tool } from "@/lib/tools";
 import { DEFAULT_TOOL_DETAIL } from "@/lib/tool-detail";
-import { getToolBySlug, getReviewsForTool, getCategoryOptions, type CmsTool } from "@/lib/cms";
+import { getToolBySlug, getReviewsForTool, getCategoryOptions, getRelatedTools, type CmsTool } from "@/lib/cms";
 import { cmsToolToLegacy, cmsReviewToLegacy, type LegacyReview } from "@/lib/cms-adapters";
 import { auth } from "@/lib/auth";
 import { JsonLd, toolJsonLd, breadcrumbJsonLd } from "@/lib/json-ld";
@@ -37,6 +37,19 @@ type FindToolResult =
       /** CMS-supplied SEO overrides. Blank → auto-generate from name + tagline. */
       seoTitle?: string | null;
       seoDescription?: string | null;
+      /**
+       * Real same-category tools — drives the Top Alternatives sidebar and
+       * the Related Tools slider. Sorted by saveCount desc, deduped, self
+       * excluded.
+       */
+      relatedTools?: Array<{
+        name: string;
+        domain: string;
+        slug: string;
+        cat: string;
+        desc: string;
+        free: boolean;
+      }>;
     }
   | null;
 
@@ -263,20 +276,41 @@ async function findTool(slug: string, locale: string = "en"): Promise<FindToolRe
   }
 
   const cms = applyToolTranslations(cmsRaw, locale);
-  const [cmsReviews, allCategories] = await Promise.all([
+  // Fetch reviews, category options, AND same-category siblings in parallel.
+  // The siblings feed both the Top Alternatives sidebar (slice 4) and the
+  // Related Tools slider (slice 7) below.
+  const [cmsReviews, allCategories, related] = await Promise.all([
     getReviewsForTool(cms.id).catch(() => []),
     getCategoryOptions().catch(() => []),
+    getRelatedTools({
+      excludeSlug: cms.slug,
+      primaryCategory: cms.category,
+      extraCategories: cms.categories,
+      limit: 8,
+    }).catch(() => [] as CmsTool[]),
   ]);
+
+  // Map CmsTool → the lightweight shape both UI components want.
+  const relatedTools = related.map((r) => ({
+    name: r.name,
+    domain: r.domain,
+    slug: r.slug,
+    cat: r.category, // sidebar shows this under each row
+    desc: r.tagline || (r.description ?? "").replace(/<[^>]+>/g, "").slice(0, 120),
+    free: r.pricing === "free" || r.pricing === "freemium",
+  }));
+
   return {
     tool: cmsToolToLegacy(cms),
     descriptionHtml: cms.description,
     headerOverrides: buildHeaderOverrides(cms, allCategories),
     overviewOverrides: buildOverviewOverrides(cms),
-    sidebarOverrides: buildSidebarOverrides(cms),
+    sidebarOverrides: { ...buildSidebarOverrides(cms), alternatives: relatedTools.slice(0, 4) },
     cmsToolId: cms.id,
     reviewsOverride: cmsReviews.map(cmsReviewToLegacy),
     seoTitle: cms.seoTitle,
     seoDescription: cms.seoDescription,
+    relatedTools,
   };
 }
 
@@ -316,7 +350,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ loc
   const { locale, slug } = await params;
   const [found, session, t] = await Promise.all([findTool(slug, locale), auth(), getTranslations("tool_page")]);
   if (!found) notFound();
-  const { tool, descriptionHtml, headerOverrides, overviewOverrides, sidebarOverrides, cmsToolId, reviewsOverride } = found;
+  const { tool, descriptionHtml, headerOverrides, overviewOverrides, sidebarOverrides, cmsToolId, reviewsOverride, relatedTools } = found;
   const detail = DEFAULT_TOOL_DETAIL;
   const currentUser = session?.user
     ? { id: session.user.id, name: session.user.name ?? null, image: session.user.image ?? null }
@@ -425,7 +459,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ loc
         reviewsOverride={reviewsOverride}
         currentUser={currentUser}
       />
-      <RelatedSlider category={detail.category} />
+      <RelatedSlider category={detail.category} itemsOverride={relatedTools?.slice(0, 7)} />
       <Footer />
     </main>
   );

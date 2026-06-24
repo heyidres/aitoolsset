@@ -289,6 +289,69 @@ export async function getToolsByCategory(categorySlug: string): Promise<CmsTool[
   return rows.map(toCmsTool);
 }
 
+/**
+ * Pick siblings for the "Top Alternatives" sidebar / "Related Tools"
+ * slider on a tool detail page.
+ *
+ * Strategy: union of tools that share ANY category with the active tool
+ * (primary OR extras), excluding the active tool itself, sorted by saveCount
+ * desc, deduped, capped at `limit`. If the union runs short, pads with the
+ * highest-save published tools from any category so the rails never look
+ * empty on a niche tool.
+ */
+export async function getRelatedTools({
+  excludeSlug,
+  primaryCategory,
+  extraCategories = [],
+  limit = 8,
+}: {
+  excludeSlug: string;
+  primaryCategory: string;
+  extraCategories?: string[];
+  limit?: number;
+}): Promise<CmsTool[]> {
+  const cats = Array.from(new Set([primaryCategory, ...extraCategories].filter(Boolean)));
+
+  // Fetch siblings per category in parallel (each query reuses the same
+  // index on tool.category / tool.categories @> [...] so cost is small).
+  const buckets = cats.length > 0
+    ? await Promise.all(cats.map((c) => getToolsByCategory(c).catch(() => [] as CmsTool[])))
+    : [];
+
+  // Merge, dedupe by id, drop self, cap to limit.
+  const seen = new Set<string>([excludeSlug]);
+  const merged: CmsTool[] = [];
+  for (const bucket of buckets) {
+    for (const t of bucket) {
+      if (seen.has(t.slug) || seen.has(t.id)) continue;
+      seen.add(t.slug);
+      seen.add(t.id);
+      merged.push(t);
+      if (merged.length >= limit) break;
+    }
+    if (merged.length >= limit) break;
+  }
+
+  // Pad with global top-save tools if we still need more (niche category).
+  if (merged.length < limit) {
+    const padding = await db
+      .select()
+      .from(tools)
+      .where(sql`${tools.status} = 'published'`)
+      .orderBy(desc(tools.saveCount))
+      .limit(limit + 5);
+    for (const row of padding) {
+      if (merged.length >= limit) break;
+      if (seen.has(row.slug) || seen.has(row.id)) continue;
+      seen.add(row.slug);
+      seen.add(row.id);
+      merged.push(toCmsTool(row));
+    }
+  }
+
+  return merged.slice(0, limit);
+}
+
 /** Cheap count for sidebar badge / dashboard stat. */
 export async function getToolsCount(): Promise<number> {
   const [r] = await db.select({ n: sql<number>`count(*)::int` }).from(tools);

@@ -45,6 +45,21 @@ export type ToolSidebarOverrides = {
   websiteUrl?: string | null;
   /** SEO rel attribute for the Quick-Info website link. */
   linkRel?: "dofollow" | "nofollow" | "sponsored" | "ugc" | null;
+  /**
+   * Dynamic "Top Alternatives" list — sibling tools in the same category.
+   * When provided, replaces the hardcoded `detail.alternatives` fallback.
+   * Page-level code (page.tsx) fetches these via getRelatedTools.
+   */
+  alternatives?: Array<{
+    name: string;
+    domain: string;
+    /** Slug used to build /ai-tool/<slug> — must be the real DB slug. */
+    slug: string;
+    /** Tag/category label shown under the tool name. */
+    cat: string;
+    /** Renders the green "Free" pill on the right of the row. */
+    free: boolean;
+  }>;
 };
 
 function buildLinkRel(kind: ToolSidebarOverrides["linkRel"]): string {
@@ -81,6 +96,18 @@ export async function ToolSidebar({
     val:   SIDEBAR_VALUE_KEYS[row.val]   ? t(SIDEBAR_VALUE_KEYS[row.val])   : row.val,
   }));
   const tags = overrides?.tags ?? detail.tags;
+  // Prefer the dynamic same-category alternatives when the page-level code
+  // provided them. Falls back to the static demo list for hardcoded seed tools.
+  const alternatives =
+    overrides?.alternatives && overrides.alternatives.length > 0
+      ? overrides.alternatives.map((a) => ({ name: a.name, domain: a.domain, slug: a.slug, cat: a.cat, free: a.free }))
+      : detail.alternatives.map((a) => ({
+          name: a.name,
+          domain: a.domain,
+          slug: a.name.toLowerCase().replace(/\s+/g, "-"),
+          cat: a.cat,
+          free: a.free,
+        }));
   return (
     <aside className="flex flex-col gap-4 sticky min-w-0 w-full tool-sidebar" style={{ top: 110 }}>
       {/* Quick Info */}
@@ -132,12 +159,12 @@ export async function ToolSidebar({
           {t("sidebar_top_alternatives")}
         </div>
         <div className="px-[18px] py-[10px]">
-          {detail.alternatives.map((alt, i) => (
+          {alternatives.map((alt, i) => (
             <Link
-              key={alt.name}
-              href={`/ai-tool/${alt.name.toLowerCase().replace(/\s+/g, "-")}`}
+              key={alt.slug}
+              href={`/ai-tool/${alt.slug}`}
               className="group flex items-center gap-[10px] py-[9px] cursor-pointer"
-              style={{ borderBottom: i < detail.alternatives.length - 1 ? "1px solid var(--border)" : "none" }}
+              style={{ borderBottom: i < alternatives.length - 1 ? "1px solid var(--border)" : "none" }}
             >
               <div
                 className="w-8 h-8 rounded-[7px] overflow-hidden flex-shrink-0 flex items-center justify-center"
