@@ -35,7 +35,9 @@ import Anthropic from "@anthropic-ai/sdk";
 import { GoogleGenAI } from "@google/genai";
 
 const ANTHROPIC_MODEL = "claude-haiku-4-5";
-const GEMINI_MODEL = "gemini-2.5-flash";
+// gemini-2.0-flash: 15 RPM / 1500 RPD free, looser hallucination guardrails
+// than 2.5 — better for "use what you know about this brand" research.
+const GEMINI_MODEL = "gemini-2.0-flash";
 const GROQ_MODEL = "llama-3.3-70b-versatile";
 
 /** Per-field confidence rating returned by the AI. */
@@ -167,6 +169,56 @@ type FetchedSource = { url: string; text: string };
 
 const SCRAPE_PATHS = ["", "/pricing", "/about", "/features"];
 
+/**
+ * Pull the high-signal head metadata from raw HTML BEFORE we strip it.
+ * SPAs (grok.com, claude.ai, midjourney.com) render the body via JS so
+ * the visible text after `<[^>]+>` strip is near-empty — but the head
+ * always carries title, meta description, OG tags, and frequently a
+ * JSON-LD block describing the product. Cite this explicitly so the
+ * model uses it.
+ */
+function extractHeadMeta(html: string): string {
+  const get = (re: RegExp): string | null => {
+    const m = html.match(re);
+    return m && m[1] ? m[1].trim() : null;
+  };
+
+  const title = get(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  const description = get(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i);
+  const ogTitle = get(/<meta\s+property=["']og:title["']\s+content=["']([^"']+)["']/i);
+  const ogDescription = get(/<meta\s+property=["']og:description["']\s+content=["']([^"']+)["']/i);
+  const ogSiteName = get(/<meta\s+property=["']og:site_name["']\s+content=["']([^"']+)["']/i);
+  const twitterTitle = get(/<meta\s+name=["']twitter:title["']\s+content=["']([^"']+)["']/i);
+  const twitterDescription = get(/<meta\s+name=["']twitter:description["']\s+content=["']([^"']+)["']/i);
+  const keywords = get(/<meta\s+name=["']keywords["']\s+content=["']([^"']+)["']/i);
+
+  // Schema.org JSON-LD often carries name + description + offers + applicationCategory.
+  const ldMatches = html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+  const ldEntries: string[] = [];
+  for (const m of ldMatches) {
+    try {
+      const json = JSON.parse(m[1].trim());
+      // Only keep relevant fields, not huge nested objects.
+      const stringified = JSON.stringify(json).slice(0, 800);
+      ldEntries.push(stringified);
+    } catch {
+      // ignore malformed JSON-LD
+    }
+  }
+
+  const lines: string[] = [];
+  if (title) lines.push(`<title>${title}`);
+  if (description) lines.push(`<meta description>${description}`);
+  if (ogTitle && ogTitle !== title) lines.push(`<og:title>${ogTitle}`);
+  if (ogDescription && ogDescription !== description) lines.push(`<og:description>${ogDescription}`);
+  if (ogSiteName) lines.push(`<og:site_name>${ogSiteName}`);
+  if (twitterTitle && twitterTitle !== title && twitterTitle !== ogTitle) lines.push(`<twitter:title>${twitterTitle}`);
+  if (twitterDescription && twitterDescription !== description && twitterDescription !== ogDescription) lines.push(`<twitter:description>${twitterDescription}`);
+  if (keywords) lines.push(`<meta keywords>${keywords}`);
+  for (const ld of ldEntries) lines.push(`<JSON-LD>${ld}`);
+  return lines.join("\n");
+}
+
 async function fetchOneSource(url: string): Promise<string | null> {
   try {
     const res = await fetch(url, {
@@ -175,17 +227,22 @@ async function fetchOneSource(url: string): Promise<string | null> {
           "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
         Accept: "text/html,application/xhtml+xml",
       },
-      signal: AbortSignal.timeout(7000),
+      signal: AbortSignal.timeout(15000),
       redirect: "follow",
     });
     if (!res.ok) return null;
     const html = await res.text();
-    return html
+
+    // Capture head metadata FIRST — for SPAs this is the only signal.
+    const headMeta = extractHeadMeta(html);
+
+    const bodyText = html
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
       .replace(/<style[\s\S]*?<\/style>/gi, " ")
       .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
       .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
       .replace(/<header[\s\S]*?<\/header>/gi, " ") // strip site nav
+      .replace(/<head[\s\S]*?<\/head>/gi, " ")     // already extracted via headMeta
       .replace(/<[^>]+>/g, " ")
       .replace(/&nbsp;/gi, " ")
       .replace(/&amp;/gi, "&")
@@ -194,6 +251,11 @@ async function fetchOneSource(url: string): Promise<string | null> {
       .replace(/&#x?\d+;/gi, " ") // strip remaining entities
       .replace(/\s+/g, " ")
       .trim();
+
+    // Return head metadata + body. Either alone is enough for the model
+    // to extract useful info; SPAs typically have only the head signal.
+    const combined = headMeta ? `${headMeta}\n\n${bodyText}` : bodyText;
+    return combined.trim() || null;
   } catch {
     return null;
   }
@@ -235,7 +297,24 @@ async function fetchSources(rootUrl: string): Promise<FetchedSource[]> {
 
 function buildUserMessage(name: string, websiteUrl: string, sources: FetchedSource[]): string {
   if (sources.length === 0) {
-    return `Tool name: ${name}\nWebsite: ${websiteUrl}\n\n(All source pages failed to fetch — work from training-data knowledge of this tool. Set every _confidence field to "low" or "medium" since you have no live verification.)\n\nExtract the structured editorial detail per the schema.`;
+    return `Tool name: ${name}
+Website: ${websiteUrl}
+
+(No source pages could be fetched — likely a JS-only SPA or aggressive bot-blocking.)
+
+IMPORTANT — for well-known tools (ChatGPT, Claude, Grok, Cursor, Midjourney, Perplexity, GitHub Copilot, Notion AI, Jasper, Runway, Suno, ElevenLabs, etc.), you almost certainly have rich training-data knowledge of:
+- What the tool actually does (be SPECIFIC — name actual features and capabilities)
+- The company that built it (madeBy)
+- Pricing model (free / freemium / paid / etc.) and starting price if widely published
+- Whether it has an API
+- Social presence (X handle, GitHub org, etc.)
+- Key features, pros, cons
+
+USE THAT KNOWLEDGE. Write the description as if you've used the tool. Fill in every field you reasonably know — set _confidence to "high" for facts that are universally known (e.g. "Grok is built by xAI"), "medium" for things that change (pricing, weekly users), "low" only for genuinely speculative items.
+
+DO NOT output placeholder text like "Unknown Tool", "does something for someone", "tool with unknown capabilities", or "try to learn more". If you truly don't know what this tool is, return null for the field rather than vague filler. But for any tool listed above (and most major AI tools), you DO know — use your knowledge.
+
+Now extract the structured editorial detail per the schema. Output ONLY the JSON.`;
   }
 
   // Budget the total input — keep each source under 3500 chars; cap total at ~12k chars.
@@ -379,6 +458,32 @@ function isProviderUnavailable(err: unknown): boolean {
  * each configured AI provider in priority order. Auto-cascades on
  * quota / auth errors. Throws actionable error text on full failure.
  */
+/**
+ * Detects placeholder / garbage output from a model that gave up.
+ * If true, we fall through to the next provider instead of saving the
+ * empty result. Match on the tagline + description fields since those
+ * are the highest-signal indicators of a "model knew nothing" response.
+ */
+function isPlaceholderResult(result: AutofillResult): boolean {
+  const placeholders = [
+    "unknown tool",
+    "unknown category",
+    "unknown capabilities",
+    "something for someone",
+    "does something",
+    "try to learn more",
+    "tool with unknown",
+    "a tool that",
+  ];
+  const haystacks: string[] = [
+    result.tagline?.toLowerCase() ?? "",
+    result.description?.toLowerCase() ?? "",
+    result.seoDescription?.toLowerCase() ?? "",
+    (result.tags ?? []).join(" ").toLowerCase(),
+  ];
+  return haystacks.some((h) => placeholders.some((p) => h.includes(p)));
+}
+
 export async function autofillToolDetail({
   name,
   websiteUrl,
@@ -406,9 +511,22 @@ export async function autofillToolDetail({
   }
 
   let lastErr: unknown = null;
+  let lastPlaceholder: AutofillResult | null = null;
   for (const provider of active) {
     try {
-      return await provider.run();
+      const result = await provider.run();
+      // Reject placeholder/garbage output and try the next provider.
+      // Different models hallucinate vs. give up differently — Gemini
+      // tends to give up on SPAs, Groq's Llama is more willing to use
+      // training knowledge, Anthropic is the most reliable.
+      if (isPlaceholderResult(result)) {
+        console.warn(
+          `[autofill] ${provider.id} returned placeholder output (looks like the model gave up on this URL), trying next provider…`
+        );
+        lastPlaceholder = result;
+        continue;
+      }
+      return result;
     } catch (err) {
       lastErr = err;
       if (!isProviderUnavailable(err)) throw err;
@@ -417,6 +535,14 @@ export async function autofillToolDetail({
         err instanceof Error ? err.message : err
       );
     }
+  }
+
+  // If every provider returned placeholder output, return the last one
+  // anyway so the editor at least sees the form fields populated and
+  // can manually fix them, rather than a hard error.
+  if (lastPlaceholder) {
+    console.warn("[autofill] all providers returned placeholder output — returning the last one for manual review");
+    return lastPlaceholder;
   }
 
   throw lastErr instanceof Error
