@@ -344,6 +344,16 @@ export type CmsCategory = {
   seoTitle: string | null;
   seoDescription: string | null;
   featuredToolSlugs: string[];
+  translations: Record<string, {
+    name?: string;
+    description?: string;
+    heroEyebrow?: string;
+    heroTitle?: string;
+    heroSubtitle?: string;
+    introHtml?: string;
+    seoTitle?: string;
+    seoDescription?: string;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -367,8 +377,29 @@ function toCmsCategory(row: typeof categories.$inferSelect): CmsCategory {
     seoTitle: row.seoTitle,
     seoDescription: row.seoDescription,
     featuredToolSlugs: row.featuredToolSlugs,
+    translations: (row.translations ?? {}) as CmsCategory["translations"],
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+  };
+}
+
+/**
+ * Apply per-locale translations to a CmsCategory. Per-field fallback — if
+ * a field is missing in the target locale, the English column is used.
+ */
+export function applyCategoryTranslations(cms: CmsCategory, locale: string): CmsCategory {
+  const tr = cms.translations?.[locale];
+  if (!tr) return cms;
+  return {
+    ...cms,
+    name:           tr.name           ?? cms.name,
+    description:    tr.description    ?? cms.description,
+    heroEyebrow:    tr.heroEyebrow    ?? cms.heroEyebrow,
+    heroTitle:      tr.heroTitle      ?? cms.heroTitle,
+    heroSubtitle:   tr.heroSubtitle   ?? cms.heroSubtitle,
+    introHtml:      tr.introHtml      ?? cms.introHtml,
+    seoTitle:       tr.seoTitle       ?? cms.seoTitle,
+    seoDescription: tr.seoDescription ?? cms.seoDescription,
   };
 }
 

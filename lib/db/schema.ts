@@ -440,6 +440,21 @@ export const categories = pgTable(
      * /ai-tools/<slug> page.
      */
     featuredToolSlugs: jsonb("featured_tool_slugs").$type<string[]>().notNull().default([]),
+    /**
+     * Per-locale translations for editor-managed fields. Same shape as
+     * tool.translations — keyed by locale code, partial fallback to the
+     * English columns when a field is missing.
+     */
+    translations: jsonb("translations").$type<Record<string, {
+      name?: string;
+      description?: string;
+      heroEyebrow?: string;
+      heroTitle?: string;
+      heroSubtitle?: string;
+      introHtml?: string;
+      seoTitle?: string;
+      seoDescription?: string;
+    }>>().notNull().default({}),
 
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

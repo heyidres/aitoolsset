@@ -12,10 +12,8 @@ import { FaqAccordion } from "@/components/category/FaqAccordion";
 import { CategoryOutro } from "@/components/category/CategoryOutro";
 import { RelatedCategories } from "@/components/category/RelatedCategories";
 import { ALL_CATS } from "@/lib/categories";
-import { getLocale } from "next-intl/server";
-import { i18n } from "@/lib/i18n/config";
 import { MARKETING_FAQ_TEXT } from "@/lib/category-detail";
-import { getToolsByCategory, getCategoryBySlug, type CmsCategory, type CmsTool } from "@/lib/cms";
+import { getToolsByCategory, getCategoryBySlug, applyCategoryTranslations, type CmsCategory, type CmsTool } from "@/lib/cms";
 import { cmsToolToDetail, cmsToolToLegacy } from "@/lib/cms-adapters";
 import { JsonLd, breadcrumbJsonLd, faqJsonLd } from "@/lib/json-ld";
 import { sanitizeHtml } from "@/lib/sanitize";
@@ -33,15 +31,36 @@ type FoundCategory = {
   cms: CmsCategory | null;
 };
 
-async function findCategory(slug: string): Promise<FoundCategory | null> {
+async function findCategory(slug: string, locale: string = "en"): Promise<FoundCategory | null> {
   // Prefer the CMS row (it carries all editorial fields). Fall
   // back to the hardcoded ALL_CATS entry for backwards compat
   // until the editor seeds defaults.
-  const cms = await getCategoryBySlug(slug).catch((e) => {
+  const cmsRaw = await getCategoryBySlug(slug).catch((e) => {
     console.error("[findCategory] getCategoryBySlug threw", { slug, err: e });
     return null;
   });
-  if (cms) return { name: cms.name, slug: cms.slug, count: 0, cms };
+  if (cmsRaw) {
+    // Lazy translate on first /ko/ hit if translation cache is empty.
+    let cms = cmsRaw;
+    const hasTranslation =
+      !!cmsRaw.translations &&
+      !!cmsRaw.translations[locale] &&
+      Object.keys(cmsRaw.translations[locale] ?? {}).length > 0;
+    if (!hasTranslation && locale !== "en") {
+      try {
+        const { translateCategoryUnauthenticated } = await import("@/app/admin/categories/_translate-actions");
+        const result = await translateCategoryUnauthenticated(cmsRaw.id, locale, null);
+        if (result.ok) {
+          const refreshed = await getCategoryBySlug(slug);
+          if (refreshed) cms = refreshed;
+        }
+      } catch (e) {
+        console.error(`[findCategory] lazy translate to ${locale} failed for ${slug}:`, e);
+      }
+    }
+    const localized = applyCategoryTranslations(cms, locale);
+    return { name: localized.name, slug: localized.slug, count: 0, cms: localized };
+  }
   const hardcoded = ALL_CATS.find((c) => c.slug === slug);
   if (hardcoded) return { name: hardcoded.name, slug: hardcoded.slug, count: hardcoded.count, cms: null };
   return null;
@@ -79,9 +98,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 
-export default async function CategoryDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const [found, t] = await Promise.all([findCategory(slug), getTranslations("category_page")]);
+export default async function CategoryDetailPage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
+  const { locale, slug } = await params;
+  const [found, t] = await Promise.all([findCategory(slug, locale), getTranslations("category_page")]);
   if (!found) notFound();
 
   // Pull every CMS tool tagged with this category slug. We need
@@ -102,12 +121,11 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
       : [];
 
   const cms = found.cms;
-  const locale = await getLocale();
-  // Non-default locales skip the CMS-edited (English) hero/intro and use
-  // the translated standard variants. Default locale honors CMS overrides.
-  const isDefaultLocale = locale === i18n.defaultLocale;
-  const hasCustomHero = isDefaultLocale && !!(cms?.heroTitle || cms?.heroSubtitle || cms?.heroEyebrow || cms?.bannerImageUrl);
-  const hasIntro = isDefaultLocale && !!cms?.introHtml?.trim();
+  // findCategory already applied per-locale overrides via applyCategoryTranslations,
+  // so cms.heroTitle etc. are already in the active locale. Honor the CMS overrides
+  // in every locale now — auto-translation makes the Korean version content-equivalent.
+  const hasCustomHero = !!(cms?.heroTitle || cms?.heroSubtitle || cms?.heroEyebrow || cms?.bannerImageUrl);
+  const hasIntro = !!cms?.introHtml?.trim();
 
   // Sanitize once on the server. If DOMPurify throws (rare — happens
   // when jsdom can't init in a constrained runtime), fall back to a

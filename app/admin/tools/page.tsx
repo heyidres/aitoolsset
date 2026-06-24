@@ -6,6 +6,7 @@
 import Link from "next/link";
 import { getAllTools } from "@/lib/cms";
 import { ToolsTable } from "./ToolsTable";
+import { BulkTranslateBar } from "./BulkTranslateBar";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,5 +54,10 @@ export default async function ToolsAdminPage() {
     );
   }
 
-  return <ToolsTable rows={rows} />;
+  return (
+    <>
+      <BulkTranslateBar />
+      <ToolsTable rows={rows} />
+    </>
+  );
 }

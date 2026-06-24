@@ -262,3 +262,66 @@ export async function autoTranslateTool(
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
 }
+
+/**
+ * Bulk-translate every published tool that doesn't yet have a translation
+ * in `targetLocale`. Used for one-time catch-up after this feature ships
+ * (the 140 tools that pre-date Phase 4 auto-translate-on-save).
+ *
+ * Runs sequentially with a small delay between calls so the Gemini free
+ * tier (15 RPM) doesn't burn out. Returns the per-tool result so the
+ * editor sees progress.
+ */
+export async function bulkTranslateAllTools(
+  targetLocale: string,
+): Promise<{ ok: true; total: number; translated: number; skipped: number; failed: number; errors: string[] } | { ok: false; error: string }> {
+  try {
+    const user = await requireEditor();
+    if (!isLocale(targetLocale) || targetLocale === i18n.defaultLocale) {
+      return { ok: false, error: `targetLocale must be a non-default supported locale` };
+    }
+
+    // Pull every published tool, in a single query. Skip tools that already
+    // have a translation in this locale (idempotent — safe to re-run).
+    const rows = await db.select().from(tools);
+
+    const candidates = rows.filter((r) => {
+      if (r.status !== "published") return false;
+      const tr = (r.translations as Record<string, unknown> | null) ?? {};
+      const existing = tr[targetLocale] as Record<string, unknown> | undefined;
+      return !existing || Object.keys(existing).length === 0;
+    });
+
+    const total = candidates.length;
+    let translated = 0;
+    let skipped = rows.length - total;
+    let failed = 0;
+    const errors: string[] = [];
+
+    for (let i = 0; i < candidates.length; i++) {
+      const row = candidates[i];
+      // 4-second gap between Gemini calls so we stay under the 15 RPM
+      // free-tier cap. 140 tools × 4s = ~10 minutes; the editor sees the
+      // total at the end. (Vercel function maxDuration is 300s by default,
+      // so this runs through the streaming form result and the action
+      // returns when complete.)
+      if (i > 0) await new Promise((r) => setTimeout(r, 4000));
+      try {
+        const result = await translateToolUnauthenticated(row.id, targetLocale, user.id);
+        if (result.ok) {
+          translated++;
+        } else {
+          failed++;
+          errors.push(`${row.slug}: ${result.error}`);
+        }
+      } catch (e) {
+        failed++;
+        errors.push(`${row.slug}: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
+
+    return { ok: true, total, translated, skipped, failed, errors };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}

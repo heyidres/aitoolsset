@@ -10,6 +10,7 @@ import { categories } from "@/lib/db/schema";
 import { slugify } from "@/lib/cms";
 import { ALL_CATS, POPULAR_CATS } from "@/lib/categories";
 import { logAdmin } from "@/lib/audit";
+import { backgroundTranslateCategoryAllLocales } from "./_translate-actions";
 
 async function requireEditor() {
   const session = await auth();
@@ -92,12 +93,17 @@ function values(i: z.infer<typeof Input>) {
 }
 
 export async function createCategory(fd: FormData) {
-  await requireEditor();
+  const user = await requireEditor();
   const input = parse(fd);
   const [existing] = await db.select({ id: categories.id }).from(categories).where(eq(categories.slug, input.slug)).limit(1);
   if (existing) throw new Error(`A category with slug "${input.slug}" already exists`);
-  await db.insert(categories).values(values(input));
+  const [inserted] = await db.insert(categories).values(values(input)).returning({ id: categories.id });
   await logAdmin("category.create", `category:${input.slug}`, { name: input.name });
+
+  // Fire-and-forget auto-translation for every non-default locale so
+  // /ko/ai-tools/<slug> renders Korean content without editor effort.
+  if (inserted?.id) backgroundTranslateCategoryAllLocales(inserted.id, user.id);
+
   revalidatePath("/admin/categories");
   revalidatePath("/ai-tools");
   revalidatePath(`/ai-tools/${input.slug}`);
@@ -105,12 +111,16 @@ export async function createCategory(fd: FormData) {
 }
 
 export async function updateCategory(id: string, fd: FormData) {
-  await requireEditor();
+  const user = await requireEditor();
   const input = parse(fd);
   const [conflict] = await db.select({ id: categories.id }).from(categories).where(eq(categories.slug, input.slug)).limit(1);
   if (conflict && conflict.id !== id) throw new Error(`A different category already has slug "${input.slug}"`);
   await db.update(categories).set({ ...values(input), updatedAt: new Date() }).where(eq(categories.id, id));
   await logAdmin("category.update", `category:${id}`, { slug: input.slug });
+
+  // English copy changed → refresh the locale translations in background.
+  backgroundTranslateCategoryAllLocales(id, user.id);
+
   revalidatePath("/admin/categories");
   revalidatePath("/ai-tools");
   revalidatePath(`/ai-tools/${input.slug}`);
