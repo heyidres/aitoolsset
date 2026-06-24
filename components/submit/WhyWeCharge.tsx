@@ -1,37 +1,30 @@
-const POINTS = [
-  { icon: "👩‍💻", title: "Human editorial review", desc: "Every tool is tested and reviewed by a real person — we don't auto-approve submissions." },
-  { icon: "📣", title: "Real marketing spend", desc: "Fees fund paid social, SEO campaigns, and newsletter distribution that drive traffic to your listing." },
-  { icon: "🆓", title: "Free for users, always", desc: "Charging tool makers — not users — keeps our recommendations unbiased and the directory free to browse." },
-  { icon: "📊", title: "Infrastructure & analytics", desc: "Fees fund the analytics dashboard, uptime, CDN, and the engineering that powers your listing page." },
-];
+import { getTranslations } from "next-intl/server";
 
-export function WhyWeCharge() {
+export async function WhyWeCharge() {
+  const t = await getTranslations("submit");
+  const POINTS = [
+    { icon: "👩‍💻", title: t("why_charge_editorial_title"),  desc: t("why_charge_editorial_desc") },
+    { icon: "📣",   title: t("why_charge_marketing_title"),  desc: t("why_charge_marketing_desc") },
+    { icon: "🆓",   title: t("why_charge_users_title"),      desc: t("why_charge_users_desc") },
+    { icon: "📊",   title: t("why_charge_infra_title"),      desc: t("why_charge_infra_desc") },
+  ];
   return (
     <section className="py-[72px] px-9 section-pad-x" style={{ background: "var(--near-black)" }}>
       <div className="max-w-page mx-auto">
         <div className="grid grid-cols-2 gap-14 items-center why-grid-2">
           <div>
             <div className="font-display text-[11.5px] font-bold uppercase tracking-[.09em] mb-3" style={{ color: "var(--blue-h)" }}>
-              Transparency
+              {t("why_charge_eyebrow")}
             </div>
             <h2
               className="font-display font-black text-white mb-5"
               style={{ fontSize: "clamp(32px, 3vw, 48px)", letterSpacing: "-1.5px", lineHeight: 1.05 }}
             >
-              Why we charge
-              <br />
-              for featured listings
+              {t("why_charge_heading")}
             </h2>
             <div className="text-[15px] leading-[1.8]" style={{ color: "rgba(255,255,255,.5)" }}>
-              <p className="mb-[14px]">
-                We believe a great directory requires editorial work — not automation. Every tool on AI Tools Set is manually reviewed by our team to ensure it's real, functional, and genuinely useful.
-              </p>
-              <p className="mb-[14px]">
-                Charging for featured placement lets us fund this curation work, keep the directory free for users, and dedicate marketing resources that actually get your tool in front of the right people.
-              </p>
-              <p>
-                We will never charge for basic inclusion or sell fake reviews. Our credibility depends on your users trusting our recommendations.
-              </p>
+              <p className="mb-[14px]">{t("why_charge_intro")}</p>
+              <p>{t("why_charge_outro")}</p>
             </div>
           </div>
           <div>

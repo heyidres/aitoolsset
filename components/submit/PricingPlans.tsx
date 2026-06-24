@@ -1,37 +1,6 @@
 "use client";
 import { useState } from "react";
-
-const FREE_FEATS = [
-  { txt: "Basic tool listing page", inc: true },
-  { txt: "Searchable in directory", inc: true },
-  { txt: "Category placement", inc: true },
-  { txt: "User reviews enabled", inc: true },
-  { txt: "Mobile optimised", inc: true },
-  { txt: "No featured placement", inc: false },
-  { txt: "No analytics dashboard", inc: false },
-];
-
-const FEATURED_FEATS = [
-  "**Featured** badge on listing",
-  "Homepage featured section",
-  "Category page top placement",
-  "Verified ✓ badge",
-  "Analytics dashboard",
-  "Priority review (24h)",
-  "Social media mention",
-  "Newsletter inclusion (1×/mo)",
-];
-
-const ENTERPRISE_FEATS = [
-  "Dedicated landing page",
-  "Sponsored news article",
-  "Homepage hero banner",
-  "Newsletter sponsorship",
-  "API integration support",
-  "Dedicated account manager",
-  "Custom analytics reports",
-  "Priority customer support",
-];
+import { useTranslations } from "next-intl";
 
 function renderMd(text: string) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -41,23 +10,36 @@ function renderMd(text: string) {
 }
 
 export function PricingPlans() {
+  const t = useTranslations("submit");
   const [annual, setAnnual] = useState(false);
+
+  const FREE_FEATS = [
+    { txt: t("free_feat_basic"),       inc: true },
+    { txt: t("free_feat_searchable"),  inc: true },
+    { txt: t("free_feat_category"),    inc: true },
+    { txt: t("free_feat_reviews"),     inc: true },
+    { txt: t("free_feat_mobile"),      inc: true },
+    { txt: t("free_feat_no_featured"), inc: false },
+    { txt: t("free_feat_no_analytics"), inc: false },
+  ];
+  const FEATURED_FEATS = Array.from({ length: 8 }, (_, i) => t(`featured_feat_${i + 1}`));
+  const ENTERPRISE_FEATS = Array.from({ length: 8 }, (_, i) => t(`ent_feat_${i + 1}`));
 
   return (
     <section className="py-[72px] px-9 section-pad-x" style={{ background: "var(--bg)" }}>
       <div className="max-w-page mx-auto">
         <div className="text-center max-w-[680px] mx-auto mb-14">
           <div className="eyebrow mb-2" style={{ letterSpacing: ".09em" }}>
-            Pricing
+            {t("plans_eyebrow")}
           </div>
           <h2
             className="font-display font-black mb-3"
             style={{ fontSize: "clamp(28px, 3vw, 42px)", letterSpacing: "-1.5px", lineHeight: 1.1 }}
           >
-            Choose your listing plan
+            {t("plans_heading")}
           </h2>
           <p className="text-base leading-[1.7]" style={{ color: "var(--text-2)" }}>
-            Start with a free basic listing or unlock premium visibility with featured placement, priority indexing, and direct analytics.
+            {t("plans_sub")}
           </p>
         </div>
 
@@ -66,7 +48,7 @@ export function PricingPlans() {
             className="font-display text-sm"
             style={{ color: annual ? "var(--text-2)" : "var(--text)", fontWeight: annual ? 600 : 800 }}
           >
-            Monthly
+            {t("plans_billing_monthly")}
           </span>
           <button
             onClick={() => setAnnual((v) => !v)}
@@ -83,27 +65,27 @@ export function PricingPlans() {
             className="font-display text-sm"
             style={{ color: annual ? "var(--text)" : "var(--text-2)", fontWeight: annual ? 800 : 600 }}
           >
-            Annual
+            {t("plans_billing_annual")}
           </span>
           <span
             className="font-display text-[11px] font-extrabold px-[9px] py-[3px] rounded-pill"
             style={{ background: "#d1fae5", color: "#065f46", border: "1px solid #a7f3d0" }}
           >
-            Save 30%
+            {t("plans_save_30")}
           </span>
         </div>
 
         <div className="grid grid-cols-3 gap-5 max-w-[1100px] mx-auto plans-grid-3">
           {/* Free */}
           <PlanCard kind="free">
-            <PlanName>Free</PlanName>
-            <PlanPrice value="$0" period="/forever" />
-            <PlanDesc>Get your tool listed in our directory. Perfect for early-stage tools and open-source projects.</PlanDesc>
+            <PlanName>{t("plans_free_name")}</PlanName>
+            <PlanPrice value="$0" period={t("plans_per_forever")} />
+            <PlanDesc>{t("plans_free_desc")}</PlanDesc>
             <PlanButton kind="surface" href="#submit-form">
-              Get Listed Free
+              {t("plans_free_cta")}
             </PlanButton>
             <PlanDivider />
-            <PlanFeaturesTitle>What's included</PlanFeaturesTitle>
+            <PlanFeaturesTitle>{t("plans_whats_included")}</PlanFeaturesTitle>
             <div className="flex flex-col gap-[10px]">
               {FREE_FEATS.map((f) => (
                 <FeatRow key={f.txt} included={f.inc}>
@@ -119,16 +101,16 @@ export function PricingPlans() {
               className="absolute -top-[13px] left-1/2 -translate-x-1/2 font-display text-[11px] font-extrabold text-white px-[14px] py-1 rounded-pill whitespace-nowrap uppercase tracking-[.04em]"
               style={{ background: "var(--blue)" }}
             >
-              Most Popular
+              {t("plans_most_popular")}
             </div>
-            <PlanName>Featured</PlanName>
-            <PlanPrice value={annual ? "$34" : "$49"} period={annual ? "/month, billed annually" : "/month"} />
-            <PlanDesc>Get prominent placement in our featured sections with a verified badge and analytics access.</PlanDesc>
+            <PlanName>{t("plans_featured_name")}</PlanName>
+            <PlanPrice value={annual ? "$34" : "$49"} period={annual ? t("plans_billed_annually") : `/${t("plans_featured_price_monthly")}`} />
+            <PlanDesc>{t("plans_featured_desc")}</PlanDesc>
             <PlanButton kind="primary" href="#submit-form">
-              Get Featured
+              {t("plans_featured_cta")}
             </PlanButton>
             <PlanDivider />
-            <PlanFeaturesTitle>Everything in Free, plus</PlanFeaturesTitle>
+            <PlanFeaturesTitle>{t("plans_everything_free_plus")}</PlanFeaturesTitle>
             <div className="flex flex-col gap-[10px]">
               {FEATURED_FEATS.map((f) => (
                 <FeatRow key={f} kind="featured" included>
@@ -140,19 +122,19 @@ export function PricingPlans() {
 
           {/* Enterprise */}
           <PlanCard kind="enterprise">
-            <PlanName dark>Enterprise</PlanName>
-            <PlanPrice value="Custom" dark />
+            <PlanName dark>{t("plans_enterprise_name")}</PlanName>
+            <PlanPrice value={t("plans_enterprise_price")} dark />
             <div className="text-sm font-medium mb-[6px]" style={{ color: "rgba(255,255,255,.3)" }}>
-              Tailored for your needs
+              {t("plans_tailored")}
             </div>
             <PlanDesc dark>
-              Dedicated placement, news coverage, sponsored content, and custom integrations for established AI companies.
+              {t("plans_enterprise_desc")}
             </PlanDesc>
             <PlanButton kind="dark" href="#submit-form">
-              Contact Us
+              {t("plans_enterprise_cta")}
             </PlanButton>
             <PlanDivider dark />
-            <PlanFeaturesTitle dark>Everything in Featured, plus</PlanFeaturesTitle>
+            <PlanFeaturesTitle dark>{t("plans_everything_featured_plus")}</PlanFeaturesTitle>
             <div className="flex flex-col gap-[10px]">
               {ENTERPRISE_FEATS.map((f) => (
                 <FeatRow key={f} kind="enterprise" included>

@@ -1,20 +1,6 @@
-type Row = { label: string; free: React.ReactNode; featured: React.ReactNode; ent: React.ReactNode };
+import { getTranslations } from "next-intl/server";
 
-const ROWS: Row[] = [
-  { label: "Basic listing page", free: "✓", featured: "✓", ent: "✓" },
-  { label: "Searchable in directory", free: "✓", featured: "✓", ent: "✓" },
-  { label: "User reviews", free: "✓", featured: "✓", ent: "✓" },
-  { label: "SEO-optimised page", free: "✓", featured: "✓", ent: "✓" },
-  { label: "Verified badge", free: "—", featured: "✓", ent: "✓" },
-  { label: "Featured placement", free: "—", featured: "Homepage + Category", ent: "✓ Priority" },
-  { label: "Analytics dashboard", free: "—", featured: "✓", ent: "✓ Advanced" },
-  { label: "Newsletter inclusion", free: "—", featured: "1× per month", ent: "Dedicated issue" },
-  { label: "Social media mention", free: "—", featured: "✓", ent: "✓ Multiple" },
-  { label: "Review turnaround", free: "5–7 days", featured: "24 hours", ent: "Same day" },
-  { label: "Sponsored article", free: "—", featured: "—", ent: "✓" },
-  { label: "Account manager", free: "—", featured: "—", ent: "✓ Dedicated" },
-  { label: "Homepage hero banner", free: "—", featured: "—", ent: "✓" },
-];
+type Row = { label: string; free: React.ReactNode; featured: React.ReactNode; ent: React.ReactNode };
 
 function cellClass(v: React.ReactNode) {
   if (v === "✓") return "ct-yes";
@@ -28,16 +14,32 @@ function cellStyle(v: React.ReactNode): React.CSSProperties {
   return {};
 }
 
-export function ComparisonTable() {
+export async function ComparisonTable() {
+  const t = await getTranslations("submit");
+  const ROWS: Row[] = [
+    { label: t("row_basic_listing"),       free: "✓",         featured: "✓",                          ent: "✓" },
+    { label: t("row_searchable"),          free: "✓",         featured: "✓",                          ent: "✓" },
+    { label: t("row_reviews"),             free: "✓",         featured: "✓",                          ent: "✓" },
+    { label: t("row_seo_page"),            free: "✓",         featured: "✓",                          ent: "✓" },
+    { label: t("row_verified"),            free: "—",         featured: "✓",                          ent: "✓" },
+    { label: t("row_featured_placement"),  free: "—",         featured: t("row_homepage_category"),   ent: `✓ ${t("row_priority")}` },
+    { label: t("row_analytics"),           free: "—",         featured: "✓",                          ent: `✓ ${t("row_advanced")}` },
+    { label: t("row_newsletter"),          free: "—",         featured: t("row_once_month"),          ent: t("row_dedicated_issue") },
+    { label: t("row_social_mention"),      free: "—",         featured: "✓",                          ent: `✓ ${t("row_multiple")}` },
+    { label: t("row_review_turnaround"),   free: t("row_5_7_days"), featured: t("row_24_hours"),       ent: t("row_same_day") },
+    { label: t("row_sponsored"),           free: "—",         featured: "—",                          ent: "✓" },
+    { label: t("row_account_manager"),     free: "—",         featured: "—",                          ent: `✓ ${t("row_dedicated")}` },
+    { label: t("row_hero_banner"),         free: "—",         featured: "—",                          ent: "✓" },
+  ];
   return (
     <section className="py-[72px] px-9 section-pad-x" style={{ background: "var(--bg)" }}>
       <div className="max-w-[1100px] mx-auto">
         <div className="text-center max-w-[680px] mx-auto mb-9">
           <div className="eyebrow mb-2" style={{ letterSpacing: ".09em" }}>
-            Compare Plans
+            {t("compare_heading")}
           </div>
           <h2 className="font-display font-black" style={{ fontSize: 32, letterSpacing: "-1.5px", lineHeight: 1.1 }}>
-            Everything side by side
+            {t("compare_subheading")}
           </h2>
         </div>
         <div className="bg-white rounded-lg overflow-x-auto" style={{ border: "1px solid var(--border)" }}>
@@ -45,10 +47,10 @@ export function ComparisonTable() {
             <thead>
               <tr>
                 {[
-                  { label: "Feature", style: { color: "rgba(255,255,255,.4)" } },
-                  { label: "Free", style: {} },
-                  { label: "Featured", style: { background: "var(--blue)" } },
-                  { label: "Enterprise", style: {} },
+                  { label: t("compare_col_feature"),    style: { color: "rgba(255,255,255,.4)" } },
+                  { label: t("compare_col_free"),       style: {} },
+                  { label: t("compare_col_featured"),   style: { background: "var(--blue)" } },
+                  { label: t("compare_col_enterprise"), style: {} },
                 ].map((h) => (
                   <th
                     key={h.label}

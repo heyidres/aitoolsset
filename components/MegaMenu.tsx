@@ -1,5 +1,6 @@
 "use client";
 import { Link } from "@/lib/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 type Badge = "new" | "hot";
 
@@ -233,9 +234,74 @@ export const PANELS: Panel[] = [
   },
 ];
 
-function Badge({ kind }: { kind: Badge }) {
-  return <span className={`mi-badge ${kind}`}>{kind === "new" ? "New" : "Hot"}</span>;
+function Badge({ kind, tBadge }: { kind: Badge; tBadge: (k: string) => string }) {
+  return <span className={`mi-badge ${kind}`}>{kind === "new" ? tBadge("badge_new") : tBadge("badge_hot")}</span>;
 }
+
+/**
+ * Maps the English source strings in PANELS to their megamenu.* message keys.
+ * The PANELS data structure stays English-source so it can be reused for SEO
+ * fallbacks, but every visible label/desc is looked up here at render time.
+ */
+const MEGAMENU_LABEL_KEYS: Record<string, string> = {
+  // Column titles
+  "Browse Tools":         "col_browse_tools",
+  "Popular Categories":   "col_popular_categories",
+  "By Pricing":           "col_by_pricing",
+  "Stay Updated":         "col_stay_updated",
+  "Trending Now":         "col_trending_now",
+  "Quick Links":          "col_quick_links",
+  "Editorial":            "col_editorial",
+  "Popular Guides":       "col_popular_guides",
+  "By Role":              "col_by_role",
+  // Item titles
+  "All AI Tools":         "all_ai_tools",
+  "Top Rated":            "top_rated",
+  "New Arrivals":         "new_arrivals",
+  "Model Leaderboard":    "model_leaderboard",
+  "AI News Feed":         "ai_news_feed",
+  "Images & Prompts":     "images_prompts",
+  "Deals & Discounts":    "deals_discounts",
+  "Blog":                 "blog_item",
+  "AI Glossary":          "glossary_item",
+  "Comparisons":          "comparisons",
+  // Item descriptions
+  "Browse 2,400+ curated tools":      "all_ai_tools_desc",
+  "Highest-reviewed by users":        "top_rated_desc",
+  "Just added this week":             "new_arrivals_desc",
+  "Ranked by intelligence & cost":    "model_leaderboard_desc",
+  "Official updates, Twitter-style":  "ai_news_feed_desc",
+  "Copy prompts from every model":    "images_prompts_desc",
+  "Verified coupon codes":            "deals_discounts_desc",
+  "Guides, reviews & deep dives":     "blog_desc",
+  "80+ AI terms explained simply":    "glossary_desc",
+  "Head-to-head tool battles":        "comparisons_desc",
+  // Links
+  "Free tools":           "free_tools",
+  "Freemium":             "freemium",
+  "Paid":                 "paid",
+  "On sale 🔥":           "on_sale",
+  "All 48 categories →":  "all_categories_arrow",
+  "Submit a Tool":        "submit_a_tool",
+  "Methodology":          "methodology",
+  "Browse Categories":    "browse_categories",
+  "For Writers":          "for_writers",
+  "For Developers":       "for_developers",
+  "For Marketers":        "for_marketers",
+  "For Founders":         "for_founders",
+  "For Designers":        "for_designers",
+  // Feature card
+  "Featured":             "featured",
+  "Tool of the week":     "tool_of_week",
+  "ChatGPT now runs on GPT-5 — 1M token context, real-time reasoning, and native web access.": "tool_of_week_desc",
+  "View tool →":          "view_tool",
+  "Newsletter":           "newsletter",
+  "AI news, weekly":      "ai_news_weekly",
+  "Join 28,000 readers getting the best AI tools and news every Tuesday.": "ai_news_weekly_desc",
+  "Subscribe free →":     "subscribe_free",
+  "Editor's Pick":        "editors_pick",
+  "Read article →":       "read_article",
+};
 
 export function MegaPanel({
   panel,
@@ -248,13 +314,19 @@ export function MegaPanel({
   onClose: () => void;
   onEnter: () => void;
 }) {
+  const t = useTranslations("megamenu");
+  /** Translate a known English label/desc via the dictionary; pass through unknown strings. */
+  const tr = (s: string): string => {
+    const key = MEGAMENU_LABEL_KEYS[s];
+    return key ? t(key) : s;
+  };
   return (
     <div className="mega-wrap" onMouseEnter={onEnter} onMouseLeave={onClose}>
       <div className={`mega${show ? " show" : ""}`}>
         <div className="mega-inner">
           {panel.cols.map((col) => (
             <div key={col.title} className="mega-col">
-              <div className="mega-col-title">{col.title}</div>
+              <div className="mega-col-title">{tr(col.title)}</div>
               {col.items && (
                 <div>
                   {col.items.map((it) => (
@@ -262,10 +334,10 @@ export function MegaPanel({
                       <div className="mi-icon">{it.icon}</div>
                       <div className="mi-body">
                         <div className="mi-title">
-                          {it.title}
-                          {it.badge && <Badge kind={it.badge} />}
+                          {tr(it.title)}
+                          {it.badge && <Badge kind={it.badge} tBadge={t} />}
                         </div>
-                        <div className="mi-desc">{it.desc}</div>
+                        <div className="mi-desc">{tr(it.desc)}</div>
                       </div>
                     </Link>
                   ))}
@@ -275,7 +347,7 @@ export function MegaPanel({
                 <div className="mega-links">
                   {col.links.map((l) => (
                     <Link key={l.label} href={l.href} className="mega-link" onClick={onClose}>
-                      {l.label}
+                      {tr(l.label)}
                       {l.count && <span className="count">{l.count}</span>}
                     </Link>
                   ))}
@@ -284,14 +356,14 @@ export function MegaPanel({
             </div>
           ))}
           <div className="mega-feature">
-            <div className="mf-eyebrow">{panel.feature.eyebrow}</div>
+            <div className="mf-eyebrow">{tr(panel.feature.eyebrow)}</div>
             <div className="mf-img" style={{ background: panel.feature.imgBg }}>
               {panel.feature.imgLabel}
             </div>
-            <div className="mf-title">{panel.feature.title}</div>
-            <div className="mf-desc">{panel.feature.desc}</div>
+            <div className="mf-title">{tr(panel.feature.title)}</div>
+            <div className="mf-desc">{tr(panel.feature.desc)}</div>
             <Link href={panel.feature.ctaHref} className="mf-btn" onClick={onClose}>
-              {panel.feature.ctaLabel}
+              {tr(panel.feature.ctaLabel)}
             </Link>
           </div>
         </div>

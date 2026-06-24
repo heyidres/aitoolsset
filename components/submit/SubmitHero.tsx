@@ -1,19 +1,20 @@
-const STATS = [
-  { num: "50k+", label: "Monthly visitors" },
-  { num: "2,400+", label: "Tools listed" },
-  { num: "12k+", label: "User reviews" },
-  { num: "48h", label: "Avg. review time" },
-];
+import { getTranslations } from "next-intl/server";
 
-const TRUST_ITEMS = [
-  { icon: "✓", bg: "#f0fdf4", text: "Quality-reviewed by our editorial team" },
-  { icon: "🔒", bg: "#eff6ff", text: "Secure payment via Stripe" },
-  { icon: "⚡", bg: "#fdf4ff", text: "Listed within 48 hours" },
-  { icon: "📈", bg: "#fff7ed", text: "Real traffic from real users" },
-  { icon: "🌍", bg: "#fef9c3", text: "SEO-optimised tool pages" },
-];
-
-export function SubmitHero() {
+export async function SubmitHero() {
+  const t = await getTranslations("submit");
+  const STATS = [
+    { num: "50k+",   label: t("stat_visitors") },
+    { num: "2,400+", label: t("stat_tools") },
+    { num: "12k+",   label: t("stat_reviews") },
+    { num: "48h",    label: t("stat_review_time") },
+  ];
+  const TRUST_ITEMS = [
+    { icon: "✓",  bg: "#f0fdf4", text: t("trust_quality_reviewed") },
+    { icon: "🔒", bg: "#eff6ff", text: t("trust_secure_payment") },
+    { icon: "⚡", bg: "#fdf4ff", text: t("trust_listed_48h") },
+    { icon: "📈", bg: "#fff7ed", text: t("trust_real_traffic") },
+    { icon: "🌍", bg: "#fef9c3", text: t("trust_seo") },
+  ];
   return (
     <>
       <section
@@ -40,7 +41,7 @@ export function SubmitHero() {
               color: "rgba(255,255,255,.7)",
             }}
           >
-            For AI Tool Makers
+            {t("hero_eyebrow")}
           </div>
           <h1
             className="font-display font-black text-white mb-4"
@@ -50,12 +51,12 @@ export function SubmitHero() {
               lineHeight: 1,
             }}
           >
-            Get your AI tool in front of
+            {t("hero_headline_lead")}
             <br />
-            <span style={{ color: "var(--blue-h)" }}>50,000+ users</span>
+            <span style={{ color: "var(--blue-h)" }}>{t("hero_headline_accent")}</span>
           </h1>
           <p className="text-[17px] leading-[1.7] max-w-[520px] mx-auto mb-9" style={{ color: "rgba(255,255,255,.5)" }}>
-            AI Tools Set is the most curated AI directory on the internet. Submit your tool and reach the exact audience that needs it — developers, creators, and AI enthusiasts.
+            {t("hero_sub")}
           </p>
           <div className="flex items-center justify-center gap-8 flex-wrap">
             {STATS.map((s, i) => (
