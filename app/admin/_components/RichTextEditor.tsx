@@ -21,6 +21,74 @@ import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
 
+/**
+ * Normalise pasted HTML so tables coming from Google Docs / Notion /
+ * Word / web pages survive TipTap's schema strict-parse and don't
+ * collapse into plain paragraphs.
+ *
+ * Without this pass, Google Docs wraps every table in <div> + inline
+ * `style="mso-..."` attributes plus a <colgroup> that TipTap's table
+ * extension doesn't recognise. The parser then sees no valid table
+ * structure and just keeps the text content, which is why pasted
+ * "Comparison: X vs Y" tables ended up as paragraphs.
+ *
+ * What this does:
+ *   1. Strip Office/Word/Google Docs noise (<o:p>, <w:*>, mso-*, font tags).
+ *   2. Strip <colgroup>/<col> — not in TipTap's table schema.
+ *   3. Wrap bare text content inside <td>/<th> in a <p>. TipTap's
+ *      default cell content is `block+`; bare inline text is rejected.
+ *   4. Promote first-row <td>s to <th> when no <thead> is present
+ *      (Google Docs exports rarely include <thead>) so the table
+ *      visually gets a header row.
+ *   5. Drop `style=""` attributes — keeps the markup tidy + delegates
+ *      visual styling to the public site's CSS.
+ */
+function transformPastedTablesHtml(html: string): string {
+  if (!html) return html;
+  let out = html;
+
+  // 1. Strip Office/Word/Google Docs cruft.
+  out = out.replace(/<o:p\b[^>]*>[\s\S]*?<\/o:p>/gi, "");
+  out = out.replace(/<o:p\b[^>]*\/?>/gi, "");
+  out = out.replace(/<w:[a-zA-Z]+\b[^>]*>[\s\S]*?<\/w:[a-zA-Z]+>/gi, "");
+  out = out.replace(/<\?xml[\s\S]*?\?>/gi, "");
+  out = out.replace(/<font\b[^>]*>([\s\S]*?)<\/font>/gi, "$1"); // unwrap <font>
+
+  // 2. Drop <colgroup>/<col> — TipTap table schema rejects them.
+  out = out.replace(/<colgroup\b[^>]*>[\s\S]*?<\/colgroup>/gi, "");
+  out = out.replace(/<col\b[^>]*\/?>/gi, "");
+
+  // 3. Wrap bare inline content inside <td>/<th> in <p>. We only do
+  //    this when the cell contains no block-level child to begin with
+  //    (a heuristic check for "<p", "<ul", "<ol", "<table" is enough).
+  out = out.replace(
+    /<(td|th)\b([^>]*)>([\s\S]*?)<\/\1>/gi,
+    (_full, tag: string, attrs: string, inner: string) => {
+      const hasBlock = /<(p|ul|ol|table|div|blockquote|h[1-6])\b/i.test(inner);
+      const trimmed = inner.trim();
+      if (hasBlock || trimmed === "") return `<${tag}${attrs}>${inner}</${tag}>`;
+      return `<${tag}${attrs}><p>${inner}</p></${tag}>`;
+    },
+  );
+
+  // 4. If a <table> has no <thead> AND the first <tr> uses <td>,
+  //    promote those first-row <td>s to <th>. Most external editors
+  //    style the first row visually but don't emit semantic <th>.
+  out = out.replace(/<table\b[^>]*>([\s\S]*?)<\/table>/gi, (full, inner: string) => {
+    if (/<thead\b/i.test(inner)) return full;
+    let promoted = false;
+    const replaced = inner.replace(/<tr\b([^>]*)>([\s\S]*?)<\/tr>/i, (_trFull, trAttrs: string, trInner: string) => {
+      if (promoted) return _trFull;
+      promoted = true;
+      const headerInner = trInner.replace(/<td\b([^>]*)>([\s\S]*?)<\/td>/gi, "<th$1>$2</th>");
+      return `<tr${trAttrs}>${headerInner}</tr>`;
+    });
+    return full.replace(inner, replaced);
+  });
+
+  return out;
+}
+
 type Props = {
   /** Form field name — what gets serialised in the FormData submission. */
   name: string;
@@ -93,6 +161,10 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
       attributes: {
         class: "rte-content",
       },
+      // Runs BEFORE TipTap's parser. Cleans pasted HTML so tables
+      // from Google Docs / Notion / Word / web comparison pages keep
+      // their structure instead of collapsing into paragraphs.
+      transformPastedHTML: (html) => transformPastedTablesHtml(html),
     },
     onUpdate: ({ editor }) => setHtml(editor.getHTML()),
     immediatelyRender: false,
