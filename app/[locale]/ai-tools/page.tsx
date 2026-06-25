@@ -78,16 +78,40 @@ export default async function CategoriesPage() {
     return s && s.count > 0 ? { ...c, count: s.count } : c;
   });
 
+  // AZList is a Client Component — props cross the RSC boundary and must
+  // be JSON-serialisable. Explicitly project to plain primitives so a
+  // stray Drizzle field (Date, jsonb proxy, etc.) can never break the
+  // page render with "Functions cannot be passed directly to Client
+  // Components". Same projection for PopularCategoriesGrid's data even
+  // though it's a Server Component — defense in depth.
+  const azListData: SmallCategory[] = allMerged.map((c) => ({
+    name: String(c.name ?? ""),
+    count: Number(c.count ?? 0),
+    icon: typeof c.icon === "string" ? c.icon : "📂",
+    bg: typeof c.bg === "string" ? c.bg : "#eef0f3",
+    slug: String(c.slug ?? ""),
+  }));
+  const popularData: PopularCategory[] = popularMerged.map((c) => ({
+    name: String(c.name ?? ""),
+    slug: String(c.slug ?? ""),
+    color: String(c.color ?? "#0052ff"),
+    emoji: String(c.emoji ?? "📂"),
+    desc: String(c.desc ?? ""),
+    count: Number(c.count ?? 0),
+    trend: String(c.trend ?? "+0"),
+    tools: Array.isArray(c.tools) ? c.tools.filter((t): t is string => typeof t === "string") : [],
+  }));
+
   return (
     <main>
       <Nav />
       <CategoriesHero />
       <IntentBar />
-      <PopularCategoriesGrid catsOverride={popularMerged} />
-      <AllCategoriesGrid catsOverride={allMerged} />
+      <PopularCategoriesGrid catsOverride={popularData} />
+      <AllCategoriesGrid catsOverride={azListData} />
       <UseCaseGrid />
       <PricingGrid />
-      <AZList catsOverride={allMerged} />
+      <AZList catsOverride={azListData} />
       <CategoriesCta />
       <Footer />
     </main>

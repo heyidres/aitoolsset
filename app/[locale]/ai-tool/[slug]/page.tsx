@@ -291,13 +291,16 @@ async function findTool(slug: string, locale: string = "en"): Promise<FindToolRe
   ]);
 
   // Map CmsTool → the lightweight shape both UI components want.
+  // String() / Number() / Boolean() guards ensure the prop crossing the
+  // RSC boundary (RelatedSlider is "use client") is JSON-safe regardless
+  // of what Drizzle's row shape includes.
   const relatedTools = related.map((r) => ({
-    name: r.name,
-    domain: r.domain,
-    slug: r.slug,
-    cat: r.category, // sidebar shows this under each row
-    desc: r.tagline || (r.description ?? "").replace(/<[^>]+>/g, "").slice(0, 120),
-    free: r.pricing === "free" || r.pricing === "freemium",
+    name: String(r.name ?? ""),
+    domain: String(r.domain ?? ""),
+    slug: String(r.slug ?? ""),
+    cat: String(r.category ?? ""),
+    desc: String(r.tagline || (r.description ?? "").replace(/<[^>]+>/g, "").slice(0, 120)),
+    free: Boolean(r.pricing === "free" || r.pricing === "freemium"),
   }));
 
   return {
