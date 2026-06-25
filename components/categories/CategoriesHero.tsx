@@ -64,9 +64,14 @@ export async function CategoriesHero() {
             >
               {t("hero_headline_lead")}
               <br />
-              {t.rich("hero_headline_tail", {
-                accent: () => <span className="gradient-text">{t("hero_headline_accent")}</span>,
-              })}
+              {/* Split into plain-text tail + rendered accent <span> rather
+                  than a t.rich() callback. Avoids passing a function (or
+                  function-wrapped JSX) through next-intl's interpolator,
+                  which was triggering the RSC "Functions cannot be passed
+                  directly to Client Components" error during page
+                  revalidation. */}
+              {t("hero_headline_tail")}{" "}
+              <span className="gradient-text">{t("hero_headline_accent")}</span>
             </h1>
             <p className="text-[17px] leading-[1.65] max-w-[540px] mb-[30px]" style={{ color: "rgba(255,255,255,.55)" }}>
               {t("hero_sub")}
