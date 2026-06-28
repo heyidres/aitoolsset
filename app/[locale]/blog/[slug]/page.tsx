@@ -22,11 +22,13 @@ import {
   getBlogPostBySlug,
   getAuthorsBySlugs,
   getAuthorBySlug,
+  getToolBySlug,
   type CmsBlogPost,
   type CmsAuthor,
 } from "@/lib/cms";
 import { JsonLd, articleJsonLd, breadcrumbJsonLd, faqJsonLd } from "@/lib/json-ld";
 import LegacyGpt5Article, { LEGACY_METADATA } from "./LegacyGpt5Article";
+import { extractToc, extractToolSlugs } from "@/lib/blog-toc";
 
 export const runtime = "nodejs";
 export const dynamicParams = true;
@@ -115,6 +117,33 @@ async function CmsPostRenderer({
   // Legacy fallback: when no CMS authors are linked, show the free-text byline.
   const legacyAuthorName =
     authors.length === 0 ? (post.author ?? "AI Tools Set Research Team") : null;
+
+  // Per-article sidebar data — parsed from the body HTML on the server:
+  //   • toc: every H2/H3 in the article, with an injected anchor id so
+  //          the sidebar's click-to-jump and scroll-spy actually work.
+  //   • toolsInArticle: tool slugs found in the body (either via
+  //          [[tool:slug]] markers or /ai-tool/<slug> links), resolved
+  //          to real CmsTool rows for the sidebar card.
+  const { toc, htmlWithIds } = extractToc(post.body);
+  const referencedSlugs = extractToolSlugs(post.body);
+  const referencedTools = (
+    await Promise.all(
+      referencedSlugs.map((s) => getToolBySlug(s).catch(() => null)),
+    )
+  )
+    .filter((t): t is NonNullable<typeof t> => !!t && t.status === "published")
+    .map((t) => ({
+      name: t.name,
+      domain: t.domain,
+      slug: t.slug,
+      cat: t.category || (t.categories?.[0] ?? ""),
+      verified: t.verified,
+      free: t.pricing === "free" || t.pricing === "freemium",
+    }));
+  const sidebarArticleData = { toc, toolsInArticle: referencedTools };
+  // Hand the body html with injected heading ids to the renderer so the
+  // sidebar TOC's anchor links can find their targets.
+  const postWithTocIds = { ...post, body: htmlWithIds };
 
   return (
     <main>
@@ -250,13 +279,13 @@ async function CmsPostRenderer({
       <section className="px-9 py-14 section-pad-x">
         <div className="blog-layout mx-auto max-w-[1320px]">
           <article className="blog-body-col" style={{ minWidth: 0 }}>
-            <BlogBody html={post.body} />
+            <BlogBody html={postWithTocIds.body} />
             {post.faqs.length > 0 && <BlogFaqs items={post.faqs} />}
             {(authors.length > 0 || reviewedBy) && (
               <AuthorCards authors={authors} reviewedBy={reviewedBy} />
             )}
           </article>
-          <BlogSidebar />
+          <BlogSidebar article={sidebarArticleData} />
         </div>
       </section>
 

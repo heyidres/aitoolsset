@@ -11,7 +11,7 @@
 
 "use client";
 
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -217,6 +217,45 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
 });
 
 function Toolbar({ editor }: { editor: Editor }) {
+  // Hidden file input that the "Insert image" toolbar button triggers.
+  // We do a real upload via /api/admin/upload (same endpoint cover-image
+  // upload uses) and insert the returned URL. Replaces the old
+  // window.prompt("Image URL") which only let editors paste a remote URL.
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [imgUploading, setImgUploading] = useState(false);
+  const [imgError, setImgError] = useState<string | null>(null);
+
+  const onPickImage = useCallback(() => {
+    setImgError(null);
+    fileInputRef.current?.click();
+  }, []);
+
+  const onImageFile = useCallback(
+    async (file: File) => {
+      setImgError(null);
+      setImgUploading(true);
+      try {
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+        const json = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+        if (!res.ok || !json.url) {
+          throw new Error(json.error ?? `Upload failed (HTTP ${res.status})`);
+        }
+        editor
+          .chain()
+          .focus()
+          .insertContent(`<p><img src="${json.url}" alt="" /></p>`)
+          .run();
+      } catch (e) {
+        setImgError(e instanceof Error ? e.message : "Upload failed");
+      } finally {
+        setImgUploading(false);
+      }
+    },
+    [editor],
+  );
+
   // Link popover state — replaces the window.prompt with a small inline
   // panel that lets the editor pick rel (nofollow/dofollow/sponsored/ugc)
   // and target_blank alongside the URL.
@@ -460,12 +499,8 @@ function Toolbar({ editor }: { editor: Editor }) {
         </svg>
       </Btn>
       <Btn
-        title="Insert image (paste URL)"
-        onClick={() => {
-          const url = window.prompt("Image URL");
-          if (!url) return;
-          editor.chain().focus().insertContent(`<p><img src="${url}" alt="" /></p>`).run();
-        }}
+        title={imgUploading ? "Uploading…" : imgError ? imgError : "Insert image (upload)"}
+        onClick={onPickImage}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
           <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -473,6 +508,18 @@ function Toolbar({ editor }: { editor: Editor }) {
           <polyline points="21 15 16 10 5 21" />
         </svg>
       </Btn>
+      {/* Hidden file picker driven by the toolbar button above. */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+        style={{ display: "none" }}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = "";
+          if (file) void onImageFile(file);
+        }}
+      />
       <div className="rte-sep" />
       <Btn
         title="Clear formatting"

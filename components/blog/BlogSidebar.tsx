@@ -2,12 +2,20 @@ import Link from "next/link";
 import { Favicon } from "../Favicon";
 import { favicon } from "@/lib/tools";
 import { TableOfContents } from "./TableOfContents";
+import type { TocItem } from "@/lib/blog-toc";
 
-const TOOLS_IN_ARTICLE = [
-  { name: "ChatGPT", domain: "chat.openai.com", cat: "AI Chat · OpenAI", verified: true, slug: "chatgpt" },
-  { name: "Claude 4", domain: "claude.ai", cat: "AI Chat · Anthropic", verified: true, slug: "claude" },
-  { name: "Perplexity", domain: "perplexity.ai", cat: "AI Search", verified: true, slug: "perplexity" },
-];
+/** Per-article data: TOC + the tools the editor referenced in the body. */
+export type SidebarArticleData = {
+  toc: TocItem[];
+  toolsInArticle: Array<{
+    name: string;
+    domain: string;
+    cat: string;
+    verified: boolean;
+    free: boolean;
+    slug: string;
+  }>;
+};
 
 const TRENDING = [
   { rank: 1, title: "ChatGPT vs Claude 4: the definitive comparison", meta: "12 min · 22.1K views", slug: "chatgpt-vs-claude-4" },
@@ -67,45 +75,51 @@ function Card({ header, headerLink, children, padBody }: { header: string; heade
   );
 }
 
-export function BlogSidebar() {
+export function BlogSidebar({ article }: { article?: SidebarArticleData } = {}) {
+  const toc = article?.toc ?? [];
+  const tools = article?.toolsInArticle ?? [];
   return (
     <aside className="sticky flex flex-col gap-[18px] min-w-0 blog-sidebar" style={{ top: 80 }}>
       <Card header="In this article">
-        <TableOfContents />
+        <TableOfContents items={toc} />
       </Card>
 
-      <Card header="Tools in this article" headerLink={{ label: "All →", href: "/" }} padBody="px-[18px] py-2">
-        {TOOLS_IN_ARTICLE.map((t, i) => (
-          <Link
-            key={t.slug}
-            href={`/ai-tool/${t.slug}`}
-            className="group flex items-center gap-[10px] py-[9px] cursor-pointer"
-            style={{ borderBottom: i < TOOLS_IN_ARTICLE.length - 1 ? "1px solid var(--border)" : "none" }}
-          >
-            <div
-              className="w-[30px] h-[30px] rounded-[7px] overflow-hidden flex-shrink-0 flex items-center justify-center"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+      {tools.length > 0 && (
+        <Card header="Tools in this article" headerLink={{ label: "All →", href: "/ai-tools" }} padBody="px-[18px] py-2">
+          {tools.map((t, i) => (
+            <Link
+              key={t.slug}
+              href={`/ai-tool/${t.slug}`}
+              className="group flex items-center gap-[10px] py-[9px] cursor-pointer"
+              style={{ borderBottom: i < tools.length - 1 ? "1px solid var(--border)" : "none" }}
             >
-              <Favicon domain={t.domain} name={t.name} size={30} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-display text-[13px] font-bold transition-colors group-hover:text-blue inline-flex items-center">
-                {t.name}
-                {t.verified && <VerifiedSmall />}
+              <div
+                className="w-[30px] h-[30px] rounded-[7px] overflow-hidden flex-shrink-0 flex items-center justify-center"
+                style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+              >
+                <Favicon domain={t.domain} name={t.name} size={30} />
               </div>
-              <div className="text-[11px]" style={{ color: "var(--text-3)" }}>
-                {t.cat}
+              <div className="flex-1 min-w-0">
+                <div className="font-display text-[13px] font-bold transition-colors group-hover:text-blue inline-flex items-center">
+                  {t.name}
+                  {t.verified && <VerifiedSmall />}
+                </div>
+                <div className="text-[11px]" style={{ color: "var(--text-3)" }}>
+                  {t.cat}
+                </div>
               </div>
-            </div>
-            <span
-              className="text-[10.5px] font-extrabold px-[7px] py-[2px] rounded-pill flex-shrink-0"
-              style={{ color: "var(--green)", background: "var(--green-bg)", border: "1px solid var(--green-border)" }}
-            >
-              Free
-            </span>
-          </Link>
-        ))}
-      </Card>
+              {t.free && (
+                <span
+                  className="text-[10.5px] font-extrabold px-[7px] py-[2px] rounded-pill flex-shrink-0"
+                  style={{ color: "var(--green)", background: "var(--green-bg)", border: "1px solid var(--green-border)" }}
+                >
+                  Free
+                </span>
+              )}
+            </Link>
+          ))}
+        </Card>
+      )}
 
       <Card header="Trending on the blog" headerLink={{ label: "All →", href: "/blog" }} padBody="px-[18px] py-2">
         {TRENDING.map((t, i) => (
