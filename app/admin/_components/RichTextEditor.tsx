@@ -499,7 +499,7 @@ function Toolbar({ editor }: { editor: Editor }) {
         </svg>
       </Btn>
       <Btn
-        title={imgUploading ? "Uploading…" : imgError ? imgError : "Insert image (upload)"}
+        title={imgUploading ? "Uploading…" : "Insert image (upload)"}
         onClick={onPickImage}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
@@ -520,6 +520,34 @@ function Toolbar({ editor }: { editor: Editor }) {
           if (file) void onImageFile(file);
         }}
       />
+      {/* Inline error banner — sits under the toolbar so upload failures
+          are impossible to miss (the previous tooltip-only error was easy
+          to overlook). Click to dismiss. */}
+      {imgError && (
+        <div
+          onClick={() => setImgError(null)}
+          role="alert"
+          style={{
+            position: "absolute",
+            top: 44,
+            left: 12,
+            right: 12,
+            zIndex: 60,
+            background: "var(--red-bg)",
+            border: "1px solid var(--red-border)",
+            color: "var(--red)",
+            padding: "8px 12px",
+            borderRadius: 8,
+            fontSize: 12.5,
+            fontWeight: 600,
+            cursor: "pointer",
+            boxShadow: "0 6px 16px rgba(0,0,0,.08)",
+          }}
+          title="Click to dismiss"
+        >
+          ⚠ Image upload failed: {imgError}
+        </div>
+      )}
       <div className="rte-sep" />
       <Btn
         title="Clear formatting"

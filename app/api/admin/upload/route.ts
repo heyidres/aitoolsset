@@ -68,7 +68,12 @@ export async function POST(req: Request) {
 
   const filename = `${crypto.randomUUID()}.${ext}`;
 
-  // Prod (Vercel Blob) when token is configured
+  // Prod (Vercel Blob) when token is configured.
+  // On Vercel, the filesystem is READ-ONLY at runtime — so the local
+  // fallback below CANNOT work in prod. Without the token configured
+  // the request would 500 with a confusing EROFS. Detect "running on
+  // Vercel" via the VERCEL env var and return a clear, actionable
+  // error pointing the user at the env var fix.
   if (process.env.BLOB_READ_WRITE_TOKEN) {
     try {
       const { put } = await import("@vercel/blob");
@@ -84,14 +89,28 @@ export async function POST(req: Request) {
     }
   }
 
-  // Local dev fallback — write to public/uploads/
-  const uploadsDir = path.join(process.cwd(), "public", "uploads");
-  if (!existsSync(uploadsDir)) {
-    await mkdir(uploadsDir, { recursive: true });
+  if (process.env.VERCEL) {
+    return NextResponse.json(
+      {
+        error:
+          "Image storage isn't configured. In Vercel → Settings → Storage, create a Blob store (free tier). The token (BLOB_READ_WRITE_TOKEN) auto-attaches; redeploy and uploads work.",
+      },
+      { status: 500 },
+    );
   }
-  const filePath = path.join(uploadsDir, filename);
-  const bytes = Buffer.from(await file.arrayBuffer());
-  await writeFile(filePath, bytes);
 
-  return NextResponse.json({ url: `/uploads/${filename}` });
+  // Local dev fallback — write to public/uploads/
+  try {
+    const uploadsDir = path.join(process.cwd(), "public", "uploads");
+    if (!existsSync(uploadsDir)) {
+      await mkdir(uploadsDir, { recursive: true });
+    }
+    const filePath = path.join(uploadsDir, filename);
+    const bytes = Buffer.from(await file.arrayBuffer());
+    await writeFile(filePath, bytes);
+    return NextResponse.json({ url: `/uploads/${filename}` });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: `Local upload failed: ${msg}` }, { status: 500 });
+  }
 }

@@ -231,26 +231,42 @@ function CoverImageField({ value, onChange }: { value: string; onChange: (v: str
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  // Browsers refuse to load file:// URLs from https:// pages. If an editor
+  // types or drags a local path into the URL input, the image is broken
+  // forever on prod. Flag it loudly so they upload via the button instead.
+  const isLocalFileUrl = /^file:\/\//i.test(value.trim());
+  const hasValidValue = !!value && !isLocalFileUrl;
+
   const handleFile = async (file: File) => {
-    setErr(null); setUploading(true);
+    setErr(null);
+    setUploading(true);
     try {
       const fd = new FormData();
       fd.append("file", file);
       const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error ?? `Upload failed (HTTP ${res.status})`);
+      if (!json.url) throw new Error("Upload returned no URL");
       onChange(json.url);
-    } catch (e) { setErr(e instanceof Error ? e.message : "Upload failed"); } finally { setUploading(false); }
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
     <div>
       <div style={{ width: "100%", aspectRatio: "1200 / 630", borderRadius: 10, border: "1.5px dashed var(--border)", background: "var(--bg)", overflow: "hidden", marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        {value ? (
+        {hasValidValue ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={value} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         ) : (
-          <div style={{ color: "var(--text-3)", fontSize: 13 }}>No cover image yet</div>
+          <div style={{ color: "var(--text-3)", fontSize: 13, textAlign: "center", padding: "0 24px" }}>
+            {isLocalFileUrl
+              ? "⚠ Local file paths (file://) don't work — click \"Upload image\" below."
+              : "No cover image yet — click \"Upload image\" to add one."}
+          </div>
         )}
       </div>
       <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
@@ -258,10 +274,31 @@ function CoverImageField({ value, onChange }: { value: string; onChange: (v: str
           {uploading ? "Uploading…" : value ? "Replace image" : "Upload image"}
           <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleFile(f); e.target.value = ""; }} />
         </label>
-        {value && <button type="button" onClick={() => onChange("")} className="adm-btn-sm ghost" style={{ padding: "8px 14px", color: "var(--red)" }}>Remove</button>}
+        {value && <button type="button" onClick={() => { onChange(""); setErr(null); }} className="adm-btn-sm ghost" style={{ padding: "8px 14px", color: "var(--red)" }}>Remove</button>}
       </div>
-      <input type="url" name="coverImageUrl" value={value} onChange={(e) => onChange(e.target.value)} placeholder="Or paste a URL: https://example.com/cover.jpg" style={{ width: "100%", border: "1.5px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 13, background: "var(--white)", outline: "none" }} />
-      {err && <div style={{ marginTop: 6, color: "var(--red)", fontSize: 12, fontWeight: 600 }}>{err}</div>}
+      <input
+        type="url"
+        name="coverImageUrl"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Or paste a public URL: https://example.com/cover.jpg"
+        style={{
+          width: "100%",
+          border: `1.5px solid ${isLocalFileUrl ? "var(--red-border)" : "var(--border)"}`,
+          borderRadius: 8,
+          padding: "8px 10px",
+          fontSize: 13,
+          background: isLocalFileUrl ? "var(--red-bg)" : "var(--white)",
+          color: isLocalFileUrl ? "var(--red)" : "var(--text)",
+          outline: "none",
+        }}
+      />
+      {isLocalFileUrl && (
+        <div style={{ marginTop: 6, color: "var(--red)", fontSize: 12, fontWeight: 600 }}>
+          That&apos;s a local file path on your computer — browsers can&apos;t load it on the live site. Clear this field and click <strong>Upload image</strong> above instead.
+        </div>
+      )}
+      {err && <div style={{ marginTop: 6, color: "var(--red)", fontSize: 12, fontWeight: 600 }}>⚠ {err}</div>}
     </div>
   );
 }

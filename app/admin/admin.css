@@ -297,6 +297,51 @@
 .adm-panel-body { padding: 20px; }
 .adm-panel-body.flush { padding: 0; }
 
+/* Generic admin table — used by /admin/authors, /admin/glossary, etc.
+   Spaces columns properly + applies hover / zebra striping so the
+   table is scannable. Includes a top border separator from the panel
+   head and inner padding consistent with other admin surfaces. */
+.adm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  color: var(--text);
+}
+.adm-table thead th {
+  text-align: left;
+  padding: 12px 20px;
+  font-family: var(--font);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.adm-table tbody td {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.adm-table tbody tr:last-child td { border-bottom: 0; }
+.adm-table tbody tr:hover { background: rgba(0, 82, 255, .03); }
+.adm-table tbody tr td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+.adm-table code {
+  background: var(--surface);
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-2);
+}
+
 .adm-dash-cols { display: grid; grid-template-columns: 1fr 360px; gap: 20px; }
 
 /* table */
