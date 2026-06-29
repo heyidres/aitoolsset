@@ -20,6 +20,7 @@ import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
+import Image from "@tiptap/extension-image";
 
 /**
  * Normalise pasted HTML so tables coming from Google Docs / Notion /
@@ -155,6 +156,15 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
       TableRow,
       TableHeader,
       TableCell,
+      // Image node — without this, inserted/pasted <img> tags are stripped
+      // by TipTap's schema (the upload succeeds but nothing appears).
+      // inline:false = images are block-level; allowBase64:false keeps the
+      // doc lean (we always upload to Blob and insert the returned URL).
+      Image.configure({
+        inline: false,
+        allowBase64: false,
+        HTMLAttributes: { class: "rte-image" },
+      }),
     ],
     content: defaultValue,
     editorProps: {
@@ -242,11 +252,9 @@ function Toolbar({ editor }: { editor: Editor }) {
         if (!res.ok || !json.url) {
           throw new Error(json.error ?? `Upload failed (HTTP ${res.status})`);
         }
-        editor
-          .chain()
-          .focus()
-          .insertContent(`<p><img src="${json.url}" alt="" /></p>`)
-          .run();
+        // setImage is the Image extension's own command — inserts a real
+        // image node the schema recognises (block-level, so no <p> wrap).
+        editor.chain().focus().setImage({ src: json.url, alt: "" }).run();
       } catch (e) {
         setImgError(e instanceof Error ? e.message : "Upload failed");
       } finally {

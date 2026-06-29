@@ -1692,6 +1692,23 @@ body.imgs-dark .imgs-foot { background: rgba(0, 0, 0, .2); border-top-color: rgb
   display: block;
 }
 
+/* Inline images inserted via the toolbar upload button. Mirrors the
+   public `.blog-prose img` look so the editor preview matches the
+   published article. The selected outline gives clear feedback when
+   the image node is clicked/selected in the editor. */
+.rte-content img,
+.rte-content .rte-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  margin: 18px 0;
+  display: block;
+}
+.rte-content img.ProseMirror-selectednode {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
 /* 2-col blog layout: flex body + 320px sticky sidebar.
    Body column is capped at 720px and justify-self centered so the
    article stays visually centered within its slot while the sidebar

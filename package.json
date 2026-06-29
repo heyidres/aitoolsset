@@ -19,6 +19,7 @@
     "@google/genai": "^2.7.0",
     "@neondatabase/serverless": "^0.10.4",
     "@sentry/nextjs": "^10.56.0",
+    "@tiptap/extension-image": "3.27.0",
     "@tiptap/extension-link": "3.27.0",
     "@tiptap/extension-placeholder": "3.27.0",
     "@tiptap/extension-table": "3.27.0",
