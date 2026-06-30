@@ -1,27 +1,25 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { Breadcrumb } from "../Breadcrumb";
-import { MARKETING_FACTS } from "@/lib/category-detail";
 import { localizeMarketingFacts } from "@/lib/i18n/seed-i18n";
+import type { CategoryFact } from "@/lib/category-stats";
 
 type Props = {
   categoryName: string;
   count: number;
+  /** Real, computed facts for the "at a glance" panel. */
+  facts: CategoryFact[];
+  /** Real average rating (0–5) across the category's tools, or null. */
+  avgRating: number | null;
+  /** Last-updated date for the category, formatted. */
+  updatedLabel?: string;
 };
 
-// Map English fact labels (from lib/category-detail.ts) to message keys.
-const FACT_LABEL_KEYS: Record<string, string> = {
-  "Total tools":        "facts_total_tools",
-  "Free tools":         "facts_free_tools",
-  "Freemium":           "facts_freemium",
-  "Paid only":          "facts_paid_only",
-  "Avg starting price": "facts_avg_price",
-  "Top use case":       "facts_top_use_case",
-};
-
-export async function CategoryHero({ categoryName, count }: Props) {
+export async function CategoryHero({ categoryName, count, facts: rawFacts, avgRating, updatedLabel }: Props) {
   const t = await getTranslations("category_page");
   const locale = await getLocale();
-  const facts = localizeMarketingFacts(MARKETING_FACTS, locale);
+  // Translate only the fact LABELS (fixed vocabulary); the VALUES are
+  // real numbers computed from the category's tools.
+  const facts = localizeMarketingFacts(rawFacts, locale);
   const lower = categoryName.toLowerCase();
   return (
     <section
@@ -90,18 +88,22 @@ export async function CategoryHero({ categoryName, count }: Props) {
               <div className="flex items-center gap-[6px]">
                 📂 <strong className="font-display font-extrabold text-white tnum">{t("stat_tools_listed", { count })}</strong>
               </div>
-              <span className="w-[3px] h-[3px] rounded-full" style={{ background: "rgba(255,255,255,.3)" }} />
-              <div className="flex items-center gap-[6px]">
-                ⭐ <strong className="font-display font-extrabold text-white tnum">{t("stat_avg_rating", { rating: "4.6" })}</strong>
-              </div>
-              <span className="w-[3px] h-[3px] rounded-full" style={{ background: "rgba(255,255,255,.3)" }} />
-              <div className="flex items-center gap-[6px]">
-                🔄 <strong className="font-display font-extrabold text-white">{t("stat_updated", { date: "May 8, 2026" })}</strong>
-              </div>
-              <span className="w-[3px] h-[3px] rounded-full" style={{ background: "rgba(255,255,255,.3)" }} />
-              <div className="flex items-center gap-[6px]" style={{ color: "#34d399" }}>
-                ⬆ <strong className="font-display font-extrabold tnum" style={{ color: "#34d399" }}>{t("stat_added_this_month", { count: 14 })}</strong>
-              </div>
+              {avgRating != null && (
+                <>
+                  <span className="w-[3px] h-[3px] rounded-full" style={{ background: "rgba(255,255,255,.3)" }} />
+                  <div className="flex items-center gap-[6px]">
+                    ⭐ <strong className="font-display font-extrabold text-white tnum">{t("stat_avg_rating", { rating: avgRating.toFixed(1) })}</strong>
+                  </div>
+                </>
+              )}
+              {updatedLabel && (
+                <>
+                  <span className="w-[3px] h-[3px] rounded-full" style={{ background: "rgba(255,255,255,.3)" }} />
+                  <div className="flex items-center gap-[6px]">
+                    🔄 <strong className="font-display font-extrabold text-white">{t("stat_updated", { date: updatedLabel })}</strong>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

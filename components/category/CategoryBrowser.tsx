@@ -1,15 +1,9 @@
 "use client";
 import { useMemo, useState } from "react";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Favicon } from "../Favicon";
-import { MARKETING_TOOLS, SUB_CATEGORIES, FEATURE_FILTERS, POPULAR_TAGS, type DetailTool } from "@/lib/category-detail";
-import { localizeSubCategories } from "@/lib/i18n/seed-i18n";
-
-const PRICING_OPTIONS: { value: DetailTool["price"]; count: number }[] = [
-  { value: "Free", count: 31 },
-  { value: "Freemium", count: 52 },
-  { value: "Paid", count: 25 },
-];
+import { type DetailTool } from "@/lib/category-detail";
+import type { FacetCount, PricingCount, TopTool } from "@/lib/category-stats";
 
 const PRICE_CLASS: Record<DetailTool["price"], { fg: string; bg: string }> = {
   Free: { fg: "var(--green)", bg: "var(--green-bg)" },
@@ -20,21 +14,26 @@ const PRICE_CLASS: Record<DetailTool["price"], { fg: string; bg: string }> = {
 export function CategoryBrowser({
   categoryName,
   toolsOverride,
+  subFacets,
+  popularTags,
+  pricingCounts,
+  topTool,
 }: {
   categoryName: string;
   toolsOverride?: DetailTool[];
+  /** Tag-based facets derived from the real category tools. */
+  subFacets: FacetCount[];
+  popularTags: string[];
+  pricingCounts: PricingCount[];
+  /** Highest-ranked real tool in the category (editor's pick). */
+  topTool: TopTool | null;
 }) {
-  // CMS tools for this category come from the server page; an
-  // empty list (clean install or category has no DB tools yet)
-  // falls back to the hardcoded marketing sample so the page
-  // never looks broken.
+  // Tools come from the server page (real CMS rows). No hardcoded
+  // sample fallback — an empty category shows the empty state.
   const t = useTranslations("category_page");
-  const locale = useLocale();
-  const subCategories = useMemo(() => localizeSubCategories(SUB_CATEGORIES, locale), [locale]);
-  const TOOLS_DATA = toolsOverride && toolsOverride.length > 0 ? toolsOverride : MARKETING_TOOLS;
+  const TOOLS_DATA = toolsOverride ?? [];
   const [pricing, setPricing] = useState<Set<string>>(new Set());
   const [subs, setSubs] = useState<Set<string>>(new Set());
-  const [features, setFeatures] = useState<Set<string>>(new Set());
   const [tags, setTags] = useState<Set<string>>(new Set());
   const [rating, setRating] = useState<number | null>(null);
   const [query, setQuery] = useState("");
@@ -52,7 +51,6 @@ export function CategoryBrowser({
 
   const togglePricing = toggleSet(setPricing);
   const toggleSub = toggleSet(setSubs);
-  const toggleFeat = toggleSet(setFeatures);
   const toggleTag = toggleSet(setTags);
 
   const toggleSaved = (name: string) =>
@@ -67,21 +65,25 @@ export function CategoryBrowser({
     const q = query.toLowerCase().trim();
     return TOOLS_DATA.filter((t) => {
       if (pricing.size && !pricing.has(t.price)) return false;
-      if (subs.size && !subs.has(t.sub)) return false;
+      // Sub-category + tag facets both match against the tool's tags.
+      const facetSel = new Set<string>([...subs, ...tags]);
+      if (facetSel.size && !t.tags.some((tag) => facetSel.has(tag))) return false;
       if (rating != null && t.rating < rating) return false;
       if (q && !(t.name.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q))) return false;
       return true;
     });
-  }, [pricing, subs, rating, query, TOOLS_DATA]);
+  }, [pricing, subs, tags, rating, query, TOOLS_DATA]);
 
   const chips: { group: string; value: string; label: string }[] = [];
   pricing.forEach((p) => chips.push({ group: "pricing", value: p, label: p }));
   subs.forEach((s) => chips.push({ group: "sub", value: s, label: s }));
+  tags.forEach((tg) => chips.push({ group: "tag", value: tg, label: tg }));
   if (rating != null) chips.push({ group: "rating", value: String(rating), label: `${rating}★ & up` });
 
   const removeChip = (group: string, val: string) => {
     if (group === "pricing") togglePricing(val);
     if (group === "sub") toggleSub(val);
+    if (group === "tag") toggleTag(val);
     if (group === "rating") setRating(null);
   };
 
@@ -134,34 +136,38 @@ export function CategoryBrowser({
             </div>
 
             {/* Pricing */}
-            <FilterSection
-              title={t("browser_filter_pricing")}
-              onClear={() => setPricing(new Set())}
-              showClear={pricing.size > 0}
-            >
-              {PRICING_OPTIONS.map((p) => (
-                <CheckRow
-                  key={p.value}
-                  checked={pricing.has(p.value)}
-                  onToggle={() => togglePricing(p.value)}
-                  label={p.value}
-                  count={p.count}
-                />
-              ))}
-            </FilterSection>
+            {pricingCounts.length > 0 && (
+              <FilterSection
+                title={t("browser_filter_pricing")}
+                onClear={() => setPricing(new Set())}
+                showClear={pricing.size > 0}
+              >
+                {pricingCounts.map((p) => (
+                  <CheckRow
+                    key={p.value}
+                    checked={pricing.has(p.value)}
+                    onToggle={() => togglePricing(p.value)}
+                    label={p.value}
+                    count={p.count}
+                  />
+                ))}
+              </FilterSection>
+            )}
 
-            {/* Sub-category */}
-            <FilterSection title={t("browser_filter_subcategory")}>
-              {subCategories.map((s) => (
-                <CheckRow
-                  key={s.key}
-                  checked={subs.has(s.key)}
-                  onToggle={() => toggleSub(s.key)}
-                  label={s.label}
-                  count={s.count}
-                />
-              ))}
-            </FilterSection>
+            {/* Sub-category (real tag facets) */}
+            {subFacets.length > 0 && (
+              <FilterSection title={t("browser_filter_subcategory")}>
+                {subFacets.map((s) => (
+                  <CheckRow
+                    key={s.key}
+                    checked={subs.has(s.key)}
+                    onToggle={() => toggleSub(s.key)}
+                    label={s.label}
+                    count={s.count}
+                  />
+                ))}
+              </FilterSection>
+            )}
 
             {/* Rating */}
             <FilterSection title={t("browser_filter_min_rating")}>
@@ -187,44 +193,33 @@ export function CategoryBrowser({
               </div>
             </FilterSection>
 
-            {/* Features */}
-            <FilterSection title={t("browser_filter_features")}>
-              {FEATURE_FILTERS.map((f) => (
-                <CheckRow
-                  key={f.key}
-                  checked={features.has(f.key)}
-                  onToggle={() => toggleFeat(f.key)}
-                  label={f.label}
-                  count={f.count}
-                />
-              ))}
-            </FilterSection>
-
-            {/* Tags */}
-            <div>
-              <div className="font-display text-[11.5px] font-extrabold uppercase tracking-[.08em] mb-3" style={{ color: "var(--text-3)" }}>
-                {t("browser_filter_popular_tags")}
+            {/* Tags (real, from the category's tools) */}
+            {popularTags.length > 0 && (
+              <div>
+                <div className="font-display text-[11.5px] font-extrabold uppercase tracking-[.08em] mb-3" style={{ color: "var(--text-3)" }}>
+                  {t("browser_filter_popular_tags")}
+                </div>
+                <div className="flex gap-[5px] flex-wrap">
+                  {popularTags.map((tg) => {
+                    const active = tags.has(tg);
+                    return (
+                      <button
+                        key={tg}
+                        onClick={() => toggleTag(tg)}
+                        className="font-display text-[11.5px] font-semibold px-[10px] py-[4px] rounded-pill cursor-pointer transition-colors"
+                        style={{
+                          background: active ? "var(--blue)" : "var(--surface)",
+                          color: active ? "#fff" : "var(--text-2)",
+                          border: `1px solid ${active ? "var(--blue)" : "transparent"}`,
+                        }}
+                      >
+                        {tg}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="flex gap-[5px] flex-wrap">
-                {POPULAR_TAGS.map((t) => {
-                  const active = tags.has(t);
-                  return (
-                    <button
-                      key={t}
-                      onClick={() => toggleTag(t)}
-                      className="font-display text-[11.5px] font-semibold px-[10px] py-[4px] rounded-pill cursor-pointer transition-colors"
-                      style={{
-                        background: active ? "var(--blue)" : "var(--surface)",
-                        color: active ? "#fff" : "var(--text-2)",
-                        border: `1px solid ${active ? "var(--blue)" : "transparent"}`,
-                      }}
-                    >
-                      {t}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            )}
           </div>
         </aside>
 
@@ -317,65 +312,74 @@ export function CategoryBrowser({
             </div>
           </div>
 
-          {/* Editor's Pick */}
-          <div
-            id="editors-pick"
-            className="rounded-lg p-6 text-white mb-6 grid grid-cols-[1fr_280px] gap-6 overflow-hidden relative editors-pick-grid"
-            style={{ background: "linear-gradient(120deg, #0f172a, #1e293b)" }}
-          >
-            <div
-              className="absolute pointer-events-none"
-              style={{
-                top: -100,
-                right: -100,
-                width: 300,
-                height: 300,
-                background: "radial-gradient(circle, rgba(236,72,153,.2) 0%, transparent 60%)",
-              }}
-            />
-            <div>
-              <div
-                className="inline-flex items-center gap-[5px] font-display text-[10.5px] font-extrabold uppercase tracking-[.08em] px-[10px] py-1 rounded-pill mb-[14px] relative"
-                style={{ background: "rgba(236,72,153,.15)", color: "#f9a8d4" }}
-              >
-                ⭐ Editor's pick · #1 {categoryName} AI
-              </div>
-              <div className="font-display font-black mb-2 relative" style={{ fontSize: 26, letterSpacing: "-.8px", lineHeight: 1.1 }}>
-                Jasper AI
-              </div>
-              <div className="text-[13px] mb-3 relative" style={{ color: "rgba(255,255,255,.5)" }}>
-                by Jasper · jasper.ai
-              </div>
-              <p className="text-sm leading-[1.6] mb-4 max-w-[480px] relative" style={{ color: "rgba(255,255,255,.7)" }}>
-                The most complete AI {categoryName.toLowerCase()} platform on the market — blog posts, ad copy, email sequences, brand voice training, and an entire content workflow built around {categoryName.toLowerCase()} teams. Trusted by 100,000+ brands including Airbnb, HubSpot, and IBM.
-              </p>
-              <div className="flex gap-2 relative flex-wrap">
-                <a className="font-display text-[13px] font-bold bg-white px-[18px] py-[9px] rounded-pill cursor-pointer" style={{ color: "var(--near-black)" }}>
-                  {t("browser_visit")} Jasper →
-                </a>
-                <a className="font-display text-[13px] font-bold px-[18px] py-[9px] rounded-pill cursor-pointer" style={{ background: "rgba(255,255,255,.08)", color: "#fff", border: "1px solid rgba(255,255,255,.12)" }}>
-                  {t("browser_read_review")}
-                </a>
-              </div>
-            </div>
-            <div
-              className="rounded p-4 relative flex flex-col gap-3"
-              style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)" }}
+          {/* Editor's Pick — the real #1 tool in this category */}
+          {topTool && (
+            <a
+              href={`/ai-tool/${topTool.slug}`}
+              id="editors-pick"
+              className="rounded-lg p-6 text-white mb-6 grid grid-cols-[1fr_280px] gap-6 overflow-hidden relative editors-pick-grid cursor-pointer"
+              style={{ background: "linear-gradient(120deg, #0f172a, #1e293b)" }}
             >
-              {[
-                { l: "Rating", v: "4.8 ★ (2,418)" },
-                { l: "Starts at", v: "$39/mo" },
-                { l: "Free trial", v: "7 days" },
-                { l: "Best for", v: `${categoryName} teams` },
-                { l: "Integrations", v: "50+" },
-              ].map((s) => (
-                <div key={s.l} className="flex justify-between items-center text-[12.5px]" style={{ color: "rgba(255,255,255,.55)" }}>
-                  <span>{s.l}</span>
-                  <strong className="font-display text-[13.5px] font-extrabold text-white tnum">{s.v}</strong>
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  top: -100,
+                  right: -100,
+                  width: 300,
+                  height: 300,
+                  background: "radial-gradient(circle, rgba(236,72,153,.2) 0%, transparent 60%)",
+                }}
+              />
+              <div>
+                <div
+                  className="inline-flex items-center gap-[5px] font-display text-[10.5px] font-extrabold uppercase tracking-[.08em] px-[10px] py-1 rounded-pill mb-[14px] relative"
+                  style={{ background: "rgba(236,72,153,.15)", color: "#f9a8d4" }}
+                >
+                  ⭐ Editor&apos;s pick · #1 {categoryName} AI
                 </div>
-              ))}
-            </div>
-          </div>
+                <div className="font-display font-black mb-2 relative flex items-center gap-2" style={{ fontSize: 26, letterSpacing: "-.8px", lineHeight: 1.1 }}>
+                  {topTool.name}
+                  {topTool.verified && (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#1D9BF0" className="flex-shrink-0">
+                      <path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91-1.01-1-2.52-1.26-3.91-.8C14.66 2.88 13.43 2 12 2s-2.66.88-3.34 2.19c-1.39-.46-2.9-.2-3.91.81-1 1.01-1.26 2.52-.8 3.91C2.88 9.34 2 10.57 2 12s.88 2.66 2.19 3.34c-.46 1.39-.2 2.9.81 3.91 1.01 1 2.52 1.26 3.91.8C9.34 21.12 10.57 22 12 22s2.66-.88 3.34-2.19c1.39.46 2.9.2 3.91-.81 1-1.01 1.26-2.52.8-3.91C21.12 14.66 22.25 13.43 22.25 12z" />
+                      <path d="M9 12l2 2.5 4.5-5" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                    </svg>
+                  )}
+                </div>
+                <div className="text-[13px] mb-3 relative" style={{ color: "rgba(255,255,255,.5)" }}>
+                  {topTool.domain}
+                </div>
+                <p className="text-sm leading-[1.6] mb-4 max-w-[480px] relative" style={{ color: "rgba(255,255,255,.7)" }}>
+                  {topTool.tagline}
+                </p>
+                <div className="flex gap-2 relative flex-wrap">
+                  <span className="font-display text-[13px] font-bold bg-white px-[18px] py-[9px] rounded-pill" style={{ color: "var(--near-black)" }}>
+                    {t("browser_visit")} {topTool.name} →
+                  </span>
+                </div>
+              </div>
+              <div
+                className="rounded p-4 relative flex flex-col gap-3"
+                style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)" }}
+              >
+                {[
+                  topTool.rating != null
+                    ? { l: "Rating", v: `${topTool.rating.toFixed(1)} ★${topTool.reviews > 0 ? ` (${topTool.reviews.toLocaleString()})` : ""}` }
+                    : null,
+                  { l: "Pricing", v: topTool.pricing },
+                  topTool.startingPrice ? { l: "Starts at", v: topTool.startingPrice } : null,
+                  topTool.verified ? { l: "Verified", v: "Yes" } : null,
+                ]
+                  .filter((s): s is { l: string; v: string } => s != null)
+                  .map((s) => (
+                    <div key={s.l} className="flex justify-between items-center text-[12.5px]" style={{ color: "rgba(255,255,255,.55)" }}>
+                      <span>{s.l}</span>
+                      <strong className="font-display text-[13.5px] font-extrabold text-white tnum">{s.v}</strong>
+                    </div>
+                  ))}
+              </div>
+            </a>
+          )}
 
           {/* Tool grid */}
           {filtered.length === 0 ? (
@@ -405,9 +409,6 @@ export function CategoryBrowser({
               ))}
             </div>
           )}
-
-          {/* Pagination */}
-          <Pagination />
         </div>
       </div>
     </div>
@@ -583,35 +584,5 @@ function ToolDetailCard({
         </span>
       </div>
     </div>
-  );
-}
-
-function Pagination() {
-  return (
-    <div className="flex items-center justify-center gap-[6px] mt-9 flex-wrap">
-      <PgBtn>‹</PgBtn>
-      <PgBtn active>1</PgBtn>
-      <PgBtn>2</PgBtn>
-      <PgBtn>3</PgBtn>
-      <PgBtn>4</PgBtn>
-      <span className="text-[var(--text-3)] px-1 font-bold">…</span>
-      <PgBtn>9</PgBtn>
-      <PgBtn>›</PgBtn>
-    </div>
-  );
-}
-
-function PgBtn({ children, active }: { children: React.ReactNode; active?: boolean }) {
-  return (
-    <button
-      className="min-w-9 h-9 rounded-sm font-display text-[13px] font-bold flex items-center justify-center px-[10px] cursor-pointer transition-colors"
-      style={{
-        background: active ? "var(--blue)" : "var(--white)",
-        color: active ? "#fff" : "var(--text-2)",
-        border: `1px solid ${active ? "var(--blue)" : "var(--border)"}`,
-      }}
-    >
-      {children}
-    </button>
   );
 }

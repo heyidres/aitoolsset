@@ -1,15 +1,27 @@
 import { getTranslations } from "next-intl/server";
 import { favicon } from "@/lib/tools";
-import { MARKETING_COMPARE } from "@/lib/category-detail";
+import type { CompareRow } from "@/lib/category-stats";
 
-const FEATURES = ["SEO", "Copywriting", "Brand Voice", "API"];
-
-export async function ComparisonTable({ categoryName }: { categoryName: string }) {
+/**
+ * At-a-glance comparison of the top real tools in this category.
+ * Columns are all derived from actual CMS data (pricing, free tier,
+ * starting price, rating, reviews, verified) — no fabricated feature
+ * matrix. Renders nothing when the category has no tools yet.
+ */
+export async function ComparisonTable({
+  categoryName,
+  rows,
+}: {
+  categoryName: string;
+  rows: CompareRow[];
+}) {
+  if (rows.length === 0) return null;
   const t = await getTranslations("category_page");
   const lower = categoryName.toLowerCase();
-  // Feature column headers stay in English since they're proper terms;
-  // only the table-meta columns (Pricing / Free Tier / Rating / Tool) translate.
-  const headers = [t("comparison_col_pricing"), t("comparison_col_free_tier"), ...FEATURES, t("comparison_col_rating")];
+
+  const cellBorder = (i: number) =>
+    i < rows.length - 1 ? "1px solid var(--border)" : "none";
+
   return (
     <section className="py-16 px-9 section-pad-x" style={{ background: "var(--sand)", borderTop: "1px solid var(--border)" }}>
       <div className="max-w-[1320px] mx-auto">
@@ -29,16 +41,18 @@ export async function ComparisonTable({ categoryName }: { categoryName: string }
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th
-                  className="font-display text-[11.5px] font-extrabold uppercase tracking-[.06em] px-[18px] py-[14px] text-left sticky left-0"
-                  style={{ background: "var(--surface)", color: "var(--text-2)", borderBottom: "1px solid var(--border)" }}
-                >
-                  {t("comparison_col_tool")}
-                </th>
-                {headers.map((h) => (
+                {[
+                  t("comparison_col_tool"),
+                  t("comparison_col_pricing"),
+                  t("comparison_col_free_tier"),
+                  "Starts at",
+                  t("comparison_col_rating"),
+                  "Reviews",
+                  "Verified",
+                ].map((h, i) => (
                   <th
                     key={h}
-                    className="font-display text-[11.5px] font-extrabold uppercase tracking-[.06em] px-[18px] py-[14px] text-left"
+                    className={`font-display text-[11.5px] font-extrabold uppercase tracking-[.06em] px-[18px] py-[14px] text-left${i === 0 ? " sticky left-0" : ""}`}
                     style={{ background: "var(--surface)", color: "var(--text-2)", borderBottom: "1px solid var(--border)" }}
                   >
                     {h}
@@ -47,54 +61,66 @@ export async function ComparisonTable({ categoryName }: { categoryName: string }
               </tr>
             </thead>
             <tbody>
-              {MARKETING_COMPARE.map((row, i) => (
-                <tr key={row.name}>
-                  <td
-                    className="px-[18px] py-[18px] text-[13.5px] align-middle"
-                    style={{ borderBottom: i < MARKETING_COMPARE.length - 1 ? "1px solid var(--border)" : "none" }}
-                  >
-                    <div className="flex items-center gap-[10px] font-display font-extrabold" style={{ color: "var(--text)" }}>
+              {rows.map((row, i) => (
+                <tr key={row.slug}>
+                  <td className="px-[18px] py-[18px] text-[13.5px] align-middle sticky left-0 bg-white" style={{ borderBottom: cellBorder(i) }}>
+                    <a href={`/ai-tool/${row.slug}`} className="flex items-center gap-[10px] font-display font-extrabold hover:underline" style={{ color: "var(--text)" }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={favicon(row.domain, 64)} alt={row.name} className="w-7 h-7 rounded-[7px]" />
-                      {row.name}
-                    </div>
+                      <span className="inline-flex items-center gap-1">
+                        {row.name}
+                        {row.verified && (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="#1D9BF0" className="flex-shrink-0">
+                            <path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91-1.01-1-2.52-1.26-3.91-.8C14.66 2.88 13.43 2 12 2s-2.66.88-3.34 2.19c-1.39-.46-2.9-.2-3.91.81-1 1.01-1.26 2.52-.8 3.91C2.88 9.34 2 10.57 2 12s.88 2.66 2.19 3.34c-.46 1.39-.2 2.9.81 3.91 1.01 1 2.52 1.26 3.91.8C9.34 21.12 10.57 22 12 22s2.66-.88 3.34-2.19c1.39.46 2.9.2 3.91-.81 1-1.01 1.26-2.52.8-3.91C21.12 14.66 22.25 13.43 22.25 12z" />
+                            <path d="M9 12l2 2.5 4.5-5" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                          </svg>
+                        )}
+                      </span>
+                    </a>
                   </td>
-                  <td className="px-[18px] py-[18px] text-[13.5px] align-middle" style={{ borderBottom: i < MARKETING_COMPARE.length - 1 ? "1px solid var(--border)" : "none" }}>
+                  <td className="px-[18px] py-[18px] text-[13.5px] align-middle" style={{ borderBottom: cellBorder(i) }}>
                     <span
                       className="inline-flex font-display text-[11px] font-extrabold px-[9px] py-[3px] rounded-pill"
-                      style={{ color: row.priceColor.fg, background: row.priceColor.bg }}
+                      style={
+                        row.pricing === "Free"
+                          ? { color: "var(--green)", background: "var(--green-bg)" }
+                          : row.pricing === "Freemium"
+                          ? { color: "#1d4ed8", background: "#eff6ff" }
+                          : { color: "#a16207", background: "#fef3c7" }
+                      }
                     >
-                      {row.price}
+                      {row.pricing}
                     </span>
                   </td>
-                  <td className="px-[18px] py-[18px] text-[13.5px] align-middle" style={{ borderBottom: i < MARKETING_COMPARE.length - 1 ? "1px solid var(--border)" : "none" }}>
-                    {row.freeTier === "—" ? (
-                      <span style={{ color: "var(--text-3)" }}>—</span>
+                  <td className="px-[18px] py-[18px] text-[13.5px] align-middle" style={{ borderBottom: cellBorder(i) }}>
+                    {row.freeTier ? (
+                      <span className="font-extrabold" style={{ color: "var(--green)" }}>✓</span>
                     ) : (
-                      <span className="font-bold" style={{ color: "var(--green)" }}>
-                        {row.freeTier}
-                      </span>
+                      <span style={{ color: "var(--text-3)" }}>—</span>
                     )}
                   </td>
-                  {FEATURES.map((f) => (
-                    <td
-                      key={f}
-                      className="px-[18px] py-[18px] text-[13.5px] align-middle"
-                      style={{ borderBottom: i < MARKETING_COMPARE.length - 1 ? "1px solid var(--border)" : "none" }}
-                    >
-                      {row.features[f] ? (
-                        <span className="font-extrabold" style={{ color: "var(--green)" }}>
-                          ✓
-                        </span>
-                      ) : (
-                        <span style={{ color: "var(--text-3)" }}>—</span>
-                      )}
-                    </td>
-                  ))}
-                  <td className="px-[18px] py-[18px] text-[13.5px] align-middle" style={{ borderBottom: i < MARKETING_COMPARE.length - 1 ? "1px solid var(--border)" : "none" }}>
-                    <div className="flex items-center gap-[5px] font-display font-extrabold tnum">
-                      {row.rating}
-                      <span style={{ color: "#fbbf24" }}>★</span>
-                    </div>
+                  <td className="px-[18px] py-[18px] text-[13.5px] align-middle" style={{ borderBottom: cellBorder(i) }}>
+                    {row.startingPrice ?? <span style={{ color: "var(--text-3)" }}>—</span>}
+                  </td>
+                  <td className="px-[18px] py-[18px] text-[13.5px] align-middle" style={{ borderBottom: cellBorder(i) }}>
+                    {row.rating != null ? (
+                      <div className="flex items-center gap-[5px] font-display font-extrabold tnum">
+                        {row.rating.toFixed(1)}
+                        <span style={{ color: "#fbbf24" }}>★</span>
+                      </div>
+                    ) : (
+                      <span style={{ color: "var(--text-3)" }}>—</span>
+                    )}
+                  </td>
+                  <td className="px-[18px] py-[18px] text-[13.5px] align-middle tnum" style={{ borderBottom: cellBorder(i), color: "var(--text-2)" }}>
+                    {row.reviews > 0 ? row.reviews.toLocaleString() : "—"}
+                  </td>
+                  <td className="px-[18px] py-[18px] text-[13.5px] align-middle" style={{ borderBottom: cellBorder(i) }}>
+                    {row.verified ? (
+                      <span className="font-extrabold" style={{ color: "var(--green)" }}>✓</span>
+                    ) : (
+                      <span style={{ color: "var(--text-3)" }}>—</span>
+                    )}
                   </td>
                 </tr>
               ))}

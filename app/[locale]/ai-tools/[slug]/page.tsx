@@ -12,9 +12,9 @@ import { FaqAccordion } from "@/components/category/FaqAccordion";
 import { CategoryOutro } from "@/components/category/CategoryOutro";
 import { RelatedCategories } from "@/components/category/RelatedCategories";
 import { ALL_CATS } from "@/lib/categories";
-import { MARKETING_FAQ_TEXT } from "@/lib/category-detail";
 import { getToolsByCategory, getCategoryBySlug, applyCategoryTranslations, type CmsCategory, type CmsTool } from "@/lib/cms";
 import { cmsToolToDetail, cmsToolToLegacy } from "@/lib/cms-adapters";
+import { computeCategoryStats } from "@/lib/category-stats";
 import { JsonLd, breadcrumbJsonLd, faqJsonLd } from "@/lib/json-ld";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { ToolCard } from "@/components/ToolCard";
@@ -110,6 +110,21 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
   const detailTools = cmsTools.map(cmsToolToDetail);
   const finalCount = cmsTools.length > 0 ? cmsTools.length : found.count;
 
+  // Everything editorial on this page is derived from the REAL tools in
+  // this category — facts, filters, comparison rows, editor's pick, FAQ.
+  // No hardcoded marketing sample content (Jasper/Copy.ai/Surfer SEO).
+  const stats = computeCategoryStats(found.name, cmsTools);
+  const updatedLabel = (() => {
+    const d = found.cms?.updatedAt
+      ? found.cms.updatedAt instanceof Date
+        ? found.cms.updatedAt
+        : new Date(found.cms.updatedAt as unknown as string)
+      : null;
+    return d && !isNaN(d.getTime())
+      ? d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      : undefined;
+  })();
+
   // Editor's picks — render at the top in a rich Tool-card rail.
   // featuredToolSlugs is jsonb with default []; be defensive against null/non-array
   // values from older rows or any mid-migration state.
@@ -149,12 +164,16 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
             { name: "AI Tools", url: "/ai-tools" },
             { name: found.name, url: `/ai-tools/${found.slug}` },
           ]),
-          faqJsonLd(
-            MARKETING_FAQ_TEXT.map((f) => ({
-              q: f.q.replace(/marketing/gi, found.name.toLowerCase()),
-              a: f.a.replace(/<[^>]+>/g, ""),
-            }))
-          ),
+          ...(stats.faqs.length > 0
+            ? [
+                faqJsonLd(
+                  stats.faqs.map((f) => ({
+                    q: f.q,
+                    a: f.a.replace(/\*\*/g, "").replace(/<[^>]+>/g, ""),
+                  }))
+                ),
+              ]
+            : []),
         ]}
       />
       <Nav />
@@ -162,7 +181,13 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
       {hasCustomHero ? (
         <CustomCategoryHero category={found.name} slug={found.slug} count={finalCount} cms={cms!} />
       ) : (
-        <CategoryHero categoryName={found.name} count={finalCount} />
+        <CategoryHero
+          categoryName={found.name}
+          count={finalCount}
+          facts={stats.facts}
+          avgRating={stats.avgRating}
+          updatedLabel={updatedLabel}
+        />
       )}
 
       {hasIntro ? (
@@ -204,9 +229,16 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
         </section>
       )}
 
-      <CategoryBrowser categoryName={found.name} toolsOverride={detailTools} />
-      <ComparisonTable categoryName={found.name} />
-      <FaqAccordion items={MARKETING_FAQ_TEXT} categoryName={found.name} />
+      <CategoryBrowser
+        categoryName={found.name}
+        toolsOverride={detailTools}
+        subFacets={stats.subFacets}
+        popularTags={stats.popularTags}
+        pricingCounts={stats.pricingCounts}
+        topTool={stats.topTool}
+      />
+      <ComparisonTable categoryName={found.name} rows={stats.compareRows} />
+      <FaqAccordion items={stats.faqs} categoryName={found.name} />
       <CategoryOutro categoryName={found.name} />
       <RelatedCategories />
       <Footer />

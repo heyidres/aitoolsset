@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useTranslations, useLocale } from "next-intl";
-import { localizeMarketingFaq } from "@/lib/i18n/seed-i18n";
+import { useTranslations } from "next-intl";
 
 type Item = { q: string; a: string };
 
@@ -22,10 +21,10 @@ function renderMd(text: string) {
 
 export function FaqAccordion({ items, categoryName }: { items: Item[]; categoryName: string }) {
   const t = useTranslations("category_page");
-  const locale = useLocale();
-  // Apply Korean FAQ overlay when on Korean (English passes through).
-  const localized = localizeMarketingFaq(items, locale);
+  // FAQs are generated server-side from the category's real tools.
+  const localized = items;
   const [open, setOpen] = useState(0);
+  if (localized.length === 0) return null;
   return (
     <section
       id="faq"
