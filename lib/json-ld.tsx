@@ -145,6 +145,27 @@ export function faqJsonLd(items: Array<{ q: string; a: string }>): Json {
   };
 }
 
+/**
+ * ItemList schema for a ranked comparison/list of tools. Helps the
+ * category comparison table surface as a list in search + AI answers.
+ */
+export function itemListJsonLd(opts: {
+  name: string;
+  items: Array<{ name: string; url: string }>;
+}): Json {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: opts.name,
+    itemListElement: opts.items.map((item, idx) => ({
+      "@type": "ListItem",
+      position: idx + 1,
+      name: item.name,
+      url: item.url.startsWith("http") ? item.url : `${SITE}${item.url}`,
+    })),
+  };
+}
+
 /** Org / website root JSON-LD for the homepage. */
 export function organizationJsonLd(): Json {
   return {

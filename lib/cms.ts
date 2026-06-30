@@ -388,6 +388,14 @@ export async function searchTools(query: string, limit = 50): Promise<CmsTool[]>
 // ─────────────────────────────────────────────────────────────
 //  Categories
 // ─────────────────────────────────────────────────────────────
+
+/** Repeater item shapes for the category editorial fields. */
+export type CategoryFaq = { q: string; a: string };
+export type CategoryQuickPick = { scenario: string; toolSlug: string; reason: string };
+export type CategoryComparisonOverride = { toolSlug: string; keyFeature: string; bestFor: string };
+export type CategoryGuideSection = { heading: string; body: string };
+export type CategoryStatOverride = { label: string; value: string };
+
 export type CmsCategory = {
   id: string;
   slug: string;
@@ -407,6 +415,18 @@ export type CmsCategory = {
   seoTitle: string | null;
   seoDescription: string | null;
   featuredToolSlugs: string[];
+  // Editorial / SEO-AEO repeater fields
+  faqs: CategoryFaq[];
+  quickPicks: CategoryQuickPick[];
+  comparisonRows: CategoryComparisonOverride[];
+  buyingGuide: CategoryGuideSection[];
+  trends: CategoryGuideSection[];
+  relatedPostSlugs: string[];
+  statsOverrides: CategoryStatOverride[];
+  toolRelevance: Record<string, number>;
+  relevanceThreshold: number;
+  lastReviewedAt: Date | null;
+  focusKeyword: string | null;
   translations: Record<string, {
     name?: string;
     description?: string;
@@ -416,6 +436,11 @@ export type CmsCategory = {
     introHtml?: string;
     seoTitle?: string;
     seoDescription?: string;
+    faqs?: CategoryFaq[];
+    quickPicks?: Array<{ scenario: string; reason: string }>;
+    buyingGuide?: CategoryGuideSection[];
+    trends?: CategoryGuideSection[];
+    statsOverrides?: CategoryStatOverride[];
   }>;
   createdAt: Date;
   updatedAt: Date;
@@ -440,6 +465,17 @@ function toCmsCategory(row: typeof categories.$inferSelect): CmsCategory {
     seoTitle: row.seoTitle,
     seoDescription: row.seoDescription,
     featuredToolSlugs: row.featuredToolSlugs,
+    faqs: row.faqs ?? [],
+    quickPicks: row.quickPicks ?? [],
+    comparisonRows: row.comparisonRows ?? [],
+    buyingGuide: row.buyingGuide ?? [],
+    trends: row.trends ?? [],
+    relatedPostSlugs: row.relatedPostSlugs ?? [],
+    statsOverrides: row.statsOverrides ?? [],
+    toolRelevance: row.toolRelevance ?? {},
+    relevanceThreshold: row.relevanceThreshold ?? 0,
+    lastReviewedAt: row.lastReviewedAt ?? null,
+    focusKeyword: row.focusKeyword ?? null,
     translations: (row.translations ?? {}) as CmsCategory["translations"],
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -453,6 +489,16 @@ function toCmsCategory(row: typeof categories.$inferSelect): CmsCategory {
 export function applyCategoryTranslations(cms: CmsCategory, locale: string): CmsCategory {
   const tr = cms.translations?.[locale];
   if (!tr) return cms;
+  // Quick-pick translations only carry scenario+reason (toolSlug is stable);
+  // merge them back onto the English rows by index so the linked tool stays.
+  const quickPicks =
+    tr.quickPicks && tr.quickPicks.length === cms.quickPicks.length
+      ? cms.quickPicks.map((qp, i) => ({
+          ...qp,
+          scenario: tr.quickPicks![i]?.scenario ?? qp.scenario,
+          reason: tr.quickPicks![i]?.reason ?? qp.reason,
+        }))
+      : cms.quickPicks;
   return {
     ...cms,
     name:           tr.name           ?? cms.name,
@@ -463,6 +509,11 @@ export function applyCategoryTranslations(cms: CmsCategory, locale: string): Cms
     introHtml:      tr.introHtml      ?? cms.introHtml,
     seoTitle:       tr.seoTitle       ?? cms.seoTitle,
     seoDescription: tr.seoDescription ?? cms.seoDescription,
+    faqs:           tr.faqs && tr.faqs.length > 0 ? tr.faqs : cms.faqs,
+    quickPicks,
+    buyingGuide:    tr.buyingGuide && tr.buyingGuide.length > 0 ? tr.buyingGuide : cms.buyingGuide,
+    trends:         tr.trends && tr.trends.length > 0 ? tr.trends : cms.trends,
+    statsOverrides: tr.statsOverrides && tr.statsOverrides.length > 0 ? tr.statsOverrides : cms.statsOverrides,
   };
 }
 

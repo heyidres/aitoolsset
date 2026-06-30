@@ -37,6 +37,18 @@ const Input = z.object({
   seoTitle: z.string().optional().default(""),
   seoDescription: z.string().optional().default(""),
   featuredToolSlugsJson: z.string().optional().default(""),
+  // Editorial / SEO-AEO repeater fields (all JSON-encoded hidden inputs)
+  faqsJson: z.string().optional().default(""),
+  quickPicksJson: z.string().optional().default(""),
+  comparisonRowsJson: z.string().optional().default(""),
+  buyingGuideJson: z.string().optional().default(""),
+  trendsJson: z.string().optional().default(""),
+  relatedPostSlugsJson: z.string().optional().default(""),
+  statsOverridesJson: z.string().optional().default(""),
+  toolRelevanceJson: z.string().optional().default(""),
+  relevanceThreshold: z.string().optional().default("0"),
+  lastReviewedAt: z.string().optional().default(""),
+  focusKeyword: z.string().optional().default(""),
 });
 
 function parse(fd: FormData) {
@@ -57,6 +69,17 @@ function parse(fd: FormData) {
     seoTitle: (fd.get("seoTitle") as string) ?? "",
     seoDescription: (fd.get("seoDescription") as string) ?? "",
     featuredToolSlugsJson: (fd.get("featuredToolSlugsJson") as string) ?? "",
+    faqsJson: (fd.get("faqsJson") as string) ?? "",
+    quickPicksJson: (fd.get("quickPicksJson") as string) ?? "",
+    comparisonRowsJson: (fd.get("comparisonRowsJson") as string) ?? "",
+    buyingGuideJson: (fd.get("buyingGuideJson") as string) ?? "",
+    trendsJson: (fd.get("trendsJson") as string) ?? "",
+    relatedPostSlugsJson: (fd.get("relatedPostSlugsJson") as string) ?? "",
+    statsOverridesJson: (fd.get("statsOverridesJson") as string) ?? "",
+    toolRelevanceJson: (fd.get("toolRelevanceJson") as string) ?? "",
+    relevanceThreshold: (fd.get("relevanceThreshold") as string) ?? "0",
+    lastReviewedAt: (fd.get("lastReviewedAt") as string) ?? "",
+    focusKeyword: (fd.get("focusKeyword") as string) ?? "",
   });
 }
 
@@ -68,6 +91,54 @@ function safeParseSlugs(raw: string): string[] {
     return [];
   } catch {
     return [];
+  }
+}
+
+/** Parse a JSON array of objects, keeping only entries that pass `keep`. */
+function safeParseArray<T>(raw: string, keep: (v: unknown) => v is T): T[] {
+  if (!raw.trim()) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter(keep) : [];
+  } catch {
+    return [];
+  }
+}
+
+const isStr = (v: unknown): v is string => typeof v === "string";
+const isFaq = (v: unknown): v is { q: string; a: string } =>
+  !!v && typeof v === "object" && isStr((v as Record<string, unknown>).q) && isStr((v as Record<string, unknown>).a);
+const isQuickPick = (v: unknown): v is { scenario: string; toolSlug: string; reason: string } => {
+  const o = v as Record<string, unknown>;
+  return !!v && typeof v === "object" && isStr(o.scenario) && isStr(o.toolSlug) && isStr(o.reason);
+};
+const isCompare = (v: unknown): v is { toolSlug: string; keyFeature: string; bestFor: string } => {
+  const o = v as Record<string, unknown>;
+  return !!v && typeof v === "object" && isStr(o.toolSlug) && isStr(o.keyFeature) && isStr(o.bestFor);
+};
+const isSection = (v: unknown): v is { heading: string; body: string } => {
+  const o = v as Record<string, unknown>;
+  return !!v && typeof v === "object" && isStr(o.heading) && isStr(o.body);
+};
+const isStatOverride = (v: unknown): v is { label: string; value: string } => {
+  const o = v as Record<string, unknown>;
+  return !!v && typeof v === "object" && isStr(o.label) && isStr(o.value);
+};
+
+/** Parse the per-tool relevance map { slug: 0-100 }. */
+function safeParseRelevance(raw: string): Record<string, number> {
+  if (!raw.trim()) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    const out: Record<string, number> = {};
+    for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
+      const n = typeof v === "number" ? v : parseInt(String(v), 10);
+      if (!Number.isNaN(n)) out[k] = Math.max(0, Math.min(100, n));
+    }
+    return out;
+  } catch {
+    return {};
   }
 }
 
@@ -89,6 +160,20 @@ function values(i: z.infer<typeof Input>) {
     seoTitle: i.seoTitle || null,
     seoDescription: i.seoDescription || null,
     featuredToolSlugs: safeParseSlugs(i.featuredToolSlugsJson),
+    faqs: safeParseArray(i.faqsJson, isFaq),
+    quickPicks: safeParseArray(i.quickPicksJson, isQuickPick),
+    comparisonRows: safeParseArray(i.comparisonRowsJson, isCompare),
+    buyingGuide: safeParseArray(i.buyingGuideJson, isSection),
+    trends: safeParseArray(i.trendsJson, isSection),
+    relatedPostSlugs: safeParseSlugs(i.relatedPostSlugsJson),
+    statsOverrides: safeParseArray(i.statsOverridesJson, isStatOverride),
+    toolRelevance: safeParseRelevance(i.toolRelevanceJson),
+    relevanceThreshold: Math.max(0, Math.min(100, parseInt(i.relevanceThreshold, 10) || 0)),
+    lastReviewedAt:
+      i.lastReviewedAt && !Number.isNaN(new Date(i.lastReviewedAt).getTime())
+        ? new Date(i.lastReviewedAt)
+        : null,
+    focusKeyword: i.focusKeyword || null,
   };
 }
 

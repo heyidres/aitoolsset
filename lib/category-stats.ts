@@ -31,6 +31,9 @@ export type CompareRow = {
   rating: number | null;
   reviews: number;
   verified: boolean;
+  /** Editorial overrides from the CMS comparison editor (optional). */
+  keyFeature?: string;
+  bestFor?: string;
 };
 
 export type TopTool = {

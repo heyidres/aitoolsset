@@ -440,6 +440,48 @@ export const categories = pgTable(
      * /ai-tools/<slug> page.
      */
     featuredToolSlugs: jsonb("featured_tool_slugs").$type<string[]>().notNull().default([]),
+
+    // ── Editorial / SEO-AEO fields (all jsonb repeaters on the row,
+    //    matching the featuredToolSlugs / translations convention) ──
+
+    /** Category-specific FAQ pairs → rendered + FAQPage JSON-LD. */
+    faqs: jsonb("faqs").$type<Array<{ q: string; a: string }>>().notNull().default([]),
+    /** "If you [scenario], pick [tool] because [reason]" decision rows. */
+    quickPicks: jsonb("quick_picks")
+      .$type<Array<{ scenario: string; toolSlug: string; reason: string }>>()
+      .notNull()
+      .default([]),
+    /** Per-tool editorial overrides merged into the comparison table. */
+    comparisonRows: jsonb("comparison_rows")
+      .$type<Array<{ toolSlug: string; keyFeature: string; bestFor: string }>>()
+      .notNull()
+      .default([]),
+    /** "How to choose" buying-guide sections (rich-text body). */
+    buyingGuide: jsonb("buying_guide")
+      .$type<Array<{ heading: string; body: string }>>()
+      .notNull()
+      .default([]),
+    /** "What changed this year" trend sections (rich-text body). */
+    trends: jsonb("trends")
+      .$type<Array<{ heading: string; body: string }>>()
+      .notNull()
+      .default([]),
+    /** Hand-picked related blog post slugs for internal linking. */
+    relatedPostSlugs: jsonb("related_post_slugs").$type<string[]>().notNull().default([]),
+    /** Editor overrides for the auto-computed "at a glance" facts. */
+    statsOverrides: jsonb("stats_overrides")
+      .$type<Array<{ label: string; value: string }>>()
+      .notNull()
+      .default([]),
+    /** Per-tool relevance score (0–100). Tools below relevanceThreshold are hidden. */
+    toolRelevance: jsonb("tool_relevance").$type<Record<string, number>>().notNull().default({}),
+    /** Minimum relevance score a tool needs to appear here. 0 = show all. */
+    relevanceThreshold: integer("relevance_threshold").notNull().default(0),
+    /** Editorial "last reviewed" date — distinct from updatedAt. Freshness signal. */
+    lastReviewedAt: timestamp("last_reviewed_at", { withTimezone: true }),
+    /** Target query for this category. Internal tracking only — not rendered. */
+    focusKeyword: text("focus_keyword"),
+
     /**
      * Per-locale translations for editor-managed fields. Same shape as
      * tool.translations — keyed by locale code, partial fallback to the
@@ -454,6 +496,11 @@ export const categories = pgTable(
       introHtml?: string;
       seoTitle?: string;
       seoDescription?: string;
+      faqs?: Array<{ q: string; a: string }>;
+      quickPicks?: Array<{ scenario: string; reason: string }>;
+      buyingGuide?: Array<{ heading: string; body: string }>;
+      trends?: Array<{ heading: string; body: string }>;
+      statsOverrides?: Array<{ label: string; value: string }>;
     }>>().notNull().default({}),
 
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

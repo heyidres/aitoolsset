@@ -11,11 +11,14 @@ import { ComparisonTable } from "@/components/category/ComparisonTable";
 import { FaqAccordion } from "@/components/category/FaqAccordion";
 import { CategoryOutro } from "@/components/category/CategoryOutro";
 import { RelatedCategories } from "@/components/category/RelatedCategories";
+import { QuickPicks, type QuickPickView } from "@/components/category/QuickPicks";
+import { CategoryProseSections } from "@/components/category/CategoryProseSections";
+import { CategoryRelatedPosts, type RelatedPostView } from "@/components/category/CategoryRelatedPosts";
 import { ALL_CATS } from "@/lib/categories";
-import { getToolsByCategory, getCategoryBySlug, applyCategoryTranslations, type CmsCategory, type CmsTool } from "@/lib/cms";
+import { getToolsByCategory, getCategoryBySlug, getBlogPostBySlug, applyCategoryTranslations, type CmsCategory, type CmsTool } from "@/lib/cms";
 import { cmsToolToDetail, cmsToolToLegacy } from "@/lib/cms-adapters";
-import { computeCategoryStats } from "@/lib/category-stats";
-import { JsonLd, breadcrumbJsonLd, faqJsonLd } from "@/lib/json-ld";
+import { computeCategoryStats, type CompareRow } from "@/lib/category-stats";
+import { JsonLd, breadcrumbJsonLd, faqJsonLd, itemListJsonLd } from "@/lib/json-ld";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { ToolCard } from "@/components/ToolCard";
 
@@ -103,22 +106,83 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
   const [found, t] = await Promise.all([findCategory(slug, locale), getTranslations("category_page")]);
   if (!found) notFound();
 
-  // Pull every CMS tool tagged with this category slug. We need
-  // BOTH the legacy DetailTool shape (for CategoryBrowser) and
-  // the rich Tool shape (for the featured picks rail at the top).
-  const cmsTools = await getToolsByCategory(slug).catch(() => [] as CmsTool[]);
+  const cms = found.cms;
+
+  // Pull every CMS tool tagged with this category slug, then apply the
+  // editor's per-tool relevance threshold so loosely-tagged tools (e.g.
+  // a general assistant that happens to carry the "code" tag) drop off
+  // pages where they don't belong. A tool with no explicit score defaults
+  // to 100 (always shown); threshold 0 = show everything.
+  const allCmsTools = await getToolsByCategory(slug).catch(() => [] as CmsTool[]);
+  const relevance = cms?.toolRelevance ?? {};
+  const threshold = cms?.relevanceThreshold ?? 0;
+  const cmsTools =
+    threshold > 0
+      ? allCmsTools.filter((tl) => (relevance[tl.slug] ?? 100) >= threshold)
+      : allCmsTools;
+
   const detailTools = cmsTools.map(cmsToolToDetail);
   const finalCount = cmsTools.length > 0 ? cmsTools.length : found.count;
 
-  // Everything editorial on this page is derived from the REAL tools in
-  // this category — facts, filters, comparison rows, editor's pick, FAQ.
-  // No hardcoded marketing sample content (Jasper/Copy.ai/Surfer SEO).
+  // Everything editorial is derived from the REAL tools in this category —
+  // facts, filters, comparison rows, editor's pick, FAQ — then the CMS
+  // editorial fields (FAQ/quick-picks/overrides) take precedence where set.
   const stats = computeCategoryStats(found.name, cmsTools);
+
+  // Stats overrides: editor-provided facts win; otherwise computed facts.
+  // CMS overrides use {label,value}; the hero facts use {label,val}.
+  const facts =
+    cms && cms.statsOverrides.length > 0
+      ? cms.statsOverrides.map((s) => ({ label: s.label, val: s.value }))
+      : stats.facts;
+
+  // FAQ: prefer hand-written CMS FAQs (best AEO); fall back to generated.
+  const faqs = cms && cms.faqs.length > 0 ? cms.faqs : stats.faqs;
+
+  // Comparison: merge editor keyFeature/bestFor overrides onto the computed rows.
+  const overrideBySlug = new Map((cms?.comparisonRows ?? []).map((r) => [r.toolSlug, r]));
+  const compareRows: CompareRow[] = stats.compareRows.map((r) => {
+    const o = overrideBySlug.get(r.slug);
+    return o ? { ...r, keyFeature: o.keyFeature, bestFor: o.bestFor } : r;
+  });
+
+  // Quick picks → resolve each toolSlug to a real tool from this category.
+  const toolBySlug = new Map(cmsTools.map((tl) => [tl.slug, tl]));
+  const quickPicks: QuickPickView[] = (cms?.quickPicks ?? []).map((qp) => {
+    const tl = toolBySlug.get(qp.toolSlug);
+    return {
+      scenario: qp.scenario,
+      reason: qp.reason,
+      tool: tl ? { name: tl.name, slug: tl.slug, domain: tl.domain } : null,
+    };
+  });
+
+  // Related blog posts → resolve slugs to published posts (parallel).
+  const relatedPosts: RelatedPostView[] = (
+    await Promise.all(
+      (cms?.relatedPostSlugs ?? []).map((s) => getBlogPostBySlug(s).catch(() => null)),
+    )
+  )
+    .filter((p): p is NonNullable<typeof p> => !!p && p.status === "published")
+    .map((p) => ({ slug: p.slug, title: p.title, category: p.category, deck: p.deck }));
+
+  // "Last reviewed" footer date — distinct freshness signal from updatedAt.
+  const reviewedDate = (() => {
+    const d = cms?.lastReviewedAt
+      ? cms.lastReviewedAt instanceof Date
+        ? cms.lastReviewedAt
+        : new Date(cms.lastReviewedAt as unknown as string)
+      : null;
+    return d && !isNaN(d.getTime())
+      ? d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+      : null;
+  })();
+
   const updatedLabel = (() => {
-    const d = found.cms?.updatedAt
-      ? found.cms.updatedAt instanceof Date
-        ? found.cms.updatedAt
-        : new Date(found.cms.updatedAt as unknown as string)
+    const d = cms?.updatedAt
+      ? cms.updatedAt instanceof Date
+        ? cms.updatedAt
+        : new Date(cms.updatedAt as unknown as string)
       : null;
     return d && !isNaN(d.getTime())
       ? d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
@@ -128,14 +192,12 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
   // Editor's picks — render at the top in a rich Tool-card rail.
   // featuredToolSlugs is jsonb with default []; be defensive against null/non-array
   // values from older rows or any mid-migration state.
-  const rawPicks = found.cms?.featuredToolSlugs;
+  const rawPicks = cms?.featuredToolSlugs;
   const pickSlugs = new Set(Array.isArray(rawPicks) ? rawPicks : []);
   const featuredTools =
     pickSlugs.size > 0
-      ? cmsTools.filter((t) => pickSlugs.has(t.slug)).map(cmsToolToLegacy)
+      ? cmsTools.filter((tl) => pickSlugs.has(tl.slug)).map(cmsToolToLegacy)
       : [];
-
-  const cms = found.cms;
   // findCategory already applied per-locale overrides via applyCategoryTranslations,
   // so cms.heroTitle etc. are already in the active locale. Honor the CMS overrides
   // in every locale now — auto-translation makes the Korean version content-equivalent.
@@ -164,14 +226,22 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
             { name: "AI Tools", url: "/ai-tools" },
             { name: found.name, url: `/ai-tools/${found.slug}` },
           ]),
-          ...(stats.faqs.length > 0
+          ...(faqs.length > 0
             ? [
                 faqJsonLd(
-                  stats.faqs.map((f) => ({
+                  faqs.map((f) => ({
                     q: f.q,
                     a: f.a.replace(/\*\*/g, "").replace(/<[^>]+>/g, ""),
                   }))
                 ),
+              ]
+            : []),
+          ...(compareRows.length > 0
+            ? [
+                itemListJsonLd({
+                  name: `Best AI ${found.name} tools`,
+                  items: compareRows.map((r) => ({ name: r.name, url: `/ai-tool/${r.slug}` })),
+                }),
               ]
             : []),
         ]}
@@ -184,7 +254,7 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
         <CategoryHero
           categoryName={found.name}
           count={finalCount}
-          facts={stats.facts}
+          facts={facts}
           avgRating={stats.avgRating}
           updatedLabel={updatedLabel}
         />
@@ -237,10 +307,45 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
         pricingCounts={stats.pricingCounts}
         topTool={stats.topTool}
       />
-      <ComparisonTable categoryName={found.name} rows={stats.compareRows} />
-      <FaqAccordion items={stats.faqs} categoryName={found.name} />
+
+      {/* Decision framework — editor-authored quick picks by scenario */}
+      <QuickPicks categoryName={found.name} picks={quickPicks} />
+
+      <ComparisonTable categoryName={found.name} rows={compareRows} />
+
+      {/* Buying guide — "how to choose" editorial prose */}
+      <CategoryProseSections
+        eyebrow="Buying guide"
+        heading={`How to choose an AI ${found.name.toLowerCase()} tool`}
+        sections={cms?.buyingGuide ?? []}
+        tint="var(--lavender)"
+      />
+
+      {/* What changed this year — trends/freshness */}
+      <CategoryProseSections
+        eyebrow="What changed this year"
+        heading={`AI ${found.name.toLowerCase()} in 2026: what's new`}
+        sections={cms?.trends ?? []}
+        tint="var(--white)"
+      />
+
+      <FaqAccordion items={faqs} categoryName={found.name} />
+
+      {/* Internal-link footer — hand-picked related blog posts */}
+      <CategoryRelatedPosts posts={relatedPosts} />
+
       <CategoryOutro categoryName={found.name} />
       <RelatedCategories />
+
+      {reviewedDate && (
+        <div className="px-9 py-6 section-pad-x bg-white" style={{ borderTop: "1px solid var(--border)" }}>
+          <div className="max-w-[1320px] mx-auto text-[12.5px]" style={{ color: "var(--text-3)" }}>
+            ✓ Last reviewed by the AI Tools Set editorial team on{" "}
+            <strong style={{ color: "var(--text-2)" }}>{reviewedDate}</strong>.
+          </div>
+        </div>
+      )}
+
       <Footer />
     </main>
   );

@@ -19,6 +19,10 @@ export async function ComparisonTable({
   const t = await getTranslations("category_page");
   const lower = categoryName.toLowerCase();
 
+  // Editorial columns only appear when the editor has filled them for ≥1 row.
+  const showKeyFeature = rows.some((r) => r.keyFeature && r.keyFeature.trim());
+  const showBestFor = rows.some((r) => r.bestFor && r.bestFor.trim());
+
   const cellBorder = (i: number) =>
     i < rows.length - 1 ? "1px solid var(--border)" : "none";
 
@@ -46,6 +50,8 @@ export async function ComparisonTable({
                   t("comparison_col_pricing"),
                   t("comparison_col_free_tier"),
                   "Starts at",
+                  ...(showKeyFeature ? ["Key feature"] : []),
+                  ...(showBestFor ? ["Best for"] : []),
                   t("comparison_col_rating"),
                   "Reviews",
                   "Verified",
@@ -102,6 +108,16 @@ export async function ComparisonTable({
                   <td className="px-[18px] py-[18px] text-[13.5px] align-middle" style={{ borderBottom: cellBorder(i) }}>
                     {row.startingPrice ?? <span style={{ color: "var(--text-3)" }}>—</span>}
                   </td>
+                  {showKeyFeature && (
+                    <td className="px-[18px] py-[18px] text-[13.5px] align-middle" style={{ borderBottom: cellBorder(i), color: "var(--text-2)" }}>
+                      {row.keyFeature?.trim() ? row.keyFeature : <span style={{ color: "var(--text-3)" }}>—</span>}
+                    </td>
+                  )}
+                  {showBestFor && (
+                    <td className="px-[18px] py-[18px] text-[13.5px] align-middle" style={{ borderBottom: cellBorder(i), color: "var(--text-2)" }}>
+                      {row.bestFor?.trim() ? row.bestFor : <span style={{ color: "var(--text-3)" }}>—</span>}
+                    </td>
+                  )}
                   <td className="px-[18px] py-[18px] text-[13.5px] align-middle" style={{ borderBottom: cellBorder(i) }}>
                     {row.rating != null ? (
                       <div className="flex items-center gap-[5px] font-display font-extrabold tnum">
