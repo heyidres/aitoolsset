@@ -205,7 +205,7 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
       <Nav />
 
       {hasCustomHero ? (
-        <CustomCategoryHero category={found.name} slug={found.slug} count={finalCount} cms={cms!} />
+        <CustomCategoryHero category={found.name} count={finalCount} cms={cms!} facts={facts} avgRating={stats.avgRating} />
       ) : (
         <CategoryHero
           categoryName={found.name}
@@ -298,18 +298,24 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
 /**
  * Custom dark hero — used when the editor has set any of
  * heroEyebrow / heroTitle / heroSubtitle / bannerImageUrl.
- * Same visual style as CategoryHero but driven from CMS fields.
+ *
+ * Matches the default CategoryHero exactly: pink eyebrow pill, a
+ * gradient-accent headline, and the "AT A GLANCE" facts side box —
+ * so setting a custom title keeps the premium two-column look instead
+ * of dropping to a plain white heading with no stats panel.
  */
 function CustomCategoryHero({
   category,
-  slug,
   count,
   cms,
+  facts,
+  avgRating,
 }: {
   category: string;
-  slug: string;
   count: number;
   cms: CmsCategory;
+  facts: Array<{ label: string; val: string }>;
+  avgRating: number | null;
 }) {
   const title = cms.heroTitle ?? `Best AI ${category} tools for 2026, ranked & reviewed`;
   const subtitle =
@@ -317,22 +323,22 @@ function CustomCategoryHero({
     cms.description ??
     `Hand-picked AI ${category.toLowerCase()} software. Every tool below has been tested by our editors.`;
   const eyebrow = cms.heroEyebrow ?? `CATEGORY · ${category.toUpperCase()}`;
+  const updated = (() => {
+    const d = cms.updatedAt instanceof Date ? cms.updatedAt : new Date(cms.updatedAt as unknown as string);
+    return isNaN(d.getTime()) ? "recently" : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  })();
 
   return (
-    <section
-      className="px-9 pt-14 pb-12 section-pad-x relative overflow-hidden"
-      style={{ background: "var(--near-black)" }}
-    >
+    <section className="relative overflow-hidden px-9 pt-12 pb-14 text-white section-pad-x" style={{ background: "var(--near-black)" }}>
       {cms.bannerImageUrl && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={cms.bannerImageUrl}
-          alt=""
-          aria-hidden
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.18 }}
-        />
+        <img src={cms.bannerImageUrl} alt="" aria-hidden style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.18 }} />
       )}
-      <div className="max-w-page mx-auto relative">
+      <div
+        className="absolute pointer-events-none"
+        style={{ top: -150, right: -80, width: 500, height: 500, background: "radial-gradient(circle, rgba(0,82,255,.18) 0%, transparent 60%)" }}
+      />
+      <div className="max-w-[1320px] mx-auto relative">
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-[12.5px] font-medium mb-5 flex-wrap" style={{ color: "rgba(255,255,255,.45)" }}>
           <Link href="/" style={{ color: "rgba(255,255,255,.55)" }}>Home</Link>
@@ -342,45 +348,72 @@ function CustomCategoryHero({
           <span style={{ color: "#fff" }}>{category}</span>
         </nav>
 
-        <div
-          className="inline-flex items-center gap-[7px] rounded-pill px-3 py-[5px] font-display text-[11.5px] font-extrabold uppercase tracking-[.07em] mb-4"
-          style={{
-            background: "rgba(255,255,255,.06)",
-            border: "1px solid rgba(255,255,255,.12)",
-            color: "rgba(255,255,255,.75)",
-          }}
-        >
-          {cms.icon ? <span>{cms.icon}</span> : null}
-          {eyebrow}
-        </div>
+        <div className="grid grid-cols-[1fr_360px] gap-[60px] items-start cat-hero-grid">
+          <div>
+            <div
+              className="inline-flex items-center gap-2 rounded-pill px-[14px] py-[5px] font-display text-[11.5px] font-bold uppercase tracking-[.07em] mb-4"
+              style={{ background: "rgba(236,72,153,.12)", border: "1px solid rgba(236,72,153,.3)", color: "#f9a8d4" }}
+            >
+              {cms.icon ? <span>{cms.icon}</span> : "📈"} {eyebrow}
+            </div>
 
-        <h1
-          className="font-display font-black mb-4 text-white"
-          style={{ fontSize: "clamp(36px, 4.6vw, 56px)", letterSpacing: "-1.5px", lineHeight: 1.05, maxWidth: 860 }}
-        >
-          {title}
-        </h1>
-        <p className="text-[16px] mb-5 max-w-[680px]" style={{ color: "rgba(255,255,255,.6)", lineHeight: 1.6 }}>
-          {subtitle}
-        </p>
+            <h1
+              className="font-display font-black mb-4"
+              style={{ fontSize: "clamp(36px, 4.5vw, 56px)", letterSpacing: "-2px", lineHeight: 1.05, maxWidth: 860 }}
+            >
+              <span
+                style={{
+                  background: "linear-gradient(120deg, #f472b6, #a78bfa)",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  color: "transparent",
+                }}
+              >
+                {title}
+              </span>
+            </h1>
 
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px]" style={{ color: "rgba(255,255,255,.55)" }}>
-          <span>
-            📦 <strong className="tnum" style={{ color: "#fff", fontWeight: 800 }}>{count}</strong> tools listed
-          </span>
-          <span>·</span>
-          <span>
-            🔄 Updated{" "}
-            <strong style={{ color: "#fff", fontWeight: 800 }}>
-              {(() => {
-                // Neon HTTP can return timestamps as strings; coerce defensively.
-                const d = cms.updatedAt instanceof Date ? cms.updatedAt : new Date(cms.updatedAt as unknown as string);
-                return isNaN(d.getTime())
-                  ? "recently"
-                  : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-              })()}
-            </strong>
-          </span>
+            <p className="text-base leading-[1.65] max-w-[620px] mb-6" style={{ color: "rgba(255,255,255,.65)" }}>
+              {subtitle}
+            </p>
+
+            <div className="flex items-center gap-[18px] flex-wrap text-[13px]" style={{ color: "rgba(255,255,255,.6)" }}>
+              <div className="flex items-center gap-[6px]">
+                📂 <strong className="font-display font-extrabold text-white tnum">{count} tools</strong>
+              </div>
+              {avgRating != null && (
+                <>
+                  <span className="w-[3px] h-[3px] rounded-full" style={{ background: "rgba(255,255,255,.3)" }} />
+                  <div className="flex items-center gap-[6px]">
+                    ⭐ <strong className="font-display font-extrabold text-white tnum">{avgRating.toFixed(1)}</strong>
+                  </div>
+                </>
+              )}
+              <span className="w-[3px] h-[3px] rounded-full" style={{ background: "rgba(255,255,255,.3)" }} />
+              <div className="flex items-center gap-[6px]">
+                🔄 <strong className="font-display font-extrabold text-white">Updated {updated}</strong>
+              </div>
+            </div>
+          </div>
+
+          {/* AT A GLANCE — real computed facts */}
+          <div className="rounded-lg p-[22px]" style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)" }}>
+            <div className="font-display text-[11.5px] font-bold uppercase tracking-[.08em] mb-[14px] flex items-center gap-2" style={{ color: "rgba(255,255,255,.5)" }}>
+              <span className="w-[5px] h-[5px] rounded-full" style={{ background: "#f472b6" }} />
+              {category} AI at a glance
+            </div>
+            {facts.map((f, i) => (
+              <div
+                key={f.label}
+                className="flex justify-between items-center py-[10px]"
+                style={{ borderBottom: i < facts.length - 1 ? "1px dashed rgba(255,255,255,.08)" : "none" }}
+              >
+                <span className="text-[13px]" style={{ color: "rgba(255,255,255,.55)" }}>{f.label}</span>
+                <span className="font-display text-sm font-extrabold text-white tnum">{f.val}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
