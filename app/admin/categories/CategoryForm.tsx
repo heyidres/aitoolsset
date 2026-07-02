@@ -5,10 +5,6 @@ import { useEffect, useState, useTransition } from "react";
 import { RichTextEditor } from "../_components/RichTextEditor";
 
 type Faq = { q: string; a: string };
-type QuickPick = { scenario: string; toolSlug: string; reason: string };
-type CompareRow = { toolSlug: string; keyFeature: string; bestFor: string };
-type GuideSection = { heading: string; body: string };
-type StatOverride = { label: string; value: string };
 
 export type CategoryFormValues = {
   name: string;
@@ -24,18 +20,12 @@ export type CategoryFormValues = {
   heroEyebrow: string;
   heroTitle: string;
   heroSubtitle: string;
-  introHtml: string;
+  introHtml: string; // "Top content" — above the tools grid
+  bottomHtml: string; // "Bottom content" — below the tools grid
   seoTitle: string;
   seoDescription: string;
   featuredToolSlugs: string[];
-  // Editorial / SEO-AEO repeater fields
   faqs: Faq[];
-  quickPicks: QuickPick[];
-  comparisonRows: CompareRow[];
-  buyingGuide: GuideSection[];
-  trends: GuideSection[];
-  relatedPostSlugs: string[];
-  statsOverrides: StatOverride[];
   toolRelevance: Record<string, number>;
   relevanceThreshold: number;
   lastReviewedAt: string; // yyyy-mm-dd
@@ -56,16 +46,11 @@ const EMPTY: CategoryFormValues = {
   heroTitle: "",
   heroSubtitle: "",
   introHtml: "",
+  bottomHtml: "",
   seoTitle: "",
   seoDescription: "",
   featuredToolSlugs: [],
   faqs: [],
-  quickPicks: [],
-  comparisonRows: [],
-  buyingGuide: [],
-  trends: [],
-  relatedPostSlugs: [],
-  statsOverrides: [],
   toolRelevance: {},
   relevanceThreshold: 0,
   lastReviewedAt: "",
@@ -82,16 +67,13 @@ export function CategoryForm({
   action,
   allCategories,
   toolsInCategory,
-  blogPosts,
 }: {
   initial?: CategoryFormValues;
   mode: "create" | "edit";
   action: (fd: FormData) => Promise<void>;
   allCategories: Array<{ slug: string; name: string }>;
-  /** Tools currently assigned to this category — used by the editor's-pick chooser. */
+  /** Tools currently assigned to this category — used by the editor's-pick chooser + relevance. */
   toolsInCategory?: Array<{ id: string; name: string; slug: string }>;
-  /** Published blog posts — for the related-posts selector. */
-  blogPosts?: Array<{ slug: string; title: string }>;
 }) {
   const [values, setValues] = useState<CategoryFormValues>(initial);
   const [slugTouched, setSlugTouched] = useState(!!initial.slug);
@@ -100,7 +82,6 @@ export function CategoryForm({
   const [introVersion] = useState(0);
 
   const tools = toolsInCategory ?? [];
-  const posts = blogPosts ?? [];
 
   useEffect(() => {
     if (!slugTouched) setValues((v) => ({ ...v, slug: slugify(v.name) }));
@@ -114,15 +95,6 @@ export function CategoryForm({
       if (picks.has(slug)) picks.delete(slug);
       else picks.add(slug);
       return { ...s, featuredToolSlugs: Array.from(picks) };
-    });
-  };
-
-  const toggleRelatedPost = (slug: string) => {
-    setValues((s) => {
-      const set = new Set(s.relatedPostSlugs);
-      if (set.has(slug)) set.delete(slug);
-      else set.add(slug);
-      return { ...s, relatedPostSlugs: Array.from(set) };
     });
   };
 
@@ -153,12 +125,6 @@ export function CategoryForm({
       <input type="hidden" name="orderIndex" value={values.orderIndex} />
       <input type="hidden" name="featuredToolSlugsJson" value={JSON.stringify(values.featuredToolSlugs)} />
       <input type="hidden" name="faqsJson" value={JSON.stringify(values.faqs)} />
-      <input type="hidden" name="quickPicksJson" value={JSON.stringify(values.quickPicks)} />
-      <input type="hidden" name="comparisonRowsJson" value={JSON.stringify(values.comparisonRows)} />
-      <input type="hidden" name="buyingGuideJson" value={JSON.stringify(values.buyingGuide)} />
-      <input type="hidden" name="trendsJson" value={JSON.stringify(values.trends)} />
-      <input type="hidden" name="relatedPostSlugsJson" value={JSON.stringify(values.relatedPostSlugs)} />
-      <input type="hidden" name="statsOverridesJson" value={JSON.stringify(values.statsOverrides)} />
       <input type="hidden" name="toolRelevanceJson" value={JSON.stringify(values.toolRelevance)} />
 
       <Section title="Basics">
@@ -212,22 +178,36 @@ export function CategoryForm({
         </Field>
       </Section>
 
-      <Section title="Intro prose">
-        <Field label="Intro body" hint="Long-form prose shown between the hero and the tools grid. Use H2/H3, bold/italic, links, lists.">
+      {/* ── TOP CONTENT — rendered ABOVE the tools grid ── */}
+      <Section title="Top content (above the tools)">
+        <Field label="Intro article" hint="Editorial prose shown between the hero and the tools grid. Use H2/H3, bold/italic, links, lists, images.">
           <RichTextEditor
             key={`intro-${introVersion}`}
             name="introHtml"
             defaultValue={values.introHtml}
-            placeholder="What are AI image generation tools — and which ones are actually worth using in 2026?"
+            placeholder="Introduce the category — what these tools do and who they're for."
           />
         </Field>
       </Section>
 
-      {/* ── FAQ editor — biggest AEO win. Renders FAQPage JSON-LD. ── */}
+      {/* ── BOTTOM CONTENT — rendered BELOW the tools grid ── */}
+      <Section title="Bottom content (below the tools)">
+        <Field label="Main article" hint="The long-form editorial article shown under the tools grid (Futurepedia-style). This is your main SEO content — write freely with H2/H3, images, tables, links.">
+          <RichTextEditor
+            key={`bottom-${introVersion}`}
+            name="bottomHtml"
+            defaultValue={values.bottomHtml}
+            placeholder="Write the in-depth guide: use cases, how to choose, what changed this year, buying advice…"
+          />
+        </Field>
+      </Section>
+
+      {/* ── FAQ editor — renders FAQPage JSON-LD ── */}
       <Section title={`FAQ (${values.faqs.length}) · AEO`}>
         <Hint>
           Category-specific question/answer pairs. Aim for 4–6 unique to this category. Each renders on the page
-          <strong> and</strong> as FAQPage schema (Google answer boxes, ChatGPT/Perplexity citations).
+          <strong> and</strong> as FAQPage schema (Google answer boxes, ChatGPT/Perplexity citations). Leave empty to
+          auto-generate FAQs from the category&apos;s real tools.
         </Hint>
         <Repeater
           items={values.faqs}
@@ -243,126 +223,6 @@ export function CategoryForm({
                 <textarea rows={3} value={item.a} onChange={(e) => set({ ...item, a: e.target.value })} placeholder="Use **bold** for tool names. Be specific and current." />
               </SubField>
             </>
-          )}
-        />
-      </Section>
-
-      {/* ── Quick-pick decision framework ── */}
-      <Section title={`Quick picks by scenario (${values.quickPicks.length})`}>
-        <Hint>
-          &ldquo;If you [scenario], pick [tool] because [reason].&rdquo; This is what Google and AI assistants quote in answers.
-        </Hint>
-        <Repeater
-          items={values.quickPicks}
-          onChange={(qp) => u("quickPicks", qp)}
-          empty={{ scenario: "", toolSlug: tools[0]?.slug ?? "", reason: "" }}
-          addLabel="+ Add quick pick"
-          render={(item, set) => (
-            <>
-              <SubField label="If you…">
-                <input type="text" value={item.scenario} onChange={(e) => set({ ...item, scenario: e.target.value })} placeholder="need the fastest autocomplete in your IDE" />
-              </SubField>
-              <Row>
-                <SubField label="Pick tool">
-                  <ToolSelect tools={tools} value={item.toolSlug} onChange={(v) => set({ ...item, toolSlug: v })} />
-                </SubField>
-                <SubField label="Because">
-                  <input type="text" value={item.reason} onChange={(e) => set({ ...item, reason: e.target.value })} placeholder="it has the lowest latency and best language coverage" />
-                </SubField>
-              </Row>
-            </>
-          )}
-        />
-      </Section>
-
-      {/* ── Comparison overrides ── */}
-      <Section title={`Comparison overrides (${values.comparisonRows.length})`}>
-        <Hint>
-          The comparison table auto-fills pricing/rating from each tool. Add a row here to attach an editorial
-          <strong> Key feature</strong> and <strong>Best for</strong> column for specific tools.
-        </Hint>
-        <Repeater
-          items={values.comparisonRows}
-          onChange={(rows) => u("comparisonRows", rows)}
-          empty={{ toolSlug: tools[0]?.slug ?? "", keyFeature: "", bestFor: "" }}
-          addLabel="+ Add comparison row"
-          render={(item, set) => (
-            <>
-              <SubField label="Tool">
-                <ToolSelect tools={tools} value={item.toolSlug} onChange={(v) => set({ ...item, toolSlug: v })} />
-              </SubField>
-              <Row>
-                <SubField label="Key feature">
-                  <input type="text" value={item.keyFeature} onChange={(e) => set({ ...item, keyFeature: e.target.value })} placeholder="Multi-file context" />
-                </SubField>
-                <SubField label="Best for">
-                  <input type="text" value={item.bestFor} onChange={(e) => set({ ...item, bestFor: e.target.value })} placeholder="Large codebases" />
-                </SubField>
-              </Row>
-            </>
-          )}
-        />
-      </Section>
-
-      {/* ── Buying guide ── */}
-      <Section title={`Buying guide (${values.buyingGuide.length})`}>
-        <Hint>&ldquo;How to choose&rdquo; sections. Adds unique content + keyword coverage. One paragraph per line break.</Hint>
-        <Repeater
-          items={values.buyingGuide}
-          onChange={(g) => u("buyingGuide", g)}
-          empty={{ heading: "", body: "" }}
-          addLabel="+ Add guide section"
-          render={(item, set) => (
-            <>
-              <SubField label="Heading">
-                <input type="text" value={item.heading} onChange={(e) => set({ ...item, heading: e.target.value })} placeholder="Match the tool to your stack" />
-              </SubField>
-              <SubField label="Body">
-                <textarea rows={4} value={item.body} onChange={(e) => set({ ...item, body: e.target.value })} placeholder="Write 1–3 paragraphs. Separate paragraphs with a blank line." />
-              </SubField>
-            </>
-          )}
-        />
-      </Section>
-
-      {/* ── Trends / what changed this year ── */}
-      <Section title={`What changed this year (${values.trends.length})`}>
-        <Hint>Specific, current, dated. Freshness signal for ranking.</Hint>
-        <Repeater
-          items={values.trends}
-          onChange={(g) => u("trends", g)}
-          empty={{ heading: "", body: "" }}
-          addLabel="+ Add trend section"
-          render={(item, set) => (
-            <>
-              <SubField label="Heading">
-                <input type="text" value={item.heading} onChange={(e) => set({ ...item, heading: e.target.value })} placeholder="Agentic coding went mainstream" />
-              </SubField>
-              <SubField label="Body">
-                <textarea rows={4} value={item.body} onChange={(e) => set({ ...item, body: e.target.value })} placeholder="What specifically changed in 2026, with dates." />
-              </SubField>
-            </>
-          )}
-        />
-      </Section>
-
-      {/* ── Stats overrides ── */}
-      <Section title={`Stats overrides (${values.statsOverrides.length})`}>
-        <Hint>Override the auto-computed &ldquo;at a glance&rdquo; facts with something specific. Leave empty to use computed stats.</Hint>
-        <Repeater
-          items={values.statsOverrides}
-          onChange={(s) => u("statsOverrides", s)}
-          empty={{ label: "", value: "" }}
-          addLabel="+ Add stat"
-          render={(item, set) => (
-            <Row>
-              <SubField label="Label">
-                <input type="text" value={item.label} onChange={(e) => set({ ...item, label: e.target.value })} placeholder="Top use case" />
-              </SubField>
-              <SubField label="Value">
-                <input type="text" value={item.value} onChange={(e) => set({ ...item, value: e.target.value })} placeholder="Autonomous agents" />
-              </SubField>
-            </Row>
           )}
         />
       </Section>
@@ -414,24 +274,6 @@ export function CategoryForm({
         </Section>
       )}
 
-      {/* ── Related blog posts ── */}
-      {posts.length > 0 && (
-        <Section title={`Related blog posts (${values.relatedPostSlugs.length} selected)`}>
-          <Hint>Internal links boost ranking. Pick 3–5 related posts to link from the page footer.</Hint>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {posts.map((p) => {
-              const on = values.relatedPostSlugs.includes(p.slug);
-              return (
-                <button key={p.slug} type="button" onClick={() => toggleRelatedPost(p.slug)} className="adm-btn-sm"
-                  style={{ padding: "6px 12px", fontSize: 12.5, background: on ? "var(--blue)" : "var(--surface)", color: on ? "#fff" : "var(--text)", border: `1.5px solid ${on ? "var(--blue)" : "var(--border)"}`, borderRadius: 100, cursor: "pointer", maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {on ? "✓ " : ""}{p.title}
-                </button>
-              );
-            })}
-          </div>
-        </Section>
-      )}
-
       <Section title="SEO & freshness">
         <Field label="Meta title" hint="Defaults to the category name if blank. Max 60 chars.">
           <input type="text" name="seoTitle" maxLength={60} value={values.seoTitle} onChange={(e) => u("seoTitle", e.target.value)} />
@@ -468,7 +310,7 @@ export function CategoryForm({
   );
 }
 
-/** Generic add/remove/reorder repeater for jsonb array fields. */
+/** Generic add/remove/reorder repeater for jsonb array fields (FAQ). */
 function Repeater<T>({
   items,
   onChange,
@@ -510,17 +352,6 @@ function Repeater<T>({
         {addLabel}
       </button>
     </div>
-  );
-}
-
-function ToolSelect({ tools, value, onChange }: { tools: Array<{ slug: string; name: string }>; value: string; onChange: (v: string) => void }) {
-  return (
-    <select value={value} onChange={(e) => onChange(e.target.value)}>
-      {tools.length === 0 && <option value="">— no tools in this category —</option>}
-      {tools.map((t) => (
-        <option key={t.slug} value={t.slug}>{t.name}</option>
-      ))}
-    </select>
   );
 }
 

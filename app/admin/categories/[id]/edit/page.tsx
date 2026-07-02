@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getAllCategories, getCategoryById, getToolOptionsByCategory, getPublishedBlogPosts } from "@/lib/cms";
+import { getAllCategories, getCategoryById, getToolOptionsByCategory } from "@/lib/cms";
 import { CategoryForm, type CategoryFormValues } from "../../CategoryForm";
 import { updateCategory } from "../../_actions";
 
@@ -16,14 +16,10 @@ function toDateInput(d: Date | null): string {
 
 export default async function EditCategoryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [cat, all, posts] = await Promise.all([
-    getCategoryById(id),
-    getAllCategories(),
-    getPublishedBlogPosts().catch(() => []),
-  ]);
+  const [cat, all] = await Promise.all([getCategoryById(id), getAllCategories()]);
   if (!cat) notFound();
 
-  // Tools currently in this category (used by the editor's-pick chooser)
+  // Tools currently in this category (used by the editor's-pick chooser + relevance)
   const toolsInCategory = await getToolOptionsByCategory(cat.slug).catch(() => []);
 
   const initial: CategoryFormValues = {
@@ -40,16 +36,11 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
     heroTitle: cat.heroTitle ?? "",
     heroSubtitle: cat.heroSubtitle ?? "",
     introHtml: cat.introHtml ?? "",
+    bottomHtml: cat.bottomHtml ?? "",
     seoTitle: cat.seoTitle ?? "",
     seoDescription: cat.seoDescription ?? "",
     featuredToolSlugs: cat.featuredToolSlugs,
     faqs: cat.faqs,
-    quickPicks: cat.quickPicks,
-    comparisonRows: cat.comparisonRows,
-    buyingGuide: cat.buyingGuide,
-    trends: cat.trends,
-    relatedPostSlugs: cat.relatedPostSlugs,
-    statsOverrides: cat.statsOverrides,
     toolRelevance: cat.toolRelevance,
     relevanceThreshold: cat.relevanceThreshold,
     lastReviewedAt: toDateInput(cat.lastReviewedAt),
@@ -68,7 +59,6 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
       action={action}
       allCategories={all.filter((c) => c.id !== id).map((c) => ({ slug: c.slug, name: c.name }))}
       toolsInCategory={toolsInCategory}
-      blogPosts={posts.map((p) => ({ slug: p.slug, title: p.title }))}
     />
   );
 }

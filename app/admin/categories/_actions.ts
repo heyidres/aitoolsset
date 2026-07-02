@@ -34,17 +34,12 @@ const Input = z.object({
   heroTitle: z.string().optional().default(""),
   heroSubtitle: z.string().optional().default(""),
   introHtml: z.string().optional().default(""),
+  bottomHtml: z.string().optional().default(""),
   seoTitle: z.string().optional().default(""),
   seoDescription: z.string().optional().default(""),
   featuredToolSlugsJson: z.string().optional().default(""),
-  // Editorial / SEO-AEO repeater fields (all JSON-encoded hidden inputs)
+  // Editorial / SEO-AEO fields
   faqsJson: z.string().optional().default(""),
-  quickPicksJson: z.string().optional().default(""),
-  comparisonRowsJson: z.string().optional().default(""),
-  buyingGuideJson: z.string().optional().default(""),
-  trendsJson: z.string().optional().default(""),
-  relatedPostSlugsJson: z.string().optional().default(""),
-  statsOverridesJson: z.string().optional().default(""),
   toolRelevanceJson: z.string().optional().default(""),
   relevanceThreshold: z.string().optional().default("0"),
   lastReviewedAt: z.string().optional().default(""),
@@ -66,16 +61,11 @@ function parse(fd: FormData) {
     heroTitle: (fd.get("heroTitle") as string) ?? "",
     heroSubtitle: (fd.get("heroSubtitle") as string) ?? "",
     introHtml: (fd.get("introHtml") as string) ?? "",
+    bottomHtml: (fd.get("bottomHtml") as string) ?? "",
     seoTitle: (fd.get("seoTitle") as string) ?? "",
     seoDescription: (fd.get("seoDescription") as string) ?? "",
     featuredToolSlugsJson: (fd.get("featuredToolSlugsJson") as string) ?? "",
     faqsJson: (fd.get("faqsJson") as string) ?? "",
-    quickPicksJson: (fd.get("quickPicksJson") as string) ?? "",
-    comparisonRowsJson: (fd.get("comparisonRowsJson") as string) ?? "",
-    buyingGuideJson: (fd.get("buyingGuideJson") as string) ?? "",
-    trendsJson: (fd.get("trendsJson") as string) ?? "",
-    relatedPostSlugsJson: (fd.get("relatedPostSlugsJson") as string) ?? "",
-    statsOverridesJson: (fd.get("statsOverridesJson") as string) ?? "",
     toolRelevanceJson: (fd.get("toolRelevanceJson") as string) ?? "",
     relevanceThreshold: (fd.get("relevanceThreshold") as string) ?? "0",
     lastReviewedAt: (fd.get("lastReviewedAt") as string) ?? "",
@@ -94,36 +84,20 @@ function safeParseSlugs(raw: string): string[] {
   }
 }
 
-/** Parse a JSON array of objects, keeping only entries that pass `keep`. */
-function safeParseArray<T>(raw: string, keep: (v: unknown) => v is T): T[] {
+/** Parse a JSON array of FAQ objects, keeping only valid { q, a } entries. */
+function safeParseFaqs(raw: string): Array<{ q: string; a: string }> {
   if (!raw.trim()) return [];
   try {
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter(keep) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (v): v is { q: string; a: string } =>
+        !!v && typeof v === "object" && typeof v.q === "string" && typeof v.a === "string",
+    );
   } catch {
     return [];
   }
 }
-
-const isStr = (v: unknown): v is string => typeof v === "string";
-const isFaq = (v: unknown): v is { q: string; a: string } =>
-  !!v && typeof v === "object" && isStr((v as Record<string, unknown>).q) && isStr((v as Record<string, unknown>).a);
-const isQuickPick = (v: unknown): v is { scenario: string; toolSlug: string; reason: string } => {
-  const o = v as Record<string, unknown>;
-  return !!v && typeof v === "object" && isStr(o.scenario) && isStr(o.toolSlug) && isStr(o.reason);
-};
-const isCompare = (v: unknown): v is { toolSlug: string; keyFeature: string; bestFor: string } => {
-  const o = v as Record<string, unknown>;
-  return !!v && typeof v === "object" && isStr(o.toolSlug) && isStr(o.keyFeature) && isStr(o.bestFor);
-};
-const isSection = (v: unknown): v is { heading: string; body: string } => {
-  const o = v as Record<string, unknown>;
-  return !!v && typeof v === "object" && isStr(o.heading) && isStr(o.body);
-};
-const isStatOverride = (v: unknown): v is { label: string; value: string } => {
-  const o = v as Record<string, unknown>;
-  return !!v && typeof v === "object" && isStr(o.label) && isStr(o.value);
-};
 
 /** Parse the per-tool relevance map { slug: 0-100 }. */
 function safeParseRelevance(raw: string): Record<string, number> {
@@ -157,16 +131,11 @@ function values(i: z.infer<typeof Input>) {
     heroTitle: i.heroTitle || null,
     heroSubtitle: i.heroSubtitle || null,
     introHtml: i.introHtml || null,
+    bottomHtml: i.bottomHtml || null,
     seoTitle: i.seoTitle || null,
     seoDescription: i.seoDescription || null,
     featuredToolSlugs: safeParseSlugs(i.featuredToolSlugsJson),
-    faqs: safeParseArray(i.faqsJson, isFaq),
-    quickPicks: safeParseArray(i.quickPicksJson, isQuickPick),
-    comparisonRows: safeParseArray(i.comparisonRowsJson, isCompare),
-    buyingGuide: safeParseArray(i.buyingGuideJson, isSection),
-    trends: safeParseArray(i.trendsJson, isSection),
-    relatedPostSlugs: safeParseSlugs(i.relatedPostSlugsJson),
-    statsOverrides: safeParseArray(i.statsOverridesJson, isStatOverride),
+    faqs: safeParseFaqs(i.faqsJson),
     toolRelevance: safeParseRelevance(i.toolRelevanceJson),
     relevanceThreshold: Math.max(0, Math.min(100, parseInt(i.relevanceThreshold, 10) || 0)),
     lastReviewedAt:

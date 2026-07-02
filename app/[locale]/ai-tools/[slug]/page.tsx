@@ -7,18 +7,14 @@ import { Footer } from "@/components/Footer";
 import { CategoryHero } from "@/components/category/CategoryHero";
 import { CategoryIntro } from "@/components/category/CategoryIntro";
 import { CategoryBrowser } from "@/components/category/CategoryBrowser";
-import { ComparisonTable } from "@/components/category/ComparisonTable";
 import { FaqAccordion } from "@/components/category/FaqAccordion";
 import { CategoryOutro } from "@/components/category/CategoryOutro";
 import { RelatedCategories } from "@/components/category/RelatedCategories";
-import { QuickPicks, type QuickPickView } from "@/components/category/QuickPicks";
-import { CategoryProseSections } from "@/components/category/CategoryProseSections";
-import { CategoryRelatedPosts, type RelatedPostView } from "@/components/category/CategoryRelatedPosts";
 import { ALL_CATS } from "@/lib/categories";
-import { getToolsByCategory, getCategoryBySlug, getBlogPostBySlug, applyCategoryTranslations, type CmsCategory, type CmsTool } from "@/lib/cms";
+import { getToolsByCategory, getCategoryBySlug, applyCategoryTranslations, type CmsCategory, type CmsTool } from "@/lib/cms";
 import { cmsToolToDetail, cmsToolToLegacy } from "@/lib/cms-adapters";
-import { computeCategoryStats, type CompareRow } from "@/lib/category-stats";
-import { JsonLd, breadcrumbJsonLd, faqJsonLd, itemListJsonLd } from "@/lib/json-ld";
+import { computeCategoryStats } from "@/lib/category-stats";
+import { JsonLd, breadcrumbJsonLd, faqJsonLd } from "@/lib/json-ld";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { ToolCard } from "@/components/ToolCard";
 
@@ -124,47 +120,13 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
   const detailTools = cmsTools.map(cmsToolToDetail);
   const finalCount = cmsTools.length > 0 ? cmsTools.length : found.count;
 
-  // Everything editorial is derived from the REAL tools in this category —
-  // facts, filters, comparison rows, editor's pick, FAQ — then the CMS
-  // editorial fields (FAQ/quick-picks/overrides) take precedence where set.
+  // Hero facts + filters + FAQ fallback are derived from the REAL tools in
+  // this category. No hardcoded marketing sample content.
   const stats = computeCategoryStats(found.name, cmsTools);
-
-  // Stats overrides: editor-provided facts win; otherwise computed facts.
-  // CMS overrides use {label,value}; the hero facts use {label,val}.
-  const facts =
-    cms && cms.statsOverrides.length > 0
-      ? cms.statsOverrides.map((s) => ({ label: s.label, val: s.value }))
-      : stats.facts;
+  const facts = stats.facts;
 
   // FAQ: prefer hand-written CMS FAQs (best AEO); fall back to generated.
   const faqs = cms && cms.faqs.length > 0 ? cms.faqs : stats.faqs;
-
-  // Comparison: merge editor keyFeature/bestFor overrides onto the computed rows.
-  const overrideBySlug = new Map((cms?.comparisonRows ?? []).map((r) => [r.toolSlug, r]));
-  const compareRows: CompareRow[] = stats.compareRows.map((r) => {
-    const o = overrideBySlug.get(r.slug);
-    return o ? { ...r, keyFeature: o.keyFeature, bestFor: o.bestFor } : r;
-  });
-
-  // Quick picks → resolve each toolSlug to a real tool from this category.
-  const toolBySlug = new Map(cmsTools.map((tl) => [tl.slug, tl]));
-  const quickPicks: QuickPickView[] = (cms?.quickPicks ?? []).map((qp) => {
-    const tl = toolBySlug.get(qp.toolSlug);
-    return {
-      scenario: qp.scenario,
-      reason: qp.reason,
-      tool: tl ? { name: tl.name, slug: tl.slug, domain: tl.domain } : null,
-    };
-  });
-
-  // Related blog posts → resolve slugs to published posts (parallel).
-  const relatedPosts: RelatedPostView[] = (
-    await Promise.all(
-      (cms?.relatedPostSlugs ?? []).map((s) => getBlogPostBySlug(s).catch(() => null)),
-    )
-  )
-    .filter((p): p is NonNullable<typeof p> => !!p && p.status === "published")
-    .map((p) => ({ slug: p.slug, title: p.title, category: p.category, deck: p.deck }));
 
   // "Last reviewed" footer date — distinct freshness signal from updatedAt.
   const reviewedDate = (() => {
@@ -203,19 +165,21 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
   // in every locale now — auto-translation makes the Korean version content-equivalent.
   const hasCustomHero = !!(cms?.heroTitle || cms?.heroSubtitle || cms?.heroEyebrow || cms?.bannerImageUrl);
   const hasIntro = !!cms?.introHtml?.trim();
+  const hasBottom = !!cms?.bottomHtml?.trim();
 
-  // Sanitize once on the server. If DOMPurify throws (rare — happens
-  // when jsdom can't init in a constrained runtime), fall back to a
-  // plain-text strip so the page still renders.
-  let introHtmlSafe = "";
-  if (hasIntro && cms?.introHtml) {
+  // Sanitize both content zones once on the server. If the sanitizer throws
+  // (rare), fall back to a plain-text strip so the page still renders.
+  const safeHtml = (html: string | null | undefined): string => {
+    if (!html) return "";
     try {
-      introHtmlSafe = sanitizeHtml(cms.introHtml);
+      return sanitizeHtml(html);
     } catch (err) {
       console.error("[category page] sanitizeHtml failed", { slug, err });
-      introHtmlSafe = cms.introHtml.replace(/<[^>]+>/g, "");
+      return html.replace(/<[^>]+>/g, "");
     }
-  }
+  };
+  const introHtmlSafe = hasIntro ? safeHtml(cms?.introHtml) : "";
+  const bottomHtmlSafe = hasBottom ? safeHtml(cms?.bottomHtml) : "";
 
   return (
     <main>
@@ -234,14 +198,6 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
                     a: f.a.replace(/\*\*/g, "").replace(/<[^>]+>/g, ""),
                   }))
                 ),
-              ]
-            : []),
-          ...(compareRows.length > 0
-            ? [
-                itemListJsonLd({
-                  name: `Best AI ${found.name} tools`,
-                  items: compareRows.map((r) => ({ name: r.name, url: `/ai-tool/${r.slug}` })),
-                }),
               ]
             : []),
         ]}
@@ -308,33 +264,21 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
         topTool={stats.topTool}
       />
 
-      {/* Decision framework — editor-authored quick picks by scenario */}
-      <QuickPicks categoryName={found.name} picks={quickPicks} />
-
-      <ComparisonTable categoryName={found.name} rows={compareRows} />
-
-      {/* Buying guide — "how to choose" editorial prose */}
-      <CategoryProseSections
-        eyebrow="Buying guide"
-        heading={`How to choose an AI ${found.name.toLowerCase()} tool`}
-        sections={cms?.buyingGuide ?? []}
-        tint="var(--lavender)"
-      />
-
-      {/* What changed this year — trends/freshness */}
-      <CategoryProseSections
-        eyebrow="What changed this year"
-        heading={`AI ${found.name.toLowerCase()} in 2026: what's new`}
-        sections={cms?.trends ?? []}
-        tint="var(--white)"
-      />
+      {/* BOTTOM CONTENT — the main editorial article below the tools grid
+          (Futurepedia-style). Editor-authored rich text; falls back to the
+          generic outro when empty so the page is never bare. */}
+      {hasBottom ? (
+        <section className="px-9 py-14 section-pad-x bg-white" style={{ borderTop: "1px solid var(--border)" }}>
+          <div className="max-w-[820px] mx-auto">
+            <article className="tool-prose" dangerouslySetInnerHTML={{ __html: bottomHtmlSafe }} />
+          </div>
+        </section>
+      ) : (
+        <CategoryOutro categoryName={found.name} />
+      )}
 
       <FaqAccordion items={faqs} categoryName={found.name} />
 
-      {/* Internal-link footer — hand-picked related blog posts */}
-      <CategoryRelatedPosts posts={relatedPosts} />
-
-      <CategoryOutro categoryName={found.name} />
       <RelatedCategories />
 
       {reviewedDate && (

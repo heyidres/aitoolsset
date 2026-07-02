@@ -30,13 +30,10 @@ type CategoryTranslation = {
   heroTitle?: string;
   heroSubtitle?: string;
   introHtml?: string;
+  bottomHtml?: string;
   seoTitle?: string;
   seoDescription?: string;
   faqs?: Array<{ q: string; a: string }>;
-  quickPicks?: Array<{ scenario: string; reason: string }>;
-  buyingGuide?: Array<{ heading: string; body: string }>;
-  trends?: Array<{ heading: string; body: string }>;
-  statsOverrides?: Array<{ label: string; value: string }>;
 };
 
 const TARGET_LANGUAGE_NAME: Record<string, string> = {
@@ -55,10 +52,10 @@ function buildPrompt(targetLocale: string, fields: CategoryTranslation): string 
 RULES:
 - Output ONLY valid JSON matching the EXACT shape of the input (same keys, same array lengths, same object keys inside arrays).
 - Keep brand and product names in English (ChatGPT, OpenAI, API, SEO, etc.).
-- Preserve HTML tags in introHtml/body fields (<p>, <strong>, <a>, <ul>, etc.) — translate the text content, not the markup.
+- Preserve HTML tags in introHtml/bottomHtml (<p>, <strong>, <a>, <ul>, <h2>, etc.) — translate the text content, not the markup.
 - Preserve **markdown bold** markers in FAQ answers — translate the text inside, keep the asterisks.
 - heroEyebrow is an all-caps uppercase pill ("CATEGORY · X") — keep that format in ${target} where possible.
-- For faqs[], quickPicks[], buyingGuide[], trends[], statsOverrides[]: translate every string value but keep the array order and length identical to the input.
+- For faqs[]: translate every q and a but keep the array order and length identical to the input.
 - Natural, fluent ${target} — not literal word-for-word.
 
 INPUT JSON (English):
@@ -184,14 +181,10 @@ export async function translateCategoryUnauthenticated(
     if (row.heroTitle)    input.heroTitle = row.heroTitle;
     if (row.heroSubtitle) input.heroSubtitle = row.heroSubtitle;
     if (row.introHtml)    input.introHtml = row.introHtml;
+    if (row.bottomHtml)   input.bottomHtml = row.bottomHtml;
     if (row.seoTitle)     input.seoTitle = row.seoTitle;
     if (row.seoDescription) input.seoDescription = row.seoDescription;
     if (row.faqs?.length) input.faqs = row.faqs;
-    // quickPicks: translate only scenario+reason; toolSlug is stable + re-merged on read.
-    if (row.quickPicks?.length) input.quickPicks = row.quickPicks.map((q) => ({ scenario: q.scenario, reason: q.reason }));
-    if (row.buyingGuide?.length) input.buyingGuide = row.buyingGuide;
-    if (row.trends?.length) input.trends = row.trends;
-    if (row.statsOverrides?.length) input.statsOverrides = row.statsOverrides;
 
     const fieldsTranslated = Object.keys(input).length;
     if (fieldsTranslated === 0) {
