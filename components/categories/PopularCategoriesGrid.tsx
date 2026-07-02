@@ -4,6 +4,18 @@ import { POPULAR_CATS, type PopularCategory } from "@/lib/categories";
 import { favicon } from "@/lib/tools";
 import { CategoriesSectionHeader } from "./SectionHeader";
 import { localizeCategories, localizePopularCategoryDescs } from "@/lib/i18n/seed-i18n";
+import { getSlotOverrides, type SlotKey } from "@/lib/site-content";
+
+// Each popular card's description is editable from /admin/site-content.
+// Keyed by the stable card slug so the mapping survives localization.
+const CARD_DESC_SLOT: Record<string, SlotKey> = {
+  "writing-and-editing": "categories.cards.writing-and-editing.desc",
+  "image-generation": "categories.cards.image-generation.desc",
+  "code-and-developer": "categories.cards.code-and-developer.desc",
+  "video-and-animation": "categories.cards.video-and-animation.desc",
+  "audio-and-music": "categories.cards.audio-and-music.desc",
+  "productivity-and-automation": "categories.cards.productivity-and-automation.desc",
+};
 
 export async function PopularCategoriesGrid({ catsOverride }: { catsOverride?: PopularCategory[] } = {}) {
   const t = await getTranslations("categories_landing");
@@ -12,6 +24,10 @@ export async function PopularCategoriesGrid({ catsOverride }: { catsOverride?: P
   const raw = catsOverride && catsOverride.length > 0 ? catsOverride : POPULAR_CATS;
   // Apply name + desc overlay so popular cards render fully Korean copy.
   const cats = localizePopularCategoryDescs(localizeCategories(raw, locale), locale);
+  // Admin overrides for the card descriptions (English). When set, they win
+  // over the localized default; when absent, the localized default shows —
+  // so /ko keeps its Korean copy unless an editor explicitly overrides.
+  const descOverrides = await getSlotOverrides(Object.values(CARD_DESC_SLOT));
   return (
     <section id="popular" className="py-[72px] px-9 bg-white section-pad-x">
       <div className="max-w-page mx-auto">
@@ -23,7 +39,10 @@ export async function PopularCategoriesGrid({ catsOverride }: { catsOverride?: P
         />
 
         <div className="grid grid-cols-3 gap-5 popular-grid-3">
-          {cats.map((c) => (
+          {cats.map((c) => {
+            const slotKey = CARD_DESC_SLOT[c.slug];
+            const desc = (slotKey && descOverrides[slotKey]) ?? c.desc;
+            return (
             <Link
               key={c.slug}
               href={`/ai-tools/${c.slug}`}
@@ -44,7 +63,7 @@ export async function PopularCategoriesGrid({ catsOverride }: { catsOverride?: P
                 className="text-[13.5px] leading-[1.55] mb-[18px] relative flex-1"
                 style={{ color: "var(--text-2)", userSelect: "text" }}
               >
-                {c.desc}
+                {desc}
               </p>
 
               <div className="flex items-center gap-[10px] relative">
@@ -94,7 +113,8 @@ export async function PopularCategoriesGrid({ catsOverride }: { catsOverride?: P
                 </span>
               </div>
             </Link>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

@@ -135,6 +135,50 @@ export const SLOT_REGISTRY = {
       "Every post is written after using the tool for at least a week. No syndicated press releases, no AI-generated filler.",
   },
 
+  // ── Categories landing (/ai-tools) — the 6 popular group cards ──
+  "categories.cards.writing-and-editing.desc": {
+    label: "Card description — Writing & Editing",
+    page: "Categories",
+    section: "Popular category cards",
+    kind: "textarea",
+    default: "Generate, edit, and polish text for everything from blog posts to marketing copy to long form fiction.",
+  },
+  "categories.cards.image-generation.desc": {
+    label: "Card description — Image Generation",
+    page: "Categories",
+    section: "Popular category cards",
+    kind: "textarea",
+    default: "Create images, illustrations, and art from text prompts using the latest diffusion models.",
+  },
+  "categories.cards.code-and-developer.desc": {
+    label: "Card description — Code & Developer",
+    page: "Categories",
+    section: "Popular category cards",
+    kind: "textarea",
+    default: "AI pair programmers, autocompletion, code reviewers, and full stack generators.",
+  },
+  "categories.cards.video-and-animation.desc": {
+    label: "Card description — Video & Animation",
+    page: "Categories",
+    section: "Popular category cards",
+    kind: "textarea",
+    default: "Generate, edit, and animate video, from text to video to background removal to lip sync.",
+  },
+  "categories.cards.audio-and-music.desc": {
+    label: "Card description — Audio & Music",
+    page: "Categories",
+    section: "Popular category cards",
+    kind: "textarea",
+    default: "Voice cloning, music generation, transcription, podcast production, and sound design.",
+  },
+  "categories.cards.productivity-and-automation.desc": {
+    label: "Card description — Productivity & Automation",
+    page: "Categories",
+    section: "Popular category cards",
+    kind: "textarea",
+    default: "Calendar AI, meeting summarisers, task automation, and personal workflow assistants.",
+  },
+
   // ── Footer ──
   "footer.tagline": {
     label: "Footer tagline",
@@ -211,6 +255,22 @@ export async function getSlots<K extends SlotKey>(keys: K[]): Promise<Record<K, 
   for (const k of keys) {
     const meta = SLOT_REGISTRY[k] as SlotMeta;
     out[k] = overrides.get(k) ?? meta.default;
+  }
+  return out;
+}
+
+/**
+ * Return ONLY the explicit editor overrides for the given keys (no code
+ * defaults). Use this when a component already has a localized default of
+ * its own and only wants to swap in an admin override when one exists —
+ * e.g. the popular-category cards, whose defaults are localized per locale.
+ */
+export async function getSlotOverrides<K extends SlotKey>(keys: K[]): Promise<Partial<Record<K, string>>> {
+  const overrides = await loadCache();
+  const out: Partial<Record<K, string>> = {};
+  for (const k of keys) {
+    const v = overrides.get(k);
+    if (v !== undefined) out[k] = v;
   }
   return out;
 }
