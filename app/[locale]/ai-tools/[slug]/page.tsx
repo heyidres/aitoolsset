@@ -15,6 +15,8 @@ import { getToolsByCategory, getCategoryBySlug, applyCategoryTranslations, type 
 import { cmsToolToDetail, cmsToolToLegacy } from "@/lib/cms-adapters";
 import { computeCategoryStats } from "@/lib/category-stats";
 import { JsonLd, breadcrumbJsonLd, faqJsonLd } from "@/lib/json-ld";
+import { alternatesFor } from "@/lib/i18n/hreflang";
+import { isLocale } from "@/lib/i18n/config";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { ToolCard } from "@/components/ToolCard";
 
@@ -69,23 +71,28 @@ export function generateStaticParams() {
   return ALL_CATS.map((c) => ({ slug: c.slug }));
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Metadata> {
   try {
-    const { slug } = await params;
+    const { locale, slug } = await params;
     const found = await findCategory(slug);
     if (!found) return { title: "Category not found" };
     const cms = found.cms;
-    const title = cms?.seoTitle ?? `Best AI ${found.name} Tools 2026 — Top Tools Reviewed | AI Tools Set`;
+    const year = new Date().getFullYear();
+    const title = cms?.seoTitle ?? `Best AI ${found.name} Tools ${year} — Top Tools Reviewed | AI Tools Set`;
     const description =
       cms?.seoDescription ??
-      `Discover the best AI ${found.name.toLowerCase()} tools of 2026. Browse hand-picked AI tools. Compare pricing, features, and user reviews.`;
+      `Discover the best AI ${found.name.toLowerCase()} tools of ${year}. Browse hand-picked AI tools. Compare pricing, features, and user reviews.`;
+    const alternates = isLocale(locale)
+      ? alternatesFor({ locale, path: `/ai-tools/${found.slug}` })
+      : undefined;
     return {
       title,
       description,
+      alternates,
       openGraph: {
-        title: cms?.seoTitle ?? `Best AI ${found.name} Tools 2026 | AI Tools Set`,
+        title: cms?.seoTitle ?? `Best AI ${found.name} Tools ${year} | AI Tools Set`,
         description,
-        url: `https://aitoolsset.com/ai-tools/${found.slug}`,
+        url: alternates?.canonical ?? `https://aitoolsset.com/ai-tools/${found.slug}`,
         images: cms?.bannerImageUrl ? [{ url: cms.bannerImageUrl }] : undefined,
       },
     };

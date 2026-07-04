@@ -84,6 +84,22 @@ function pass(req: NextRequest): NextResponse {
 export default auth(async (req) => {
   const { pathname } = req.nextUrl;
 
+  // ── 0. Canonical-host redirect (post-cutover only) ─────────
+  // Once aitoolsset.com points at Vercel, set REDIRECT_TO_APEX=1 so the
+  // *.vercel.app mirror 308s to the canonical domain instead of serving
+  // duplicate content. Env-gated because BEFORE cutover vercel.app IS
+  // the site — redirecting it early would take the whole site down.
+  if (process.env.REDIRECT_TO_APEX === "1") {
+    const host = req.headers.get("host") ?? "";
+    const canonical = (process.env.SITE_URL ?? "https://aitoolsset.com").replace(/\/$/, "");
+    if (host.endsWith(".vercel.app")) {
+      return NextResponse.redirect(
+        new URL(`${req.nextUrl.pathname}${req.nextUrl.search}`, canonical),
+        308
+      );
+    }
+  }
+
   // ── 1. Admin gate ─────────────────────────────────────────
   if (pathname.startsWith("/admin")) {
     // The login page is the ONE admin path reachable without a session.

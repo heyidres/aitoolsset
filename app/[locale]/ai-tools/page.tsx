@@ -17,21 +17,28 @@ import {
 } from "@/lib/categories";
 import { getAllCategories, getCategoryStats, type CategoryStats } from "@/lib/cms";
 import { cmsCategoryToPopular, cmsCategoryToSmall } from "@/lib/cms-adapters";
+import { alternatesFor } from "@/lib/i18n/hreflang";
+import { isLocale } from "@/lib/i18n/config";
 
 export const runtime = "nodejs";
 export const revalidate = 60;
 
-export const metadata: Metadata = {
-  title: "Browse AI Tools by Category — AI Tools Set",
-  description:
-    "Browse 2,400+ AI tools across 48 categories — organised by what they do, who they're for, and how much they cost.",
-  openGraph: {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const alternates = isLocale(locale) ? alternatesFor({ locale, path: "/ai-tools" }) : undefined;
+  return {
     title: "Browse AI Tools by Category — AI Tools Set",
-    description: "48 categories. 2,400+ tools. Find the right AI for any task.",
-    type: "website",
-    url: "https://aitoolsset.com/ai-tools",
-  },
-};
+    description:
+      "Browse 590+ hand-reviewed AI tools across 80+ categories — organised by what they do, who they're for, and how much they cost.",
+    alternates,
+    openGraph: {
+      title: "Browse AI Tools by Category — AI Tools Set",
+      description: "80+ categories. 590+ hand-reviewed tools. Find the right AI for any task.",
+      type: "website",
+      url: alternates?.canonical ?? "https://aitoolsset.com/ai-tools",
+    },
+  };
+}
 
 /**
  * Merge a CMS list onto a hardcoded list by slug.

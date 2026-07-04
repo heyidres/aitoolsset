@@ -11,21 +11,27 @@ import { Link } from "@/lib/i18n/navigation";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { getPublishedBlogPosts, type CmsBlogPost } from "@/lib/cms";
+import { alternatesFor } from "@/lib/i18n/hreflang";
+import { isLocale } from "@/lib/i18n/config";
 
 export const runtime = "nodejs";
 export const revalidate = 60;
 
-export const metadata: Metadata = {
-  title: "AI Tools Set Blog — guides, comparisons, and reviews",
-  description:
-    "Hands-on reviews, head-to-head comparisons, and deep guides covering every major AI tool — written by the team that hand-curates the directory.",
-  alternates: { canonical: "https://aitoolsset.com/blog" },
-  openGraph: {
-    title: "AI Tools Set Blog",
-    description: "Hands-on AI tool reviews, comparisons, and guides.",
-    url: "https://aitoolsset.com/blog",
-  },
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const alternates = isLocale(locale) ? alternatesFor({ locale, path: "/blog" }) : undefined;
+  return {
+    title: "AI Tools Set Blog — guides, comparisons, and reviews",
+    description:
+      "Hands-on reviews, head-to-head comparisons, and deep guides covering every major AI tool — written by the team that hand-curates the directory.",
+    alternates,
+    openGraph: {
+      title: "AI Tools Set Blog",
+      description: "Hands-on AI tool reviews, comparisons, and guides.",
+      url: alternates?.canonical ?? "https://aitoolsset.com/blog",
+    },
+  };
+}
 
 function fmtDate(d: Date | null | string): string {
   if (!d) return "";

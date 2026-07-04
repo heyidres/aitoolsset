@@ -40,7 +40,7 @@ export function SearchInput({ defaultValue = "" }: { defaultValue?: string }) {
         type="search"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Search 2,400+ AI tools…"
+        placeholder="Search 590+ AI tools…"
         autoFocus
         style={{
           width: "100%",

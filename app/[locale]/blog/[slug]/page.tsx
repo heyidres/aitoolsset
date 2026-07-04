@@ -27,6 +27,8 @@ import {
   type CmsAuthor,
 } from "@/lib/cms";
 import { JsonLd, articleJsonLd, breadcrumbJsonLd, faqJsonLd } from "@/lib/json-ld";
+import { alternatesFor } from "@/lib/i18n/hreflang";
+import { isLocale } from "@/lib/i18n/config";
 import LegacyGpt5Article, { LEGACY_METADATA } from "./LegacyGpt5Article";
 import { extractToc, extractToolSlugs } from "@/lib/blog-toc";
 
@@ -36,18 +38,20 @@ export const revalidate = 60;
 
 const LEGACY_SLUG = "gpt-5-complete-guide";
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Metadata> {
   try {
-    const { slug } = await params;
+    const { locale, slug } = await params;
+    const alternates = isLocale(locale) ? alternatesFor({ locale, path: `/blog/${slug}` }) : undefined;
     if (slug === LEGACY_SLUG) {
       return {
         title: LEGACY_METADATA.title,
         description: LEGACY_METADATA.description,
+        alternates,
         openGraph: {
           title: LEGACY_METADATA.title,
           description: LEGACY_METADATA.description,
           type: "article",
-          url: `https://aitoolsset.com/blog/${slug}`,
+          url: alternates?.canonical ?? `https://aitoolsset.com/blog/${slug}`,
         },
       };
     }
@@ -56,11 +60,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return {
       title: post.seoTitle ?? `${post.title} — AI Tools Set Blog`,
       description: post.seoDescription ?? post.deck ?? undefined,
+      alternates,
       openGraph: {
         title: post.title,
         description: post.deck ?? undefined,
         type: "article",
-        url: `https://aitoolsset.com/blog/${slug}`,
+        url: alternates?.canonical ?? `https://aitoolsset.com/blog/${slug}`,
         images: post.coverImageUrl ? [{ url: post.coverImageUrl }] : undefined,
       },
     };

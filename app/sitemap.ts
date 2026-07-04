@@ -10,12 +10,10 @@
 import type { MetadataRoute } from "next";
 import { TOOLS } from "@/lib/tools";
 import { ALL_CATS } from "@/lib/categories";
-import { GLOSSARY, slugifyTerm } from "@/lib/glossary";
 import {
   getPublishedTools,
   getAllCategories,
   getPublishedBlogPosts,
-  getAllGlossaryTerms,
   getPublishedSitePages,
 } from "@/lib/cms";
 import { i18n } from "@/lib/i18n/config";
@@ -46,6 +44,8 @@ function fullyTranslatedAlternates(path: string) {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Static top-level routes — UI chrome is translated in every locale,
   // so we emit one sitemap entry per locale-URL plus xhtml:link alternates.
+  // NOTE: /search is deliberately absent — search results are noindexed
+  // and disallowed in robots.txt (index-bloat surface, mirrors Futurepedia).
   const now = new Date();
   const staticPaths: Array<{ path: string; freq: MetadataRoute.Sitemap[number]["changeFrequency"]; priority: number }> = [
     { path: "/",            freq: "daily",   priority: 1.0 },
@@ -56,17 +56,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/news",        freq: "hourly",  priority: 0.7 },
     { path: "/submit",      freq: "monthly", priority: 0.5 },
     { path: "/leaderboard", freq: "weekly",  priority: 0.6 },
-    { path: "/search",      freq: "weekly",  priority: 0.4 },
   ];
   const staticRoutes: MetadataRoute.Sitemap = [];
   for (const sp of staticPaths) {
     const alternates = fullyTranslatedAlternates(sp.path);
     // Emit one sitemap entry PER locale so Google sees the Korean URL too;
     // each entry references the full language matrix.
+    // No lastModified on static routes: stamping now() every generation
+    // is a false freshness signal that teaches Google to distrust our
+    // lastmod values. changefreq/priority carry the hint instead.
     for (const locale of i18n.locales) {
       staticRoutes.push({
         url: localeUrl(locale, sp.path),
-        lastModified: now,
         changeFrequency: sp.freq,
         priority: sp.priority,
         alternates,
@@ -139,31 +140,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   });
 
-  // Glossary — DB + hardcoded
-  const cmsTerms = await getAllGlossaryTerms().catch(() => []);
-  const termSlugs = new Set<string>();
-  const glossaryUrls: MetadataRoute.Sitemap = [];
-  for (const t of cmsTerms) {
-    if (termSlugs.has(t.slug)) continue;
-    termSlugs.add(t.slug);
-    glossaryUrls.push({
-      url: `${BASE}/glossary#${t.slug}`,
-      lastModified: t.updatedAt,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    });
-  }
-  for (const t of GLOSSARY) {
-    const slug = slugifyTerm(t.term);
-    if (termSlugs.has(slug)) continue;
-    termSlugs.add(slug);
-    glossaryUrls.push({
-      url: `${BASE}/glossary#${slug}`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.4,
-    });
-  }
+  // Glossary term URLs are NOT sitemapped: they're #fragments on one
+  // page, and Google ignores fragments in sitemaps — the entries were
+  // pure noise. When per-term routes (/glossary/[slug]) ship, list
+  // them here with real lastmod dates. The hub page itself is in
+  // staticPaths above.
 
   // Editor-managed pages from the Pages CMS
   const cmsPages = await getPublishedSitePages().catch(() => []);
@@ -174,5 +155,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...toolUrls, ...categoryUrls, ...blogUrls, ...glossaryUrls, ...pageUrls];
+  return [...staticRoutes, ...toolUrls, ...categoryUrls, ...blogUrls, ...pageUrls];
 }

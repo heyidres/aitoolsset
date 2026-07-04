@@ -4,23 +4,29 @@ import { Footer } from "@/components/Footer";
 import { DealsClient } from "@/components/deals/DealsClient";
 import { getActiveDeals } from "@/lib/cms";
 import { cmsDealToLegacy } from "@/lib/cms-adapters";
+import { alternatesFor } from "@/lib/i18n/hreflang";
+import { isLocale } from "@/lib/i18n/config";
 
 export const runtime = "nodejs";
 // Cache for 60 seconds so editor publishes show within the minute
 // without re-hitting the DB on every page view.
 export const revalidate = 60;
 
-export const metadata: Metadata = {
-  title: "AI Deals & Discounts — Save on the Best AI Tools | AI Tools Set",
-  description:
-    "Verified active deals, coupon codes, and Black Friday discounts on the top AI tools — ChatGPT, Midjourney, Cursor, ElevenLabs, Runway, and more. Updated daily.",
-  alternates: { canonical: "https://aitoolsset.com/deals" },
-  openGraph: {
-    title: "AI Deals & Discounts — AI Tools Set",
-    description: "34 verified live deals. Hand-checked daily. No expired junk.",
-    url: "https://aitoolsset.com/deals",
-  },
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const alternates = isLocale(locale) ? alternatesFor({ locale, path: "/deals" }) : undefined;
+  return {
+    title: "AI Deals & Discounts — Save on the Best AI Tools | AI Tools Set",
+    description:
+      "Verified active deals, coupon codes, and Black Friday discounts on the top AI tools — ChatGPT, Midjourney, Cursor, ElevenLabs, Runway, and more. Updated daily.",
+    alternates,
+    openGraph: {
+      title: "AI Deals & Discounts — AI Tools Set",
+      description: "Verified live deals. Hand-checked daily. No expired junk.",
+      url: alternates?.canonical ?? "https://aitoolsset.com/deals",
+    },
+  };
+}
 
 export default async function DealsPage() {
   // CMS deals win. When the DB is empty (clean install) the client

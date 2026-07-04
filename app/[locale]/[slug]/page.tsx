@@ -20,23 +20,27 @@ import { notFound } from "next/navigation";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { getSitePageBySlug, RESERVED_PAGE_SLUGS, type CmsSitePage } from "@/lib/cms";
+import { alternatesFor } from "@/lib/i18n/hreflang";
+import { isLocale } from "@/lib/i18n/config";
 import { sanitizeHtml } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
+export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Metadata> {
+  const { locale, slug } = await params;
   if (RESERVED_PAGE_SLUGS.has(slug)) return { title: "Not found" };
   const page = await getSitePageBySlug(slug).catch(() => null);
   if (!page || page.status !== "published") return { title: "Not found" };
+  const alternates = isLocale(locale) ? alternatesFor({ locale, path: `/${slug}` }) : undefined;
   return {
     title: page.seoTitle ?? `${page.title} — AI Tools Set`,
     description: page.seoDescription ?? page.deck ?? undefined,
+    alternates,
     openGraph: {
       title: page.title,
       description: page.deck ?? undefined,
-      url: `https://aitoolsset.com/${slug}`,
+      url: alternates?.canonical ?? `https://aitoolsset.com/${slug}`,
       images: page.coverImageUrl ? [{ url: page.coverImageUrl }] : undefined,
     },
   };

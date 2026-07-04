@@ -109,7 +109,7 @@ export const PANELS: Panel[] = [
       {
         title: "Browse Tools",
         items: [
-          { title: "All AI Tools", desc: "Browse 2,400+ curated tools", href: "/", icon: Icon.grid },
+          { title: "All AI Tools", desc: "Browse 590+ hand-reviewed tools", href: "/", icon: Icon.grid },
           { title: "Top Rated", desc: "Highest-reviewed by users", href: "/top-rated", icon: Icon.star },
           { title: "New Arrivals", desc: "Just added this week", href: "/new", icon: Icon.up, badge: "new" },
           { title: "Model Leaderboard", desc: "Ranked by intelligence & cost", href: "/leaderboard", icon: Icon.bars },
@@ -133,7 +133,7 @@ export const PANELS: Panel[] = [
           { label: "Freemium", href: "/ai-tools", count: "1,184" },
           { label: "Paid", href: "/ai-tools", count: "628" },
           { label: "On sale 🔥", href: "/deals", count: "34" },
-          { label: "All 48 categories →", href: "/ai-tools" },
+          { label: "All 80+ categories →", href: "/ai-tools" },
         ],
       },
     ],
@@ -266,7 +266,7 @@ const MEGAMENU_LABEL_KEYS: Record<string, string> = {
   "AI Glossary":          "glossary_item",
   "Comparisons":          "comparisons",
   // Item descriptions
-  "Browse 2,400+ curated tools":      "all_ai_tools_desc",
+  "Browse 590+ hand-reviewed tools":  "all_ai_tools_desc",
   "Highest-reviewed by users":        "top_rated_desc",
   "Just added this week":             "new_arrivals_desc",
   "Ranked by intelligence & cost":    "model_leaderboard_desc",
@@ -281,7 +281,7 @@ const MEGAMENU_LABEL_KEYS: Record<string, string> = {
   "Freemium":             "freemium",
   "Paid":                 "paid",
   "On sale 🔥":           "on_sale",
-  "All 48 categories →":  "all_categories_arrow",
+  "All 80+ categories →":  "all_categories_arrow",
   "Submit a Tool":        "submit_a_tool",
   "Methodology":          "methodology",
   "Browse Categories":    "browse_categories",

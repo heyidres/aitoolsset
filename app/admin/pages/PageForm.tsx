@@ -38,7 +38,7 @@ const TEMPLATES: Array<{ name: string; title: string; slug: string; body: string
     name: "About",
     title: "About AI Tools Set",
     slug: "about",
-    body: "<h2>Who we are</h2><p>AI Tools Set is a curated directory of the best AI tools across every category. We test every tool ourselves before listing it.</p><h2>What we do</h2><p>We maintain a hand-checked catalogue of 2,400+ AI tools updated daily.</p>",
+    body: "<h2>Who we are</h2><p>AI Tools Set is a curated directory of the best AI tools across every category. We test every tool ourselves before listing it.</p><h2>What we do</h2><p>We maintain a hand-checked catalogue of 590+ AI tools updated daily.</p>",
   },
   {
     name: "Privacy Policy",

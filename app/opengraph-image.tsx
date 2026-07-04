@@ -87,7 +87,7 @@ export default async function HomeOgImage() {
               display: "flex",
             }}
           >
-            2,400+ tools across 48 categories — curated, ranked, updated daily.
+            590+ hand-reviewed tools across 80+ categories — curated, ranked, updated daily.
           </div>
         </div>
 

@@ -14,7 +14,8 @@ import { TOOLS, WRITER_TOOLS, DEV_TOOLS, WRITER_USECASES, DEV_USECASES } from "@
 import { getPublishedTools, getEnabledHomeSections, type CmsTool } from "@/lib/cms";
 import { mergeToolsBySlug } from "@/lib/cms-adapters";
 import { getLocale, getTranslations } from "next-intl/server";
-import { i18n } from "@/lib/i18n/config";
+import { i18n, isLocale } from "@/lib/i18n/config";
+import { alternatesFor } from "@/lib/i18n/hreflang";
 import {
   localizeTools,
   localizeToolList,
@@ -25,6 +26,16 @@ import {
 export const runtime = "nodejs";
 // 60-second ISR — admin publishes are also instant via revalidatePath().
 export const revalidate = 60;
+
+// Homepage canonical + hreflang. Title/description inherit from the
+// root layout; this only pins the URL identity (en at root, ko at /ko)
+// so the vercel.app mirror and locale variants consolidate cleanly.
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return {
+    alternates: alternatesFor({ locale: isLocale(locale) ? locale : i18n.defaultLocale, path: "/" }),
+  };
+}
 
 export default async function HomePage() {
   // Pull every published tool + every enabled homepage section in parallel.

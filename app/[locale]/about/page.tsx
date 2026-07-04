@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 const VALUES = [
-  { emoji: "🎯", title: "Curation over volume", desc: "A great shortlist beats an endless list. We'd rather feature 2,400 tools we trust than 50,000 we've never tested." },
+  { emoji: "🎯", title: "Curation over volume", desc: "A great shortlist beats an endless list. We'd rather feature 590 tools we trust than 50,000 we've never tested." },
   { emoji: "🤝", title: "Trust above all", desc: "No fake reviews, no pay-to-win rankings. Our recommendations are independent and honestly earned." },
   { emoji: "⚡", title: "Useful, not flashy", desc: "Clean design and fast pages. We respect your time and get you to the right tool with minimal friction." },
   { emoji: "🆓", title: "Free for everyone", desc: "Browsing the directory is — and always will be — completely free. We charge tool makers, not users." },
@@ -52,7 +52,7 @@ export default function AboutPage() {
       <div className="section-light">
         <div className="sec-inner" style={{ padding: "48px 36px" }}>
           <div className="stat-row">
-            <div className="stat-box"><div className="stat-num">2,400+</div><div className="stat-label">Tools curated</div></div>
+            <div className="stat-box"><div className="stat-num">590+</div><div className="stat-label">Tools curated</div></div>
             <div className="stat-box"><div className="stat-num">51k</div><div className="stat-label">Monthly visitors</div></div>
             <div className="stat-box"><div className="stat-num">48</div><div className="stat-label">Categories</div></div>
             <div className="stat-box"><div className="stat-num">12k+</div><div className="stat-label">User reviews</div></div>

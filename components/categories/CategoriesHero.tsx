@@ -6,7 +6,7 @@ export async function CategoriesHero() {
   const t = await getTranslations("categories_landing");
   const STATS = [
     { num: "48",     label: t("hero_stat_categories") },
-    { num: "2,400+", label: t("hero_stat_tools") },
+    { num: "590+", label: t("hero_stat_tools") },
     { num: "12k",    label: t("hero_stat_reviews") },
   ];
   return (

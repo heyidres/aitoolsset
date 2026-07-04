@@ -49,8 +49,10 @@ export const metadata: Metadata = {
     default: "AI Tools Set — Find the Best AI Tools",
     template: "%s — AI Tools Set",
   },
+  // Keep these counts honest — AI engines cross-check them against the
+  // live directory before citing us. Round down, never inflate.
   description:
-    "Discover, compare, and save the best AI tools — curated for writers, coders, designers, and teams. 2,400+ tools across 48 categories, updated daily.",
+    "Discover, compare, and save the best AI tools — curated for writers, coders, designers, and teams. 590+ hand-reviewed tools across 80+ categories, updated daily.",
   applicationName: "AI Tools Set",
   authors: [{ name: "AI Tools Set" }],
   keywords: ["AI tools", "AI directory", "ChatGPT alternatives", "best AI tools", "AI tool comparison"],
@@ -64,7 +66,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "AI Tools Set — Find the Best AI Tools",
-    description: "Hand-curated AI tools directory. 2,400+ tools, 48 categories.",
+    description: "Hand-curated AI tools directory. 590+ reviewed tools, 80+ categories.",
   },
 };
 

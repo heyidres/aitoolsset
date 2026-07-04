@@ -4,7 +4,7 @@ export async function SubmitHero() {
   const t = await getTranslations("submit");
   const STATS = [
     { num: "50k+",   label: t("stat_visitors") },
-    { num: "2,400+", label: t("stat_tools") },
+    { num: "590+", label: t("stat_tools") },
     { num: "12k+",   label: t("stat_reviews") },
     { num: "48h",    label: t("stat_review_time") },
   ];

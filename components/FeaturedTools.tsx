@@ -73,7 +73,7 @@ export function FeaturedTools({ toolsOverride }: { toolsOverride?: Tool[] } = {}
                 className="text-[13.5px] font-semibold transition-colors flex items-center gap-1"
                 style={{ color: "var(--blue)" }}
               >
-                {t("featured_browse_all", { count: "2,400" })} →
+                {t("featured_browse_all", { count: "590" })} →
               </Link>
             </div>
             <div className="grid grid-cols-3 gap-4 tool-grid-3">

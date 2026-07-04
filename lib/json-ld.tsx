@@ -28,13 +28,37 @@ export function toolJsonLd(args: {
   slug: string;
   description: string;
   category: string;
-  pricing: "free" | "freemium" | "paid";
+  /** Full pricing enum from the DB — all six values are valid input. */
+  pricing: "free" | "freemium" | "paid" | "credit" | "trial" | "enterprise";
   url: string;
   imageUrl?: string | null;
+  /** e.g. "$19/mo", "Free", "Custom" — parsed for a numeric offer price. */
+  startingPrice?: string | null;
+  /** Only pass REAL review aggregates — synthetic ratings violate Google policy. */
   rating?: { value: number; count: number };
 }): Json {
-  const priceDisplay =
-    args.pricing === "free" ? "Free" : args.pricing === "freemium" ? "Freemium" : "Paid";
+  const priceDisplay: Record<typeof args.pricing, string> = {
+    free: "Free",
+    freemium: "Freemium",
+    paid: "Paid",
+    credit: "Credit-based",
+    trial: "Free trial",
+    enterprise: "Custom pricing",
+  };
+
+  // An Offer needs a numeric price to be valid for rich results.
+  // free/freemium/trial → 0 (a free entry point exists). Otherwise try
+  // to parse a leading number from startingPrice ("$19.99/mo" → 19.99).
+  // When neither works we omit `offers` entirely — an Offer without a
+  // price is invalid schema and worse than none.
+  let price: string | undefined;
+  if (args.pricing === "free" || args.pricing === "freemium" || args.pricing === "trial") {
+    price = "0";
+  } else if (args.startingPrice) {
+    const m = args.startingPrice.replace(/,/g, "").match(/\$?\s*(\d+(?:\.\d+)?)/);
+    if (m) price = m[1];
+  }
+
   return {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -45,13 +69,16 @@ export function toolJsonLd(args: {
     url: `${SITE}/ai-tool/${args.slug}`,
     image: args.imageUrl ?? undefined,
     sameAs: args.url,
-    offers: {
-      "@type": "Offer",
-      price: args.pricing === "paid" ? undefined : "0",
-      priceCurrency: "USD",
-      availability: "https://schema.org/InStock",
-      description: priceDisplay,
-    },
+    offers:
+      price !== undefined
+        ? {
+            "@type": "Offer",
+            price,
+            priceCurrency: "USD",
+            availability: "https://schema.org/InStock",
+            description: priceDisplay[args.pricing],
+          }
+        : undefined,
     aggregateRating:
       args.rating && args.rating.count > 0
         ? {
@@ -168,13 +195,21 @@ export function itemListJsonLd(opts: {
 
 /** Org / website root JSON-LD for the homepage. */
 export function organizationJsonLd(): Json {
+  // Social/profile URLs that corroborate the brand entity for Google's
+  // Knowledge Graph and AI engines. Comma-separated env so profiles can
+  // be added without a deploy-time code change:
+  //   ORG_SAMEAS="https://x.com/aitoolsset,https://linkedin.com/company/aitoolsset"
+  const sameAs = (process.env.ORG_SAMEAS ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.startsWith("http"));
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "AI Tools Set",
     url: SITE,
     logo: `${SITE}/opengraph-image`,
-    sameAs: [],
+    ...(sameAs.length > 0 ? { sameAs } : {}),
   };
 }
 

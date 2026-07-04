@@ -45,7 +45,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
       ? `AI tools matching "${query}" — curated from the AI Tools Set directory.`
       : tier
       ? `Browse ${tier} AI tools — every tool tagged ${tier} from our directory.`
-      : "Search 2,400+ AI tools across 48 categories.",
+      : "Search 590+ AI tools across 80+ categories.",
     robots: { index: false, follow: true },
   };
 }
@@ -171,7 +171,7 @@ function NoResults({ query }: { query: string }) {
         Try a broader keyword or browse by category.
       </p>
       <Link href="/ai-tools" className="font-display text-sm font-bold px-5 py-3 rounded-pill inline-block" style={{ background: "var(--blue)", color: "#fff" }}>
-        Browse all 48 categories →
+        Browse all 80+ categories →
       </Link>
     </div>
   );

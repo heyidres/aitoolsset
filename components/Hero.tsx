@@ -47,7 +47,7 @@ export async function Hero() {
   ];
 
   const STATS = [
-    { num: "2,400+", label: t("stat_tools") },
+    { num: "590+", label: t("stat_tools") },
     { num: "48",     label: t("stat_categories") },
     { num: "50k+",   label: t("stat_users") },
     { num: "12k",    label: t("stat_reviews") },

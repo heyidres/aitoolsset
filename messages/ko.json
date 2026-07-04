@@ -10,7 +10,7 @@
     "col_popular_guides": "인기 가이드",
     "col_by_role": "직군별",
     "all_ai_tools": "모든 AI 도구",
-    "all_ai_tools_desc": "엄선된 2,400개 이상의 도구 둘러보기",
+    "all_ai_tools_desc": "엄선된 590개 이상의 도구 둘러보기",
     "top_rated": "최고 평점",
     "top_rated_desc": "사용자가 가장 높이 평가한 도구",
     "new_arrivals": "신규 등록",
@@ -200,7 +200,7 @@
     "hero_headline_lead": "어떤 작업에든 맞는",
     "hero_headline_accent": "모든 작업",
     "hero_headline_tail": "AI 도구를 찾으세요",
-    "hero_sub": "48개 카테고리에 걸친 2,400개 이상의 AI 도구 — 용도·대상·가격으로 정리되어 있습니다.",
+    "hero_sub": "80개 이상의 카테고리에 걸친 590개 이상의 AI 도구 — 용도·대상·가격으로 정리되어 있습니다.",
     "hero_search_placeholder": "카테고리 검색: 글쓰기, 이미지, 비디오…",
     "hero_stat_categories": "카테고리",
     "hero_stat_tools": "등록 도구",
@@ -538,7 +538,7 @@
     "switch_language": "언어"
   },
   "home": {
-    "hero_badge": "2,400개 이상의 도구 · 매일 업데이트",
+    "hero_badge": "590개 이상의 도구 · 매일 업데이트",
     "hero_eyebrow": "당신에게 필요한",
     "hero_headline_lead": "유일한 AI",
     "hero_headline_accent": "도구 디렉토리.",

@@ -17,6 +17,8 @@ import { getToolBySlug, getReviewsForTool, getCategoryOptions, getRelatedTools, 
 import { cmsToolToLegacy, cmsReviewToLegacy, type LegacyReview } from "@/lib/cms-adapters";
 import { auth } from "@/lib/auth";
 import { JsonLd, toolJsonLd, breadcrumbJsonLd } from "@/lib/json-ld";
+import { alternatesFor } from "@/lib/i18n/hreflang";
+import { isLocale } from "@/lib/i18n/config";
 
 // Dynamic so DB-managed tools resolve at request time —
 // `generateStaticParams` only lists hardcoded seed tools, but
@@ -37,6 +39,9 @@ type FindToolResult =
       /** CMS-supplied SEO overrides. Blank → auto-generate from name + tagline. */
       seoTitle?: string | null;
       seoDescription?: string | null;
+      /** Raw DB pricing enum + starting price — feed the JSON-LD Offer. */
+      pricingRaw?: "free" | "freemium" | "paid" | "credit" | "trial" | "enterprise";
+      startingPrice?: string | null;
       /**
        * Real same-category tools — drives the Top Alternatives sidebar and
        * the Related Tools slider. Sorted by saveCount desc, deduped, self
@@ -313,6 +318,8 @@ async function findTool(slug: string, locale: string = "en"): Promise<FindToolRe
     reviewsOverride: cmsReviews.map(cmsReviewToLegacy),
     seoTitle: cms.seoTitle,
     seoDescription: cms.seoDescription,
+    pricingRaw: cms.pricing,
+    startingPrice: cms.startingPrice,
     relatedTools,
   };
 }
@@ -327,18 +334,23 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     const found = await findTool(slug, locale);
     if (!found) return { title: "Tool not found" };
     const { tool, seoTitle, seoDescription } = found;
-    const defaultTitle = `${tool.name} Reviews: Detail, Pricing & Features`;
+    const year = new Date().getFullYear();
+    const defaultTitle = `${tool.name} Review ${year}: Features, Pricing & Alternatives`;
     const title = seoTitle?.trim() || defaultTitle;
     const description = seoDescription?.trim() || tool.desc;
+    const alternates = isLocale(locale)
+      ? alternatesFor({ locale, path: `/ai-tool/${tool.id}` })
+      : undefined;
     return {
       // `absolute` bypasses the root layout's "%s — AI Tools Set" template
       // so the title renders exactly as written (matches editorial intent).
       title: { absolute: title },
       description,
+      alternates,
       openGraph: {
         title,
         description,
-        url: `https://aitoolsset.com/ai-tool/${tool.id}`,
+        url: alternates?.canonical ?? `https://aitoolsset.com/ai-tool/${tool.id}`,
       },
     };
   } catch (err) {
@@ -358,8 +370,17 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ loc
   const currentUser = session?.user
     ? { id: session.user.id, name: session.user.name ?? null, image: session.user.image ?? null }
     : null;
-  const ratingValue = found.tool.deal ? 4.8 : 4.7; // mirrors the visible header rating
-  const ratingCount = Math.max(found.tool.saves, 1);
+  // aggregateRating from REAL reviews only. Synthetic ratings in schema
+  // are a Google structured-data policy violation and poison AI-engine
+  // trust; when a tool has no reviews yet we emit no rating at all.
+  const realReviews = reviewsOverride ?? [];
+  const realRating =
+    realReviews.length > 0
+      ? {
+          value: realReviews.reduce((s, r) => s + r.rating, 0) / realReviews.length,
+          count: realReviews.length,
+        }
+      : undefined;
   return (
     <main>
       <JsonLd
@@ -369,9 +390,10 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ loc
             slug: found.tool.id,
             description: descriptionHtml ? descriptionHtml.replace(/<[^>]+>/g, "").slice(0, 300) : found.tool.desc,
             category: found.tool.cat,
-            pricing: found.tool.free ? "freemium" : "paid",
+            pricing: found.pricingRaw ?? (found.tool.free ? "freemium" : "paid"),
             url: `https://${found.tool.domain}`,
-            rating: { value: ratingValue, count: ratingCount },
+            startingPrice: found.startingPrice,
+            rating: realRating,
           }),
           breadcrumbJsonLd([
             { name: "Home", url: "/" },
@@ -402,7 +424,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ loc
       </div>
 
       <ToolHeader tool={tool} detail={detail} overrides={headerOverrides} />
-      <ToolTabs reviewCount={2341} />
+      <ToolTabs reviewCount={realReviews.length} />
 
       <div className="max-w-page mx-auto px-9 pt-8 grid grid-cols-[minmax(0,1fr)_300px] gap-8 items-start tool-page-grid section-pad-x">
         <div className="flex flex-col min-w-0 overflow-hidden">
