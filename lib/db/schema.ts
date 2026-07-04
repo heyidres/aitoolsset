@@ -61,6 +61,13 @@ export const users = pgTable("user", {
   emailVerified: timestamp("email_verified", { mode: "date" }),
   image: text("image"),
   role: roleEnum("role").notNull().default("user"),
+  // ── TOTP two-factor (admin/editor) ──────────────────────────
+  // base32 secret for the authenticator app. Null until enrolled.
+  totpSecret: text("totp_secret"),
+  // Flipped true only after the first 6-digit code is confirmed.
+  totpEnabled: boolean("totp_enabled").notNull().default(false),
+  // One-time recovery codes, stored as sha256 hashes. Consumed on use.
+  totpBackupCodes: jsonb("totp_backup_codes").$type<string[]>().notNull().default([]),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

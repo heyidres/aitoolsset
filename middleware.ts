@@ -16,6 +16,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 import { auth } from "@/lib/auth";
+import { verifyMfaToken, MFA_COOKIE } from "@/lib/admin-mfa";
 import { routing } from "@/lib/i18n/routing";
 import { i18n, isLocale } from "@/lib/i18n/config";
 
@@ -71,21 +72,49 @@ function geoFirstLocaleRedirect(req: NextRequest): NextResponse | null {
   return res;
 }
 
-export default auth((req) => {
+// Pass through, forwarding the pathname to server components so the
+// admin layout can render /admin/login and /admin/2fa "bare" (no CMS
+// shell / no session redirect) while gating everything else.
+function pass(req: NextRequest): NextResponse {
+  const h = new Headers(req.headers);
+  h.set("x-pathname", req.nextUrl.pathname);
+  return NextResponse.next({ request: { headers: h } });
+}
+
+export default auth(async (req) => {
   const { pathname } = req.nextUrl;
 
   // ── 1. Admin gate ─────────────────────────────────────────
   if (pathname.startsWith("/admin")) {
+    // The login page is the ONE admin path reachable without a session.
+    if (pathname === "/admin/login" || pathname.startsWith("/admin/login/")) {
+      return pass(req as unknown as NextRequest);
+    }
+
     const session = req.auth;
     if (!session?.user) {
-      const url = new URL("/api/auth/signin", req.url);
+      const url = new URL("/admin/login", req.url);
       url.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(url);
     }
     if (session.user.role !== "admin" && session.user.role !== "editor") {
       return NextResponse.redirect(new URL("/", req.url));
     }
-    return NextResponse.next();
+
+    // Signed in with a CMS role. The /admin/2fa flow is where you OBTAIN
+    // the MFA proof, so it must be reachable without it.
+    if (pathname === "/admin/2fa" || pathname.startsWith("/admin/2fa/")) {
+      return pass(req as unknown as NextRequest);
+    }
+
+    // Enforce the short-lived TOTP proof (8h). Missing/expired → re-verify.
+    const mfaOk = await verifyMfaToken(req.cookies.get(MFA_COOKIE)?.value, session.user.id);
+    if (!mfaOk) {
+      const url = new URL("/admin/2fa", req.url);
+      url.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(url);
+    }
+    return pass(req as unknown as NextRequest);
   }
 
   // ── 2. Public routes — i18n negotiation ───────────────────

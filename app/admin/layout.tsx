@@ -13,6 +13,7 @@
  */
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -21,6 +22,12 @@ import { getToolsCount } from "@/lib/cms";
 import { Sidebar, type SidebarCounts } from "./_components/Sidebar";
 import { Topbar } from "./_components/Topbar";
 import "./admin.css";
+
+// These render standalone (no CMS shell, no session redirect): the
+// login page is pre-auth, and the 2fa page runs after sign-in but
+// before the MFA proof exists. Middleware sets x-pathname so we can
+// tell without a client-side pathname hook.
+const BARE_PATHS = new Set(["/admin/login", "/admin/2fa"]);
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,9 +58,15 @@ async function loadCounts(): Promise<SidebarCounts> {
 }
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const pathname = (await headers()).get("x-pathname") ?? "";
+  // Login / 2fa render bare — no shell, no gate. They own their own auth.
+  if (BARE_PATHS.has(pathname)) {
+    return <div className="admin-root">{children}</div>;
+  }
+
   const session = await auth();
   if (!session?.user) {
-    redirect("/api/auth/signin?callbackUrl=/admin");
+    redirect("/admin/login");
   }
 
   const counts = await loadCounts();
