@@ -48,18 +48,20 @@ export async function CategoryHero({ categoryName, count, facts: rawFacts, avgRa
 
         <div className="grid grid-cols-[1fr_360px] gap-[60px] items-start cat-hero-grid">
           <div>
+            {/* Eyebrow + accent match the homepage hero (blue on dark),
+                so every dark hero across the site reads as one family. */}
             <div
               className="inline-flex items-center gap-2 rounded-pill px-[14px] py-[5px] font-display text-[11.5px] font-bold uppercase tracking-[.07em] mb-4"
               style={{
-                background: "rgba(236,72,153,.12)",
-                border: "1px solid rgba(236,72,153,.3)",
-                color: "#f9a8d4",
+                background: "rgba(0,82,255,.14)",
+                border: "1px solid rgba(87,139,250,.35)",
+                color: "var(--blue-h)",
               }}
             >
               📈 {t("eyebrow", { name: categoryName })}
             </div>
             <h1
-              className="font-display font-black mb-4"
+              className="font-display font-black mb-4 text-white"
               style={{
                 fontSize: "clamp(36px, 4.5vw, 56px)",
                 letterSpacing: "-2px",
@@ -67,15 +69,7 @@ export async function CategoryHero({ categoryName, count, facts: rawFacts, avgRa
               }}
             >
               {t("headline_lead")}{" "}
-              <span
-                style={{
-                  background: "linear-gradient(120deg, #f472b6, #a78bfa)",
-                  WebkitBackgroundClip: "text",
-                  backgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  color: "transparent",
-                }}
-              >
+              <span style={{ color: "var(--blue-h)" }}>
                 {t("headline_accent", { nameLower: lower })}
               </span>
               <br />
@@ -115,7 +109,7 @@ export async function CategoryHero({ categoryName, count, facts: rawFacts, avgRa
               className="font-display text-[11.5px] font-bold uppercase tracking-[.08em] mb-[14px] flex items-center gap-2"
               style={{ color: "rgba(255,255,255,.5)" }}
             >
-              <span className="w-[5px] h-[5px] rounded-full" style={{ background: "#f472b6" }} />
+              <span className="w-[5px] h-[5px] rounded-full" style={{ background: "var(--blue-h)" }} />
               {t("at_a_glance", { name: categoryName })}
             </div>
             {facts.map((f, i) => (

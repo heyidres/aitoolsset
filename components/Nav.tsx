@@ -12,8 +12,9 @@ export function Nav() {
   const t = useTranslations("nav");
   // Direct links — re-derived inside the component so locale switching
   // re-translates without a hard refresh.
+  // Leaderboard link removed until the page gets its quality pass —
+  // the /leaderboard route itself stays live.
   const DIRECT_LINKS = [
-    { labelKey: "leaderboard", href: "/leaderboard" },
     { labelKey: "submit_a_tool", href: "/submit" },
   ];
   // Mega-menu top-level labels translated via key matching on PANELS[].key

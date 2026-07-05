@@ -133,6 +133,8 @@ export function cmsToolToDetail(t: CmsTool): import("./category-detail").DetailT
     reviews: t.reviewCount,
     verified: t.verified,
     tags: t.tags.slice(0, 4),
+    slug: t.slug,
+    saves: t.saveCount,
   };
 }
 

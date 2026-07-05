@@ -112,7 +112,6 @@ export const PANELS: Panel[] = [
           { title: "All AI Tools", desc: "Browse 590+ hand-reviewed tools", href: "/", icon: Icon.grid },
           { title: "Top Rated", desc: "Highest-reviewed by users", href: "/top-rated", icon: Icon.star },
           { title: "New Arrivals", desc: "Just added this week", href: "/new", icon: Icon.up, badge: "new" },
-          { title: "Model Leaderboard", desc: "Ranked by intelligence & cost", href: "/leaderboard", icon: Icon.bars },
         ],
       },
       {
@@ -151,30 +150,30 @@ export const PANELS: Panel[] = [
     key: "discover",
     label: "Discover",
     cols: [
+      // News / Images / Leaderboard links removed until those pages get
+      // their quality pass — routes stay live, just not promoted here.
       {
         title: "Stay Updated",
         items: [
-          { title: "AI News Feed", desc: "Official updates, Twitter-style", href: "/news", icon: Icon.news, badge: "hot" },
-          { title: "Images & Prompts", desc: "Copy prompts from every model", href: "/images", icon: Icon.image },
           { title: "Deals & Discounts", desc: "Verified coupon codes", href: "/deals", icon: Icon.tag, badge: "hot" },
+          { title: "Blog", desc: "Guides, reviews & deep dives", href: "/blog", icon: Icon.book },
+          { title: "AI Glossary", desc: "80+ AI terms explained simply", href: "/glossary", icon: Icon.bookmark },
         ],
       },
       {
         title: "Trending Now",
         links: [
-          { label: "GPT-5 launch", href: "/news" },
-          { label: "Claude 4.5 Opus", href: "/news" },
-          { label: "Sora 2.0 video", href: "/news" },
-          { label: "Cyberpunk prompts", href: "/images" },
-          { label: "Black Friday deals 🔥", href: "/deals" },
+          { label: "GPT-5 complete guide", href: "/blog/gpt-5-complete-guide" },
+          { label: "Perplexity vs ChatGPT", href: "/blog/perplexity-vs-chatgpt" },
+          { label: "Best AI image tools", href: "/ai-tools/image-generators" },
+          { label: "AI deals this week 🔥", href: "/deals" },
         ],
       },
       {
         title: "Quick Links",
         links: [
-          { label: "Model Leaderboard", href: "/leaderboard" },
-          { label: "Methodology", href: "/leaderboard/methodology" },
           { label: "Browse Categories", href: "/ai-tools" },
+          { label: "AI Glossary", href: "/glossary" },
           { label: "Submit a Tool", href: "/submit" },
         ],
       },

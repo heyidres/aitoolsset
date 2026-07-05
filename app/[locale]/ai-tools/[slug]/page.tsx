@@ -357,28 +357,20 @@ function CustomCategoryHero({
 
         <div className="grid grid-cols-[1fr_360px] gap-[60px] items-start cat-hero-grid">
           <div>
+            {/* Blue-on-dark eyebrow + white headline — matches the homepage
+                hero family (no off-palette pink gradient). */}
             <div
               className="inline-flex items-center gap-2 rounded-pill px-[14px] py-[5px] font-display text-[11.5px] font-bold uppercase tracking-[.07em] mb-4"
-              style={{ background: "rgba(236,72,153,.12)", border: "1px solid rgba(236,72,153,.3)", color: "#f9a8d4" }}
+              style={{ background: "rgba(0,82,255,.14)", border: "1px solid rgba(87,139,250,.35)", color: "var(--blue-h)" }}
             >
               {cms.icon ? <span>{cms.icon}</span> : "📈"} {eyebrow}
             </div>
 
             <h1
-              className="font-display font-black mb-4"
+              className="font-display font-black mb-4 text-white"
               style={{ fontSize: "clamp(36px, 4.5vw, 56px)", letterSpacing: "-2px", lineHeight: 1.05, maxWidth: 860 }}
             >
-              <span
-                style={{
-                  background: "linear-gradient(120deg, #f472b6, #a78bfa)",
-                  WebkitBackgroundClip: "text",
-                  backgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  color: "transparent",
-                }}
-              >
-                {title}
-              </span>
+              {title}
             </h1>
 
             <p className="text-base leading-[1.65] max-w-[620px] mb-6" style={{ color: "rgba(255,255,255,.65)" }}>
@@ -407,7 +399,7 @@ function CustomCategoryHero({
           {/* AT A GLANCE — real computed facts */}
           <div className="rounded-lg p-[22px]" style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)" }}>
             <div className="font-display text-[11.5px] font-bold uppercase tracking-[.08em] mb-[14px] flex items-center gap-2" style={{ color: "rgba(255,255,255,.5)" }}>
-              <span className="w-[5px] h-[5px] rounded-full" style={{ background: "#f472b6" }} />
+              <span className="w-[5px] h-[5px] rounded-full" style={{ background: "var(--blue-h)" }} />
               {category} AI at a glance
             </div>
             {facts.map((f, i) => (

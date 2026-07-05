@@ -8,6 +8,10 @@ export type DetailTool = {
   reviews: number;
   verified: boolean;
   tags: string[];
+  /** Tool detail slug — cards link to /ai-tool/[slug] when present. */
+  slug?: string;
+  /** Real save count for the shared ToolCard's ♥ counter. */
+  saves?: number;
 };
 
 export const MARKETING_TOOLS: DetailTool[] = [

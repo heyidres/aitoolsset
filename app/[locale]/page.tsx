@@ -7,7 +7,6 @@ import { TrendingGrid } from "@/components/TrendingGrid";
 import { UseCaseBlock } from "@/components/UseCaseBlock";
 import { CategoriesGrid } from "@/components/CategoriesGrid";
 import { PopularTable } from "@/components/PopularTable";
-import { NewsSection } from "@/components/NewsSection";
 import { BlogSection } from "@/components/BlogSection";
 import { CtaSection } from "@/components/CtaSection";
 import { TOOLS, WRITER_TOOLS, DEV_TOOLS, WRITER_USECASES, DEV_USECASES } from "@/lib/tools";
@@ -122,7 +121,8 @@ export default async function HomePage() {
 
       <CategoriesGrid />
       <PopularTable toolsOverride={tools} />
-      <NewsSection />
+      {/* NewsSection removed until the news feed publishes real stories —
+          the /news route stays live, just not promoted on the homepage. */}
       <BlogSection />
       <CtaSection />
       <Footer />

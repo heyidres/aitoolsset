@@ -64,8 +64,6 @@ export async function GET(): Promise<Response> {
     "## Editorial",
     ...posts.slice(0, 20).map((p) => `- [${p.title}](${BASE}/blog/${p.slug})`),
     `- [AI glossary — plain-English definitions](${BASE}/glossary)`,
-    `- [AI model leaderboard](${BASE}/leaderboard)`,
-    `- [Live AI news](${BASE}/news)`,
     "",
     "## Optional",
     `- [Browse all categories](${BASE}/ai-tools)`,

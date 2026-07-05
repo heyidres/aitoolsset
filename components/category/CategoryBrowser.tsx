@@ -1,15 +1,34 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Favicon } from "../Favicon";
+import { ToolCard } from "../ToolCard";
 import { type DetailTool } from "@/lib/category-detail";
+import type { Tool } from "@/lib/tools";
 import type { FacetCount, PricingCount, TopTool } from "@/lib/category-stats";
 
-const PRICE_CLASS: Record<DetailTool["price"], { fg: string; bg: string }> = {
-  Free: { fg: "var(--green)", bg: "var(--green-bg)" },
-  Freemium: { fg: "#1d4ed8", bg: "#eff6ff" },
-  Paid: { fg: "#a16207", bg: "#fef3c7" },
-};
+/**
+ * Adapt a DetailTool to the legacy Tool shape so the category grid
+ * renders the SAME <ToolCard> as the homepage (save/vote/share, tags,
+ * ♥ count) and links through to /ai-tool/[slug].
+ */
+function detailToTool(dt: DetailTool): Tool {
+  return {
+    id: dt.slug ?? dt.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+    name: dt.name,
+    domain: dt.by,
+    cat: dt.sub,
+    tags: dt.tags,
+    desc: dt.desc,
+    saves: dt.saves ?? 0,
+    free: dt.price === "Free" || dt.price === "Freemium",
+    trending: false,
+    featured: false,
+    trendPct: null,
+    link: dt.slug ? `/ai-tool/${dt.slug}` : "#",
+    verified: dt.verified,
+    deal: null,
+  };
+}
 
 export function CategoryBrowser({
   categoryName,
@@ -38,7 +57,6 @@ export function CategoryBrowser({
   const [rating, setRating] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   const [view, setView] = useState<"grid" | "list">("grid");
-  const [saved, setSaved] = useState<Set<string>>(new Set());
 
   const toggleSet = (setter: React.Dispatch<React.SetStateAction<Set<string>>>) => (val: string) => {
     setter((prev) => {
@@ -52,14 +70,6 @@ export function CategoryBrowser({
   const togglePricing = toggleSet(setPricing);
   const toggleSub = toggleSet(setSubs);
   const toggleTag = toggleSet(setTags);
-
-  const toggleSaved = (name: string) =>
-    setSaved((prev) => {
-      const next = new Set(prev);
-      if (next.has(name)) next.delete(name);
-      else next.add(name);
-      return next;
-    });
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
@@ -327,13 +337,13 @@ export function CategoryBrowser({
                   right: -100,
                   width: 300,
                   height: 300,
-                  background: "radial-gradient(circle, rgba(236,72,153,.2) 0%, transparent 60%)",
+                  background: "radial-gradient(circle, rgba(0,82,255,.22) 0%, transparent 60%)",
                 }}
               />
               <div>
                 <div
                   className="inline-flex items-center gap-[5px] font-display text-[10.5px] font-extrabold uppercase tracking-[.08em] px-[10px] py-1 rounded-pill mb-[14px] relative"
-                  style={{ background: "rgba(236,72,153,.15)", color: "#f9a8d4" }}
+                  style={{ background: "rgba(0,82,255,.18)", color: "var(--blue-h)" }}
                 >
                   ⭐ Editor&apos;s pick · #1 {categoryName} AI
                 </div>
@@ -398,14 +408,7 @@ export function CategoryBrowser({
               }}
             >
               {filtered.map((dt) => (
-                <ToolDetailCard
-                  key={dt.name}
-                  tool={dt}
-                  saved={saved.has(dt.name)}
-                  onToggleSave={() => toggleSaved(dt.name)}
-                  view={view}
-                  visitLabel={t("browser_visit")}
-                />
+                <ToolCard key={dt.slug ?? dt.name} tool={detailToTool(dt)} />
               ))}
             </div>
           )}
@@ -486,103 +489,5 @@ function CheckRow({
         {count}
       </span>
     </label>
-  );
-}
-
-function ToolDetailCard({
-  tool,
-  saved,
-  onToggleSave,
-  view,
-  visitLabel,
-}: {
-  tool: DetailTool;
-  saved: boolean;
-  onToggleSave: () => void;
-  view: "grid" | "list";
-  visitLabel: string;
-}) {
-  const cls = PRICE_CLASS[tool.price];
-  return (
-    <div
-      className="tc-hover bg-white rounded-lg p-[18px] flex flex-col cursor-pointer relative tnum"
-      style={{ flexDirection: view === "list" ? "row" : "column", gap: view === "list" ? 16 : 0 }}
-    >
-      <div className="flex items-start gap-3 mb-3" style={view === "list" ? { marginBottom: 0, flex: 1 } : {}}>
-        <div
-          className="w-[42px] h-[42px] rounded-[10px] overflow-hidden flex-shrink-0 flex items-center justify-center"
-          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-        >
-          <Favicon domain={tool.by} name={tool.name} size={42} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-display text-[15px] font-extrabold tracking-[-.3px] mb-[2px] flex items-center gap-1">
-            <span className="truncate">{tool.name}</span>
-            {tool.verified && (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="#1D9BF0" className="flex-shrink-0">
-                <path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91-1.01-1-2.52-1.26-3.91-.8C14.66 2.88 13.43 2 12 2s-2.66.88-3.34 2.19c-1.39-.46-2.9-.2-3.91.81-1 1.01-1.26 2.52-.8 3.91C2.88 9.34 2 10.57 2 12s.88 2.66 2.19 3.34c-.46 1.39-.2 2.9.81 3.91 1.01 1 2.52 1.26 3.91.8C9.34 21.12 10.57 22 12 22s2.66-.88 3.34-2.19c1.39.46 2.9.2 3.91-.81 1-1.01 1.26-2.52.8-3.91C21.12 14.66 22.25 13.43 22.25 12z" />
-                <path d="M9 12l2 2.5 4.5-5" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-              </svg>
-            )}
-          </div>
-          <div className="text-xs font-medium truncate" style={{ color: "var(--text-3)" }}>
-            {tool.by}
-          </div>
-        </div>
-        <button
-          onClick={onToggleSave}
-          aria-label={saved ? "Unsave" : "Save"}
-          className="w-[30px] h-[30px] rounded-sm flex items-center justify-center flex-shrink-0 transition-all hover:bg-surface"
-          style={{ color: saved ? "#ef4444" : "var(--text-3)" }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-          </svg>
-        </button>
-      </div>
-      <div className="flex items-center gap-1 mb-[10px] text-[12.5px]">
-        <span className="text-xs" style={{ color: "#fbbf24", letterSpacing: 1 }}>
-          ★★★★★
-        </span>
-        <span className="font-display font-extrabold tnum" style={{ color: "var(--text)" }}>
-          {tool.rating}
-        </span>
-        <span className="font-medium tnum" style={{ color: "var(--text-3)" }}>
-          ({tool.reviews.toLocaleString()})
-        </span>
-      </div>
-      <div
-        className="text-[13px] leading-[1.55] mb-[14px] overflow-hidden"
-        style={{
-          color: "var(--text-2)",
-          display: "-webkit-box",
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical",
-          flex: 1,
-        }}
-      >
-        {tool.desc}
-      </div>
-      <div className="flex items-center gap-[6px] flex-wrap pt-3" style={{ borderTop: "1px solid var(--border)" }}>
-        <span
-          className="font-display text-[11px] font-extrabold uppercase tracking-[.04em] px-[9px] py-[3px] rounded-pill"
-          style={{ color: cls.fg, background: cls.bg }}
-        >
-          {tool.price}
-        </span>
-        {tool.tags.slice(0, 1).map((tag) => (
-          <span
-            key={tag}
-            className="text-[11px] font-semibold px-2 py-[3px] rounded-pill"
-            style={{ color: "var(--text-2)", background: "var(--surface)" }}
-          >
-            {tag}
-          </span>
-        ))}
-        <span className="font-display text-xs font-bold ml-auto hover:underline" style={{ color: "var(--blue)" }}>
-          {visitLabel} →
-        </span>
-      </div>
-    </div>
   );
 }

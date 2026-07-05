@@ -19,9 +19,9 @@ export async function Footer() {
       links: [
         { href: "/ai-tools", label: t("nav.tools") },
         { href: "/ai-tools", label: t("nav.categories") },
-        { href: "/news",     label: t("nav.news") },
         { href: "/blog",     label: t("nav.blog") },
         { href: "/deals",    label: t("nav.deals") },
+        { href: "/glossary", label: t("nav.glossary") },
       ],
     },
     {

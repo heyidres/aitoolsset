@@ -4,8 +4,9 @@ import { Link } from "@/lib/i18n/navigation";
 import { LogoMark } from "./Logo";
 import { PANELS } from "./MegaMenu";
 
+// Leaderboard link removed until the page gets its quality pass —
+// mirrors the desktop Nav.
 const DIRECT_LINKS = [
-  { label: "Leaderboard", href: "/leaderboard" },
   { label: "Submit a Tool", href: "/submit" },
 ];
 

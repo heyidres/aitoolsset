@@ -44,8 +44,10 @@ function fullyTranslatedAlternates(path: string) {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Static top-level routes — UI chrome is translated in every locale,
   // so we emit one sitemap entry per locale-URL plus xhtml:link alternates.
-  // NOTE: /search is deliberately absent — search results are noindexed
-  // and disallowed in robots.txt (index-bloat surface, mirrors Futurepedia).
+  // NOTE deliberately absent:
+  //  - /search      → noindexed + robots-disallowed (index bloat)
+  //  - /news        → 0 published stories yet; re-add when the feed goes live
+  //  - /leaderboard → unlinked pending a quality pass; re-add with it
   const now = new Date();
   const staticPaths: Array<{ path: string; freq: MetadataRoute.Sitemap[number]["changeFrequency"]; priority: number }> = [
     { path: "/",            freq: "daily",   priority: 1.0 },
@@ -53,9 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/blog",        freq: "daily",   priority: 0.8 },
     { path: "/deals",       freq: "daily",   priority: 0.8 },
     { path: "/glossary",    freq: "weekly",  priority: 0.7 },
-    { path: "/news",        freq: "hourly",  priority: 0.7 },
     { path: "/submit",      freq: "monthly", priority: 0.5 },
-    { path: "/leaderboard", freq: "weekly",  priority: 0.6 },
   ];
   const staticRoutes: MetadataRoute.Sitemap = [];
   for (const sp of staticPaths) {
