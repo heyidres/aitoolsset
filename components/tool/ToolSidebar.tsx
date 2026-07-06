@@ -1,8 +1,9 @@
 import { Link } from "@/lib/i18n/navigation";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { Favicon } from "../Favicon";
 import type { Tool } from "@/lib/tools";
 import type { ToolDetail } from "@/lib/tool-detail";
+import { localizePricingTag } from "@/lib/i18n/seed-i18n";
 
 /**
  * Translates well-known English-built quickInfo labels into the active locale.
@@ -88,12 +89,16 @@ export async function ToolSidebar({
 }) {
   const t = await getTranslations("tool_page");
   const tc = await getTranslations("tool_card");
+  const locale = await getLocale();
   const quickInfoRaw = overrides?.quickInfo ?? detail.quickInfo;
-  // Apply label + value translation via the known-key dictionary.
+  // Apply label + value translation via the known-key dictionary. Values
+  // that aren't one of the fixed pricingLabel() outputs (e.g. "Starts at"'s
+  // free-text admin-entered startingPrice, like "Free trial" or "$29/mo")
+  // fall back to the same pricing-tag overlay ToolHeader's stat bar uses.
   const quickInfo = quickInfoRaw.map((row) => ({
     ...row,
     label: SIDEBAR_LABEL_KEYS[row.label] ? t(SIDEBAR_LABEL_KEYS[row.label]) : row.label,
-    val:   SIDEBAR_VALUE_KEYS[row.val]   ? t(SIDEBAR_VALUE_KEYS[row.val])   : row.val,
+    val:   SIDEBAR_VALUE_KEYS[row.val]   ? t(SIDEBAR_VALUE_KEYS[row.val])   : localizePricingTag(row.val, locale),
   }));
   const tags = overrides?.tags ?? detail.tags;
   // Prefer the dynamic same-category alternatives when the page-level code

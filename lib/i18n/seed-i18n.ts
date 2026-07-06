@@ -3286,11 +3286,23 @@ export function localizeCategoryName(name: string, locale: string): string {
   return overlay.categories[name] ?? name;
 }
 
-/** Returns a translated pricing tag — "Free" → "무료", etc. Pass-through for unknown values. */
+/**
+ * Returns a translated pricing tag — "Free" → "무료", etc. Pass-through for
+ * unknown values. Admin-entered `startingPrice` strings drift from the
+ * dictionary's exact casing/whitespace (e.g. "Free trial" vs "Free Trial",
+ * "Free " with a trailing space) — a trimmed, case-insensitive fallback
+ * catches those without needing to enumerate every variant.
+ */
 export function localizePricingTag(tag: string, locale: string): string {
   const overlay = OVERLAYS[locale];
   if (!overlay) return tag;
-  return overlay.pricingTags[tag] ?? tag;
+  const trimmed = tag.trim();
+  if (overlay.pricingTags[trimmed]) return overlay.pricingTags[trimmed];
+  const lower = trimmed.toLowerCase();
+  for (const key in overlay.pricingTags) {
+    if (key.toLowerCase() === lower) return overlay.pricingTags[key];
+  }
+  return tag;
 }
 
 /** Returns a new tool-list with pricing tags translated (for WRITER_TOOLS / DEV_TOOLS). */
