@@ -523,6 +523,20 @@ export const blogPosts = pgTable(
     views: integer("views").notNull().default(0),
     seoTitle: text("seo_title"),
     seoDescription: text("seo_description"),
+    /**
+     * Per-locale translations for editorial fields. Keys are locale codes.
+     * Render path reads `translations[locale]?.<field>` and falls back to
+     * the canonical English column when a field is missing. Mirrors the
+     * `tool`/`category` tables' translations column.
+     */
+    translations: jsonb("translations").$type<Record<string, {
+      title?: string;
+      deck?: string;
+      body?: string;
+      faqs?: Array<{ q: string; a: string }>;
+      seoTitle?: string;
+      seoDescription?: string;
+    }>>().notNull().default({}),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

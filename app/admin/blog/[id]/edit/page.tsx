@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getBlogPostById, getAuthorOptions, getPublishedTools } from "@/lib/cms";
 import { BlogForm, type BlogFormValues } from "../../BlogForm";
 import { updateBlogPost } from "../../_actions";
+import { TranslatePanel } from "./TranslatePanel";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,13 +52,23 @@ export default async function EditBlogPostPage({ params }: { params: Promise<{ i
     await updateBlogPost(id, fd);
   };
 
+  // Which locales already have a stored translation? (drives the
+  // "Re-translate" vs "Translate now" CTA on each row).
+  const existingTranslations = post.translations ?? {};
+  const existingLocales = Object.keys(existingTranslations).filter(
+    (k) => existingTranslations[k] && Object.keys(existingTranslations[k]).length > 0,
+  );
+
   return (
-    <BlogForm
-      mode="edit"
-      initial={initial}
-      action={action}
-      authorOptions={authorOptions}
-      toolOptions={toolOptions}
-    />
+    <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+      <TranslatePanel postId={id} slug={post.slug} existingLocales={existingLocales} />
+      <BlogForm
+        mode="edit"
+        initial={initial}
+        action={action}
+        authorOptions={authorOptions}
+        toolOptions={toolOptions}
+      />
+    </div>
   );
 }

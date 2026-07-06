@@ -537,6 +537,19 @@ export type CmsBlogPost = {
   views: number;
   seoTitle: string | null;
   seoDescription: string | null;
+  /**
+   * Per-locale translations for editorial fields. Keys are locale codes.
+   * Render path reads `translations[locale]?.<field>` and falls back to
+   * the canonical English column when a field is missing.
+   */
+  translations: Record<string, {
+    title?: string;
+    deck?: string;
+    body?: string;
+    faqs?: Array<{ q: string; a: string }>;
+    seoTitle?: string;
+    seoDescription?: string;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -561,6 +574,7 @@ function toCmsBlogPost(row: typeof blogPosts.$inferSelect): CmsBlogPost {
     views: row.views,
     seoTitle: row.seoTitle,
     seoDescription: row.seoDescription,
+    translations: (row.translations ?? {}) as CmsBlogPost["translations"],
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };

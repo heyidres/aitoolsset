@@ -8,11 +8,13 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { blogPosts } from "@/lib/db/schema";
 import { slugify } from "@/lib/cms";
+import { backgroundTranslateBlogPostAllLocales } from "./_translate-actions";
 
 async function requireEditor() {
   const session = await auth();
   if (!session?.user) throw new Error("Not signed in");
   if (session.user.role !== "admin" && session.user.role !== "editor") throw new Error("Not authorised");
+  return session.user;
 }
 
 const Input = z.object({
@@ -94,11 +96,12 @@ function values(i: z.infer<typeof Input>) {
 }
 
 export async function createBlogPost(fd: FormData) {
-  await requireEditor();
+  const user = await requireEditor();
   const input = parse(fd);
   const [existing] = await db.select({ id: blogPosts.id }).from(blogPosts).where(eq(blogPosts.slug, input.slug)).limit(1);
   if (existing) throw new Error(`A post with slug "${input.slug}" already exists`);
-  await db.insert(blogPosts).values(values(input));
+  const [inserted] = await db.insert(blogPosts).values(values(input)).returning({ id: blogPosts.id });
+  if (inserted?.id) backgroundTranslateBlogPostAllLocales(inserted.id, user.id);
   revalidatePath("/admin/blog");
   revalidatePath(`/blog/${input.slug}`);
   revalidatePath("/blog");
@@ -106,11 +109,12 @@ export async function createBlogPost(fd: FormData) {
 }
 
 export async function updateBlogPost(id: string, fd: FormData) {
-  await requireEditor();
+  const user = await requireEditor();
   const input = parse(fd);
   const [conflict] = await db.select({ id: blogPosts.id }).from(blogPosts).where(eq(blogPosts.slug, input.slug)).limit(1);
   if (conflict && conflict.id !== id) throw new Error(`A different post already has slug "${input.slug}"`);
   await db.update(blogPosts).set({ ...values(input), updatedAt: new Date() }).where(eq(blogPosts.id, id));
+  backgroundTranslateBlogPostAllLocales(id, user.id);
   revalidatePath("/admin/blog");
   revalidatePath(`/blog/${input.slug}`);
   revalidatePath("/blog");

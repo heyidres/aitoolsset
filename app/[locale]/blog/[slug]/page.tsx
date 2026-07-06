@@ -32,6 +32,67 @@ import { isLocale } from "@/lib/i18n/config";
 import LegacyGpt5Article, { LEGACY_METADATA } from "./LegacyGpt5Article";
 import { extractToc, extractToolSlugs } from "@/lib/blog-toc";
 
+/**
+ * Apply per-locale translations to a CmsBlogPost. For each translatable
+ * field, use the locale override when present, otherwise pass through
+ * the English canonical column. Mirrors applyToolTranslations in the
+ * tool detail page.
+ */
+function applyBlogPostTranslations(post: CmsBlogPost, locale: string): CmsBlogPost {
+  const tr = post.translations?.[locale];
+  if (!tr) return post;
+  return {
+    ...post,
+    title: tr.title ?? post.title,
+    deck: tr.deck ?? post.deck,
+    body: tr.body ?? post.body,
+    faqs: tr.faqs ?? post.faqs,
+    seoTitle: tr.seoTitle ?? post.seoTitle,
+    seoDescription: tr.seoDescription ?? post.seoDescription,
+  };
+}
+
+/**
+ * Decides whether a missing translation should be lazily generated.
+ * Mirrors the tool detail page's shouldLazyTranslate — default locale
+ * never needs it, every other locale gets a runtime safety net.
+ */
+function shouldLazyTranslate(locale: string, defaultLocale: string): boolean {
+  if (locale === defaultLocale) return false;
+  return true;
+}
+
+async function findBlogPost(slug: string, locale: string): Promise<CmsBlogPost | null> {
+  let post = await getBlogPostBySlug(slug);
+  if (!post || post.status !== "published") return null;
+
+  // Runtime safety net: if a non-default locale URL is hit but the
+  // translation cache is empty, generate + cache it inline. Costs the
+  // first visitor a few seconds, but every subsequent visit (including
+  // the crawl) is instant from DB.
+  const hasTranslation =
+    !!post.translations &&
+    !!post.translations[locale] &&
+    Object.keys(post.translations[locale] ?? {}).length > 0;
+
+  if (!hasTranslation && shouldLazyTranslate(locale, "en")) {
+    try {
+      const { translateBlogPostUnauthenticated } = await import("@/app/admin/blog/_translate-actions");
+      const result = await translateBlogPostUnauthenticated(post.id, locale, null);
+      if (result.ok) {
+        const refreshed = await getBlogPostBySlug(slug);
+        if (refreshed) post = refreshed;
+      }
+    } catch (e) {
+      // Translation failed (quota, network, etc.) — fall back to English
+      // silently. We never want the page to 500 because the translator is down.
+      console.error(`[blog/${slug}] lazy translate to ${locale} failed:`, e);
+    }
+  }
+
+  return applyBlogPostTranslations(post, locale);
+}
+
 export const runtime = "nodejs";
 export const dynamicParams = true;
 export const revalidate = 60;
@@ -55,8 +116,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
         },
       };
     }
-    const post = await getBlogPostBySlug(slug).catch(() => null);
-    if (!post || post.status !== "published") return { title: "Article not found" };
+    const post = await findBlogPost(slug, locale).catch(() => null);
+    if (!post) return { title: "Article not found" };
     return {
       title: post.seoTitle ?? `${post.title} — AI Tools Set Blog`,
       description: post.seoDescription ?? post.deck ?? undefined,
@@ -75,14 +136,14 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   }
 }
 
-export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+export default async function BlogPostPage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
+  const { locale, slug } = await params;
   if (slug === LEGACY_SLUG) {
     return <LegacyGpt5Article />;
   }
 
-  const post = await getBlogPostBySlug(slug).catch(() => null);
-  if (!post || post.status !== "published") notFound();
+  const post = await findBlogPost(slug, locale).catch(() => null);
+  if (!post) notFound();
 
   // Resolve every author + reviewer in parallel for the rich byline + bio cards.
   const [authors, reviewedBy] = await Promise.all([
