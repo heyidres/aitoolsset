@@ -1,17 +1,31 @@
 import { Link } from "@/lib/i18n/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { LogoMark } from "./Logo";
 import { NewsletterSignup } from "./NewsletterSignup";
 import { getSlots } from "@/lib/site-content";
+import { i18n } from "@/lib/i18n/config";
 
 export async function Footer() {
+  const locale = await getLocale();
   const t = await getTranslations();
-  const s = await getSlots([
-    "footer.tagline",
-    "footer.newsletter_title",
-    "footer.newsletter_sub",
-    "footer.copyright",
-  ]);
+  const isDefault = locale === i18n.defaultLocale;
+
+  // Default locale (English): editor-overridable CMS slots.
+  // Other locales: messages catalog (no per-locale CMS override yet —
+  // same pattern as Hero.tsx).
+  const s = isDefault
+    ? await getSlots([
+        "footer.tagline",
+        "footer.newsletter_title",
+        "footer.newsletter_sub",
+        "footer.copyright",
+      ])
+    : {
+        "footer.tagline": t("footer.tagline"),
+        "footer.newsletter_title": t("footer.newsletter_heading"),
+        "footer.newsletter_sub": t("footer.newsletter_body"),
+        "footer.copyright": `© ${new Date().getFullYear()} AI Tools Set. ${t("footer.all_rights_reserved")}`,
+      };
 
   const COLUMNS = [
     {

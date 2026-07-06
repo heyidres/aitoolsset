@@ -1,11 +1,12 @@
 "use client";
 import { useState } from "react";
 import { Link } from "@/lib/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import type { Tool } from "@/lib/tools";
 import { favicon } from "@/lib/tools";
 import type { ToolDetail } from "@/lib/tool-detail";
 import { useSaved } from "@/lib/storage";
+import { localizePricingTag } from "@/lib/i18n/seed-i18n";
 
 const SOCIAL_SVGS: Record<string, React.ReactNode> = {
   x: (
@@ -81,6 +82,7 @@ export function ToolHeader({
   overrides?: ToolHeaderOverrides;
 }) {
   const t = useTranslations("tool_page");
+  const locale = useLocale();
   const { saved, toggle } = useSaved(tool.id);
   const [copied, setCopied] = useState(false);
 
@@ -258,7 +260,7 @@ export function ToolHeader({
               : { val: <><span style={{ color: "#f59e0b", fontSize: 12, letterSpacing: 1 }}>★★★★★</span> 4.8</>, label: `${tool.saves.toLocaleString()} reviews` },
             { val: tool.saves.toLocaleString(), label: t("header_saves_unit") },
             weeklyUsers ? { val: weeklyUsers, label: t("header_weekly_users") } : null,
-            startingPrice ? { val: <span style={{ color: "var(--green)" }}>{startingPrice}</span>, label: t("header_starting_price") } : null,
+            startingPrice ? { val: <span style={{ color: "var(--green)" }}>{localizePricingTag(startingPrice, locale)}</span>, label: t("header_starting_price") } : null,
             launched ? { val: launched, label: t("sidebar_launched") } : null,
             madeBy ? { val: madeBy, label: t("header_made_by") } : null,
           ];
