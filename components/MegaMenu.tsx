@@ -1,6 +1,7 @@
 "use client";
 import { Link } from "@/lib/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { localizeCategoryName } from "@/lib/i18n/seed-i18n";
 
 type Badge = "new" | "hot";
 
@@ -241,8 +242,10 @@ function Badge({ kind, tBadge }: { kind: Badge; tBadge: (k: string) => string })
  * Maps the English source strings in PANELS to their megamenu.* message keys.
  * The PANELS data structure stays English-source so it can be reused for SEO
  * fallbacks, but every visible label/desc is looked up here at render time.
+ * Exported so MobileDrawer (which renders the same PANELS data in its
+ * accordion) can reuse it instead of duplicating the dictionary.
  */
-const MEGAMENU_LABEL_KEYS: Record<string, string> = {
+export const MEGAMENU_LABEL_KEYS: Record<string, string> = {
   // Column titles
   "Browse Tools":         "col_browse_tools",
   "Popular Categories":   "col_popular_categories",
@@ -314,10 +317,17 @@ export function MegaPanel({
   onEnter: () => void;
 }) {
   const t = useTranslations("megamenu");
-  /** Translate a known English label/desc via the dictionary; pass through unknown strings. */
+  const locale = useLocale();
+  /**
+   * Translate a known English label/desc via the dictionary. The "Popular
+   * Categories" column reuses real category names (Marketing, Writing &
+   * Editing, ...) that aren't chrome strings, so fall back to the same
+   * category-name overlay the /ai-tools grids use before giving up.
+   */
   const tr = (s: string): string => {
     const key = MEGAMENU_LABEL_KEYS[s];
-    return key ? t(key) : s;
+    if (key) return t(key);
+    return localizeCategoryName(s, locale);
   };
   return (
     <div className="mega-wrap" onMouseEnter={onEnter} onMouseLeave={onClose}>

@@ -3279,6 +3279,13 @@ export function localizeCategories<T extends { name: string }>(cats: readonly T[
   return cats.map((c) => ({ ...c, name: overlay.categories[c.name] ?? c.name }));
 }
 
+/** Returns a single translated category name — "Marketing" → "마케팅", etc. Pass-through for unknown values. */
+export function localizeCategoryName(name: string, locale: string): string {
+  const overlay = OVERLAYS[locale];
+  if (!overlay) return name;
+  return overlay.categories[name] ?? name;
+}
+
 /** Returns a translated pricing tag — "Free" → "무료", etc. Pass-through for unknown values. */
 export function localizePricingTag(tag: string, locale: string): string {
   const overlay = OVERLAYS[locale];

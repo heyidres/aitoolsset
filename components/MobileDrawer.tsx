@@ -1,14 +1,23 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Link } from "@/lib/i18n/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { LogoMark } from "./Logo";
-import { PANELS } from "./MegaMenu";
+import { PANELS, MEGAMENU_LABEL_KEYS } from "./MegaMenu";
+import { localizeCategoryName } from "@/lib/i18n/seed-i18n";
 
 // Leaderboard link removed until the page gets its quality pass —
 // mirrors the desktop Nav.
 const DIRECT_LINKS = [
   { label: "Submit a Tool", href: "/submit" },
 ];
+
+// Mirrors Nav.tsx's top-level tab labels ("Tools" -> nav.tools, etc.)
+const PANEL_LABEL_KEYS: Record<string, string> = {
+  tools: "tools",
+  discover: "categories",
+  learn: "blog",
+};
 
 const SECTION_ICONS: Record<string, React.ReactNode> = {
   tools: (
@@ -40,6 +49,14 @@ const Chev = (
 );
 
 export function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const t = useTranslations("megamenu");
+  const tNav = useTranslations("nav");
+  const locale = useLocale();
+  const tr = (s: string): string => {
+    const key = MEGAMENU_LABEL_KEYS[s];
+    if (key) return t(key);
+    return localizeCategoryName(s, locale);
+  };
   const [acc, setAcc] = useState<string | null>(null);
 
   useEffect(() => {
@@ -101,14 +118,14 @@ export function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => 
                   aria-expanded={isOpen}
                 >
                   <span className="acc-head-icon">{SECTION_ICONS[panel.key]}</span>
-                  {panel.label}
+                  {PANEL_LABEL_KEYS[panel.key] ? tNav(PANEL_LABEL_KEYS[panel.key]) : panel.label}
                   {Chev}
                 </button>
                 <div className="acc-body">
                   {allLinks.map((l) => (
                     <Link key={l.label + l.href} href={l.href} onClick={onClose} className="acc-link">
-                      {l.label}
-                      {l.badge && <span className={`mi-badge ${l.badge}`}>{l.badge === "new" ? "New" : "Hot"}</span>}
+                      {tr(l.label)}
+                      {l.badge && <span className={`mi-badge ${l.badge}`}>{l.badge === "new" ? t("badge_new") : t("badge_hot")}</span>}
                     </Link>
                   ))}
                 </div>
@@ -117,14 +134,14 @@ export function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => 
           })}
           {DIRECT_LINKS.map((l) => (
             <Link key={l.label} href={l.href} onClick={onClose} className="acc-link direct">
-              {l.label}
+              {tr(l.label)}
             </Link>
           ))}
         </div>
 
         <div className="drawer-foot">
-          <button className="nav-ghost">Sign in</button>
-          <button className="nav-primary">Subscribe</button>
+          <button className="nav-ghost">{tNav("signIn")}</button>
+          <button className="nav-primary">{tNav("subscribe")}</button>
         </div>
       </aside>
     </>
