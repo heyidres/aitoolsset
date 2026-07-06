@@ -19,18 +19,34 @@ export const i18n = {
   defaultLocale: "en",
 
   /** All supported locales (must include defaultLocale). Order = display order. */
-  locales: ["en", "ko"] as const,
+  locales: ["en", "ko", "es", "zh", "de", "fr", "ja", "pt", "tw", "vi"] as const,
 
   /** Human-readable name shown in the language switcher. */
   localeNames: {
     en: "English",
     ko: "한국어",
+    es: "Español",
+    zh: "简体中文",
+    de: "Deutsch",
+    fr: "Français",
+    ja: "日本語",
+    pt: "Português",
+    tw: "繁體中文",
+    vi: "Tiếng Việt",
   } as Record<string, string>,
 
   /** Optional flag emoji shown in the switcher. */
   localeFlags: {
     en: "🇺🇸",
     ko: "🇰🇷",
+    es: "🇪🇸",
+    zh: "🇨🇳",
+    de: "🇩🇪",
+    fr: "🇫🇷",
+    ja: "🇯🇵",
+    pt: "🇧🇷",
+    tw: "🇹🇼",
+    vi: "🇻🇳",
   } as Record<string, string>,
 
   /**
@@ -40,6 +56,14 @@ export const i18n = {
    */
   countryToLocale: {
     KR: "ko",
+    ES: "es", MX: "es", AR: "es", CO: "es", CL: "es", PE: "es",
+    CN: "zh", SG: "zh",
+    DE: "de", AT: "de",
+    FR: "fr", BE: "fr",
+    JP: "ja",
+    BR: "pt", PT: "pt",
+    TW: "tw", HK: "tw",
+    VN: "vi",
   } as Record<string, string>,
 
   /**
@@ -49,6 +73,14 @@ export const i18n = {
   htmlLang: {
     en: "en",
     ko: "ko-KR",
+    es: "es",
+    zh: "zh-CN",
+    de: "de",
+    fr: "fr",
+    ja: "ja",
+    pt: "pt-BR",
+    tw: "zh-TW",
+    vi: "vi",
   } as Record<string, string>,
 
   /**

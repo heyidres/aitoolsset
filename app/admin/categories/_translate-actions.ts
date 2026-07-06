@@ -43,6 +43,9 @@ const TARGET_LANGUAGE_NAME: Record<string, string> = {
   es: "Spanish (Español)",
   de: "German (Deutsch)",
   zh: "Simplified Chinese (简体中文)",
+  pt: "Brazilian Portuguese (Português do Brasil)",
+  tw: "Traditional Chinese, Taiwan (繁體中文)",
+  vi: "Vietnamese (Tiếng Việt)",
 };
 
 function buildPrompt(targetLocale: string, fields: CategoryTranslation): string {
