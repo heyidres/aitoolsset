@@ -138,7 +138,13 @@ function isProviderUnavailable(err: unknown): boolean {
     msg.includes("unauthorized") ||
     msg.includes("401") ||
     msg.includes("invalid api key") ||
-    msg.includes("is not set")
+    msg.includes("is not set") ||
+    // Request too large for this provider's per-request/per-minute token
+    // limit (e.g. Groq's free-tier TPM cap on a long tool/article body) —
+    // try the next provider in the chain rather than giving up entirely.
+    msg.includes("413") ||
+    msg.includes("too large") ||
+    msg.includes("request too large")
   );
 }
 
@@ -261,6 +267,34 @@ export async function autoTranslateTool(
   try {
     const user = await requireEditor();
     return await translateToolUnauthenticated(toolId, targetLocale, user.id);
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+/**
+ * Translate ONE tool into EVERY non-default locale, one click instead of
+ * one per locale. Runs sequentially with a small gap between calls so a
+ * free-tier provider doesn't rate-limit mid-run. Returns a per-locale
+ * result so the admin panel can show exactly which ones succeeded.
+ */
+export async function autoTranslateToolAllLocales(
+  toolId: string,
+): Promise<{ ok: true; results: Array<{ locale: string; ok: boolean; fieldsTranslated?: number; error?: string }> } | { ok: false; error: string }> {
+  try {
+    const user = await requireEditor();
+    const targets = i18n.locales.filter((l) => l !== i18n.defaultLocale);
+    const results: Array<{ locale: string; ok: boolean; fieldsTranslated?: number; error?: string }> = [];
+    for (let i = 0; i < targets.length; i++) {
+      if (i > 0) await new Promise((r) => setTimeout(r, 4000));
+      const result = await translateToolUnauthenticated(toolId, targets[i], user.id);
+      results.push(
+        result.ok
+          ? { locale: targets[i], ok: true, fieldsTranslated: result.fieldsTranslated }
+          : { locale: targets[i], ok: false, error: result.error },
+      );
+    }
+    return { ok: true, results };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }

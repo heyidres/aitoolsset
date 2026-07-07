@@ -136,7 +136,10 @@ function isProviderUnavailable(err: unknown): boolean {
     msg.includes("resource_exhausted") || msg.includes("credit balance") || msg.includes("429") ||
     msg.includes("503") || msg.includes("overloaded") || msg.includes("authentication") ||
     msg.includes("unauthorized") || msg.includes("401") || msg.includes("invalid api key") ||
-    msg.includes("is not set")
+    msg.includes("is not set") ||
+    // Request too large for this provider's per-request/per-minute token
+    // limit — try the next provider in the chain rather than giving up.
+    msg.includes("413") || msg.includes("too large") || msg.includes("request too large")
   );
 }
 
