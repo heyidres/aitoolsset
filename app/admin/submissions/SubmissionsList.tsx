@@ -105,7 +105,9 @@ function Card({ sub, tab }: { sub: Submission; tab: Tab }) {
       <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
         <ToolCell name={sub.name} domain={domainFrom(sub.websiteUrl)} />
         <div style={{ marginLeft: "auto", textAlign: "right" }}>
-          <Pill tone={sub.plan === "featured" ? "blue" : "gray"}>{sub.plan === "featured" ? "Featured" : "Free"}</Pill>
+          <Pill tone={sub.plan === "enterprise" ? "purple" : sub.plan === "featured" ? "blue" : "gray"}>
+            {sub.plan === "enterprise" ? "Enterprise" : sub.plan === "featured" ? "Featured" : "Standard"}
+          </Pill>
           <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 4 }}>{sub.category} · {fmtAgo(sub.submittedAt)}</div>
         </div>
       </div>

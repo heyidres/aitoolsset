@@ -52,8 +52,8 @@ export async function sendContactMessage(formData: FormData): Promise<ContactRes
       const { Resend } = await import("resend");
       const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
-        from: process.env.EMAIL_FROM ?? "onboarding@resend.dev",
-        to: process.env.CONTACT_INBOX ?? "hello@aitoolsset.com",
+        from: process.env.EMAIL_FROM || "onboarding@resend.dev",
+        to: process.env.CONTACT_INBOX || "sales@aitoolsset.com",
         replyTo: parsed.email,
         subject: `[Contact] ${parsed.subject} — ${parsed.name}`,
         text: `From: ${parsed.name} <${parsed.email}>\nSubject: ${parsed.subject}\n\n${parsed.message}`,
@@ -64,6 +64,6 @@ export async function sendContactMessage(formData: FormData): Promise<ContactRes
     return { ok: true };
   } catch (e) {
     console.error("[contact] send failed:", e);
-    return { ok: false, error: "Could not send. Please email hello@aitoolsset.com directly." };
+    return { ok: false, error: "Could not send. Please email sales@aitoolsset.com directly." };
   }
 }

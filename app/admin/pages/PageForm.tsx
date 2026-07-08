@@ -56,7 +56,7 @@ const TEMPLATES: Array<{ name: string; title: string; slug: string; body: string
     name: "Contact",
     title: "Contact",
     slug: "contact",
-    body: "<h2>Get in touch</h2><p>Email us at <a href='mailto:hello@aitoolsset.com'>hello@aitoolsset.com</a>. We reply within 48 hours.</p>",
+    body: "<h2>Get in touch</h2><p>Email us at <a href='mailto:sales@aitoolsset.com'>sales@aitoolsset.com</a>. We reply within 48 hours.</p>",
   },
 ];
 

@@ -13,17 +13,15 @@ export function PricingPlans() {
   const t = useTranslations("submit");
   const [annual, setAnnual] = useState(false);
 
-  const FREE_FEATS = [
-    { txt: t("free_feat_basic"),       inc: true },
-    { txt: t("free_feat_searchable"),  inc: true },
-    { txt: t("free_feat_category"),    inc: true },
-    { txt: t("free_feat_reviews"),     inc: true },
-    { txt: t("free_feat_mobile"),      inc: true },
-    { txt: t("free_feat_no_featured"), inc: false },
-    { txt: t("free_feat_no_analytics"), inc: false },
+  const STANDARD_FEATS = [
+    { txt: t("standard_feat_1"), inc: true },
+    { txt: t("standard_feat_2"), inc: true },
+    { txt: t("standard_feat_3"), inc: true },
+    { txt: t("standard_feat_4"), inc: true },
+    { txt: t("standard_feat_not_included_1"), inc: false },
   ];
-  const FEATURED_FEATS = Array.from({ length: 8 }, (_, i) => t(`featured_feat_${i + 1}`));
-  const ENTERPRISE_FEATS = Array.from({ length: 8 }, (_, i) => t(`ent_feat_${i + 1}`));
+  const FEATURED_FEATS = Array.from({ length: 6 }, (_, i) => t(`featured_feat_${i + 1}`));
+  const ENTERPRISE_FEATS = Array.from({ length: 5 }, (_, i) => t(`ent_feat_${i + 1}`));
 
   return (
     <section className="py-[72px] px-9 section-pad-x" style={{ background: "var(--bg)" }}>
@@ -76,18 +74,18 @@ export function PricingPlans() {
         </div>
 
         <div className="grid grid-cols-3 gap-5 max-w-[1100px] mx-auto plans-grid-3">
-          {/* Free */}
-          <PlanCard kind="free">
-            <PlanName>{t("plans_free_name")}</PlanName>
-            <PlanPrice value="$0" period={t("plans_per_forever")} />
-            <PlanDesc>{t("plans_free_desc")}</PlanDesc>
+          {/* Standard */}
+          <PlanCard kind="standard">
+            <PlanName>{t("plans_standard_name")}</PlanName>
+            <PlanPrice value={t("plans_standard_price")} period={t("plans_standard_period")} />
+            <PlanDesc>{t("plans_standard_desc")}</PlanDesc>
             <PlanButton kind="surface" href="#submit-form">
-              {t("plans_free_cta")}
+              {t("plans_standard_cta")}
             </PlanButton>
             <PlanDivider />
             <PlanFeaturesTitle>{t("plans_whats_included")}</PlanFeaturesTitle>
             <div className="flex flex-col gap-[10px]">
-              {FREE_FEATS.map((f) => (
+              {STANDARD_FEATS.map((f) => (
                 <FeatRow key={f.txt} included={f.inc}>
                   {f.txt}
                 </FeatRow>
@@ -110,7 +108,7 @@ export function PricingPlans() {
               {t("plans_featured_cta")}
             </PlanButton>
             <PlanDivider />
-            <PlanFeaturesTitle>{t("plans_everything_free_plus")}</PlanFeaturesTitle>
+            <PlanFeaturesTitle>{t("plans_everything_standard_plus")}</PlanFeaturesTitle>
             <div className="flex flex-col gap-[10px]">
               {FEATURED_FEATS.map((f) => (
                 <FeatRow key={f} kind="featured" included>
@@ -149,7 +147,7 @@ export function PricingPlans() {
   );
 }
 
-function PlanCard({ children, kind }: { children: React.ReactNode; kind: "free" | "featured" | "enterprise" }) {
+function PlanCard({ children, kind }: { children: React.ReactNode; kind: "standard" | "featured" | "enterprise" }) {
   const styles =
     kind === "enterprise"
       ? { background: "var(--near-black)", border: "1.5px solid var(--near-black)" }
@@ -246,7 +244,7 @@ function FeatRow({
 }: {
   children: React.ReactNode;
   included: boolean;
-  kind?: "free" | "featured" | "enterprise";
+  kind?: "standard" | "featured" | "enterprise";
 }) {
   const checkStyle =
     !included

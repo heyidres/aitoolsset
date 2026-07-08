@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 
-type Row = { label: string; free: React.ReactNode; featured: React.ReactNode; ent: React.ReactNode };
+type Row = { label: string; standard: React.ReactNode; featured: React.ReactNode; ent: React.ReactNode };
 
 function cellClass(v: React.ReactNode) {
   if (v === "✓") return "ct-yes";
@@ -17,19 +17,16 @@ function cellStyle(v: React.ReactNode): React.CSSProperties {
 export async function ComparisonTable() {
   const t = await getTranslations("submit");
   const ROWS: Row[] = [
-    { label: t("row_basic_listing"),       free: "✓",         featured: "✓",                          ent: "✓" },
-    { label: t("row_searchable"),          free: "✓",         featured: "✓",                          ent: "✓" },
-    { label: t("row_reviews"),             free: "✓",         featured: "✓",                          ent: "✓" },
-    { label: t("row_seo_page"),            free: "✓",         featured: "✓",                          ent: "✓" },
-    { label: t("row_verified"),            free: "—",         featured: "✓",                          ent: "✓" },
-    { label: t("row_featured_placement"),  free: "—",         featured: t("row_homepage_category"),   ent: `✓ ${t("row_priority")}` },
-    { label: t("row_analytics"),           free: "—",         featured: "✓",                          ent: `✓ ${t("row_advanced")}` },
-    { label: t("row_newsletter"),          free: "—",         featured: t("row_once_month"),          ent: t("row_dedicated_issue") },
-    { label: t("row_social_mention"),      free: "—",         featured: "✓",                          ent: `✓ ${t("row_multiple")}` },
-    { label: t("row_review_turnaround"),   free: t("row_5_7_days"), featured: t("row_24_hours"),       ent: t("row_same_day") },
-    { label: t("row_sponsored"),           free: "—",         featured: "—",                          ent: "✓" },
-    { label: t("row_account_manager"),     free: "—",         featured: "—",                          ent: `✓ ${t("row_dedicated")}` },
-    { label: t("row_hero_banner"),         free: "—",         featured: "—",                          ent: "✓" },
+    { label: t("row_basic_listing"),       standard: "✓",         featured: "✓",                          ent: "✓" },
+    { label: t("row_searchable"),          standard: "✓",         featured: "✓",                          ent: "✓" },
+    { label: t("row_reviews"),             standard: "✓",         featured: "✓",                          ent: "✓" },
+    { label: t("row_seo_page"),            standard: "✓",         featured: "✓",                          ent: "✓" },
+    { label: t("row_verified"),            standard: "✓",         featured: "✓",                          ent: "✓" },
+    { label: t("row_featured_placement"),  standard: "—",         featured: t("row_homepage_category"),   ent: `✓ ${t("row_priority")}` },
+    { label: t("row_review_turnaround"),   standard: t("row_5_7_days"), featured: t("row_24_hours"),      ent: t("row_same_day") },
+    { label: t("row_sponsored"),           standard: "—",         featured: "—",                          ent: "✓" },
+    { label: t("row_account_manager"),     standard: "—",         featured: "—",                          ent: `✓ ${t("row_dedicated")}` },
+    { label: t("row_hero_banner"),         standard: "—",         featured: "—",                          ent: "✓" },
   ];
   return (
     <section className="py-[72px] px-9 section-pad-x" style={{ background: "var(--bg)" }}>
@@ -48,7 +45,7 @@ export async function ComparisonTable() {
               <tr>
                 {[
                   { label: t("compare_col_feature"),    style: { color: "rgba(255,255,255,.4)" } },
-                  { label: t("compare_col_free"),       style: {} },
+                  { label: t("compare_col_standard"),   style: {} },
                   { label: t("compare_col_featured"),   style: { background: "var(--blue)" } },
                   { label: t("compare_col_enterprise"), style: {} },
                 ].map((h) => (
@@ -75,10 +72,10 @@ export async function ComparisonTable() {
                     {r.label}
                   </td>
                   <td
-                    className={`px-5 py-[14px] text-[13.5px] ${cellClass(r.free)}`}
-                    style={{ ...cellStyle(r.free), borderBottom: i < ROWS.length - 1 ? "1px solid var(--border)" : "none" }}
+                    className={`px-5 py-[14px] text-[13.5px] ${cellClass(r.standard)}`}
+                    style={{ ...cellStyle(r.standard), borderBottom: i < ROWS.length - 1 ? "1px solid var(--border)" : "none" }}
                   >
-                    {r.free}
+                    {r.standard}
                   </td>
                   <td
                     className={`px-5 py-[14px] text-[13.5px] ${cellClass(r.featured)}`}

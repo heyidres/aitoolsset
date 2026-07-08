@@ -241,7 +241,7 @@ export const toolSubmissions = pgTable(
     description: text("description").notNull(),
     category: text("category").notNull(),
     pricingModel: text("pricing_model").notNull(),
-    plan: text("plan").notNull(), // "free" | "featured" | "enterprise"
+    plan: text("plan").notNull(), // "standard" | "featured" | "enterprise"
     submitterName: text("submitter_name").notNull(),
     submitterEmail: text("submitter_email").notNull(),
     twitterHandle: text("twitter_handle"),

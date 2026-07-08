@@ -17,7 +17,7 @@ import { limit } from "@/lib/rate-limit";
 import { verifyTurnstile } from "@/lib/turnstile";
 
 const SubmissionInput = z.object({
-  plan: z.enum(["free", "featured", "enterprise"]).default("free"),
+  plan: z.enum(["standard", "featured", "enterprise"]).default("standard"),
   name: z.string().min(1).max(80),
   websiteUrl: z.string().url(),
   category: z.string().min(1),
@@ -54,7 +54,7 @@ export async function submitTool(formData: FormData): Promise<SubmitToolResult> 
   let parsed;
   try {
     parsed = SubmissionInput.parse({
-      plan: (formData.get("plan") as string) ?? "free",
+      plan: (formData.get("plan") as string) ?? "standard",
       name: (formData.get("name") as string) ?? "",
       websiteUrl: (formData.get("websiteUrl") as string) ?? "",
       category: (formData.get("category") as string) ?? "",
@@ -88,9 +88,40 @@ export async function submitTool(formData: FormData): Promise<SubmitToolResult> 
 
     revalidatePath("/admin/submissions");
     revalidatePath("/admin");
+    await notifySubmission(parsed);
     return { ok: true, id: row.id };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     return { ok: false, error: `Could not save submission: ${msg}` };
+  }
+}
+
+// Best-effort email notifications — a failure here must never fail
+// the submission itself, since the row is already saved.
+async function notifySubmission(parsed: z.infer<typeof SubmissionInput>) {
+  if (!process.env.RESEND_API_KEY) {
+    console.log("[submit-tool] (no Resend key — notification skipped)", parsed.name);
+    return;
+  }
+  try {
+    const { Resend } = await import("resend");
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const from = process.env.EMAIL_FROM || "onboarding@resend.dev";
+
+    await resend.emails.send({
+      from,
+      to: parsed.submitterEmail,
+      subject: `We've received your submission: ${parsed.name}`,
+      text: `Thanks for submitting ${parsed.name} to AI Tools Set!\n\nOur editorial team reviews every submission within 48 hours. Once approved, we'll email you a secure payment link for the ${parsed.plan} plan — you won't be charged before that.\n\nQuestions? Just reply to this email.`,
+    });
+
+    await resend.emails.send({
+      from,
+      to: process.env.SUBMISSIONS_INBOX || "sales@aitoolsset.com",
+      subject: `[Submission] ${parsed.name} (${parsed.plan})`,
+      text: `New tool submission awaiting review:\n\nName: ${parsed.name}\nWebsite: ${parsed.websiteUrl}\nPlan: ${parsed.plan}\nCategory: ${parsed.category}\nSubmitter: ${parsed.submitterName} <${parsed.submitterEmail}>\n\nReview at /admin/submissions.`,
+    });
+  } catch (e) {
+    console.error("[submit-tool] notification email failed:", e);
   }
 }

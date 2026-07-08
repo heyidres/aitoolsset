@@ -14,8 +14,8 @@ const METHODS = [
   {
     title: "General enquiries",
     desc: "Questions, feedback, or partnership ideas.",
-    href: "mailto:hello@aitoolsset.com",
-    linkLabel: "hello@aitoolsset.com",
+    href: "mailto:sales@aitoolsset.com",
+    linkLabel: "sales@aitoolsset.com",
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
@@ -40,8 +40,8 @@ const METHODS = [
   {
     title: "Advertising & partnerships",
     desc: "Reach 50,000+ AI practitioners monthly.",
-    href: "mailto:partners@aitoolsset.com",
-    linkLabel: "partners@aitoolsset.com",
+    href: "mailto:sales@aitoolsset.com",
+    linkLabel: "sales@aitoolsset.com",
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -52,8 +52,8 @@ const METHODS = [
   {
     title: "Report an issue",
     desc: "Broken link, wrong info, or a bug on the site.",
-    href: "mailto:support@aitoolsset.com",
-    linkLabel: "support@aitoolsset.com",
+    href: "mailto:sales@aitoolsset.com",
+    linkLabel: "sales@aitoolsset.com",
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <circle cx="12" cy="12" r="10" />

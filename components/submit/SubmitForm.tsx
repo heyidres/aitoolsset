@@ -4,7 +4,7 @@ import { submitTool } from "@/app/[locale]/submit/actions";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 const PLAN_OPTIONS = [
-  { key: "free", name: "Free", price: "$0", desc: "Basic listing" },
+  { key: "standard", name: "Standard", price: "$99", priceSub: " one-time", desc: "Full listing, reviewed & verified" },
   { key: "featured", name: "Featured", price: "$49", priceSub: "/mo", desc: "Homepage placement + verified badge", popular: true },
   { key: "enterprise", name: "Enterprise", price: "Custom", desc: "Contact us for custom package" },
 ];
@@ -267,7 +267,7 @@ export function SubmitForm() {
                 {pending ? "Submitting…" : "Submit for Review"}
               </button>
               <div className="text-[12.5px] mt-3" style={{ color: "var(--text-3)" }}>
-                🔒 Secure payment processed via Stripe · No charge until approved
+                🔒 No charge until your submission is approved · We'll email you a secure payment link after review
               </div>
               {error && (
                 <div
@@ -291,7 +291,7 @@ export function SubmitForm() {
               Submission received!
             </div>
             <p className="text-[15px] max-w-[420px] mx-auto" style={{ color: "var(--text-2)" }}>
-              Thank you! Our editorial team will review your tool within 48 hours. You'll receive a confirmation email at the address you provided.
+              Thank you! Our editorial team will review your tool within 48 hours. Once approved, we'll email you a secure payment link — you won't be charged before that.
             </p>
             <div className="mt-7 flex gap-3 justify-center flex-wrap">
               <a

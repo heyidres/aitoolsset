@@ -11,7 +11,7 @@ const SubmitSchema = z.object({
   websiteUrl: z.string().url(),
   category: z.string().min(2).max(60),
   pricingModel: z.string().min(2).max(40),
-  plan: z.enum(["free", "featured", "enterprise"]),
+  plan: z.enum(["standard", "featured", "enterprise"]),
   tagline: z.string().min(8).max(120),
   description: z.string().min(80).max(4000),
   submitterName: z.string().min(2).max(80),

@@ -82,7 +82,7 @@ export default function TermsPage() {
           <p>We may suspend or terminate your access to the Service at any time, with or without notice, for conduct that violates these terms or is otherwise harmful to other users or to us.</p>
 
           <h2 id="contact">Contact us</h2>
-          <p>Questions about these terms? Email <a href="mailto:hello@aitoolsset.com">hello@aitoolsset.com</a> or use our <Link href="/contact">contact form</Link>.</p>
+          <p>Questions about these terms? Email <a href="mailto:sales@aitoolsset.com">sales@aitoolsset.com</a> or use our <Link href="/contact">contact form</Link>.</p>
         </div>
       </div>
 

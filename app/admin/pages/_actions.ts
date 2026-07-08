@@ -130,7 +130,7 @@ const DEFAULT_PAGES = [
 <p>Some tools on the site offer affiliate codes that pay us a small commission when you sign up — these are clearly tagged as <strong>⭐ Exclusive</strong> deals. The commission never changes a tool's ranking or whether it gets listed. We've turned down many partnerships from tools that didn't pass our editorial bar.</p>
 
 <h2>How to reach us</h2>
-<p>Email <a href="mailto:hello@aitoolsset.com">hello@aitoolsset.com</a>. We respond within 48 hours, usually faster.</p>
+<p>Email <a href="mailto:sales@aitoolsset.com">sales@aitoolsset.com</a>. We respond within 48 hours, usually faster.</p>
 <p>To submit your own tool for review, head to <a href="/submit">/submit</a>.</p>
     `.trim(),
     seoTitle: "About AI Tools Set — hand-curated AI directory",
@@ -179,7 +179,7 @@ const DEFAULT_PAGES = [
 </ul>
 
 <h2>5. Your rights</h2>
-<p>You can <strong>access</strong>, <strong>correct</strong>, or <strong>delete</strong> any data we hold about you. Email <a href="mailto:hello@aitoolsset.com">hello@aitoolsset.com</a> with the subject "Data request" and we'll respond within 14 days.</p>
+<p>You can <strong>access</strong>, <strong>correct</strong>, or <strong>delete</strong> any data we hold about you. Email <a href="mailto:sales@aitoolsset.com">sales@aitoolsset.com</a> with the subject "Data request" and we'll respond within 14 days.</p>
 
 <h2>6. Children</h2>
 <p>The service is intended for users 16 and older. If you're under 16, please don't sign in or subscribe to the newsletter.</p>
@@ -188,7 +188,7 @@ const DEFAULT_PAGES = [
 <p>If we materially change how we handle data, we'll post the new version here and email registered users at least 14 days before the change takes effect.</p>
 
 <h2>Questions?</h2>
-<p>Email <a href="mailto:hello@aitoolsset.com">hello@aitoolsset.com</a>.</p>
+<p>Email <a href="mailto:sales@aitoolsset.com">sales@aitoolsset.com</a>.</p>
     `.trim(),
     seoTitle: "Privacy Policy — AI Tools Set",
     seoDescription: "We collect the minimum needed to operate the site. We don't sell data. Full plain-English breakdown.",
@@ -228,7 +228,7 @@ const DEFAULT_PAGES = [
 <p>Featured listings are paid placements that get homepage rail placement and a verified badge. They're clearly marked. Payment doesn't guarantee a tool will pass editorial review.</p>
 
 <h2>7. Termination</h2>
-<p>You can delete your account at any time by emailing <a href="mailto:hello@aitoolsset.com">hello@aitoolsset.com</a>. We can suspend or terminate accounts that violate these terms.</p>
+<p>You can delete your account at any time by emailing <a href="mailto:sales@aitoolsset.com">sales@aitoolsset.com</a>. We can suspend or terminate accounts that violate these terms.</p>
 
 <h2>8. Changes</h2>
 <p>We can update these terms at any time. Material changes get a 14-day notice at the top of the page and an email to registered users.</p>
@@ -237,7 +237,7 @@ const DEFAULT_PAGES = [
 <p>These terms are governed by the laws of the jurisdiction where AI Tools Set is operated. Any disputes will be resolved in those courts.</p>
 
 <h2>Questions?</h2>
-<p>Email <a href="mailto:hello@aitoolsset.com">hello@aitoolsset.com</a>.</p>
+<p>Email <a href="mailto:sales@aitoolsset.com">sales@aitoolsset.com</a>.</p>
     `.trim(),
     seoTitle: "Terms of Service — AI Tools Set",
     seoDescription: "The rules of the road. Editorial disclaimers, acceptable use, affiliate disclosure, and the rest.",
@@ -248,25 +248,25 @@ const DEFAULT_PAGES = [
     deck: "We read every email. Pick the channel that fits — we usually respond within 48 hours.",
     body: `
 <h2>General enquiries</h2>
-<p>Email <a href="mailto:hello@aitoolsset.com">hello@aitoolsset.com</a>. We answer questions about the site, the editorial process, and partnership opportunities.</p>
+<p>Email <a href="mailto:sales@aitoolsset.com">sales@aitoolsset.com</a>. We answer questions about the site, the editorial process, and partnership opportunities.</p>
 
 <h2>Submit a tool</h2>
 <p>Don't email us — use the <a href="/submit">submission form</a>. It feeds straight into our editorial queue and gets reviewed within 48 hours. Email submissions slow us down.</p>
 
 <h2>Press</h2>
-<p>For press enquiries, podcast appearances, or quotes for articles, email <a href="mailto:press@aitoolsset.com">press@aitoolsset.com</a> with your deadline in the subject line.</p>
+<p>For press enquiries, podcast appearances, or quotes for articles, email <a href="mailto:sales@aitoolsset.com">sales@aitoolsset.com</a> with your deadline in the subject line.</p>
 
 <h2>Report an issue</h2>
-<p>Found a broken link, an out-of-date listing, an expired deal, or a security issue? Email <a href="mailto:hello@aitoolsset.com">hello@aitoolsset.com</a> with the URL and a short description. We fix verified reports within 24 hours.</p>
+<p>Found a broken link, an out-of-date listing, an expired deal, or a security issue? Email <a href="mailto:sales@aitoolsset.com">sales@aitoolsset.com</a> with the URL and a short description. We fix verified reports within 24 hours.</p>
 
 <h2>Affiliate / partnership</h2>
-<p>If you're a tool maker wanting to discuss a featured listing, exclusive deal, or content partnership, email <a href="mailto:partners@aitoolsset.com">partners@aitoolsset.com</a>. We respond to every legitimate enquiry.</p>
+<p>If you're a tool maker wanting to discuss a featured listing, exclusive deal, or content partnership, email <a href="mailto:sales@aitoolsset.com">sales@aitoolsset.com</a>. We respond to every legitimate enquiry.</p>
 
 <h2>Newsletter</h2>
 <p>To subscribe, use the form in the footer of any page. To unsubscribe, click the unsubscribe link at the bottom of any newsletter email.</p>
 
 <h2>Data requests</h2>
-<p>For account, GDPR, or data-deletion requests, email <a href="mailto:hello@aitoolsset.com">hello@aitoolsset.com</a> with the subject "Data request". We respond within 14 days.</p>
+<p>For account, GDPR, or data-deletion requests, email <a href="mailto:sales@aitoolsset.com">sales@aitoolsset.com</a> with the subject "Data request". We respond within 14 days.</p>
     `.trim(),
     seoTitle: "Contact AI Tools Set",
     seoDescription: "Email us, submit a tool, report an issue, or pitch a partnership. We respond within 48 hours.",
@@ -319,7 +319,7 @@ const DEFAULT_PAGES = [
 <p>If we add a new cookie, we'll list it here and update the date below. If the change is material (e.g. we add a third-party cookie), we'll notify registered users by email.</p>
 
 <h2>Questions?</h2>
-<p>Email <a href="mailto:hello@aitoolsset.com">hello@aitoolsset.com</a>.</p>
+<p>Email <a href="mailto:sales@aitoolsset.com">sales@aitoolsset.com</a>.</p>
     `.trim(),
     seoTitle: "Cookie Policy — AI Tools Set",
     seoDescription: "Two essential cookies, zero tracking. Plain-English breakdown of every cookie we use.",

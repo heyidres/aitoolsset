@@ -10,7 +10,7 @@ export async function SubmitHero() {
   ];
   const TRUST_ITEMS = [
     { icon: "✓",  bg: "#f0fdf4", text: t("trust_quality_reviewed") },
-    { icon: "🔒", bg: "#eff6ff", text: t("trust_secure_payment") },
+    { icon: "🔒", bg: "#eff6ff", text: t("trust_no_charge") },
     { icon: "⚡", bg: "#fdf4ff", text: t("trust_listed_48h") },
     { icon: "📈", bg: "#fff7ed", text: t("trust_real_traffic") },
     { icon: "🌍", bg: "#fef9c3", text: t("trust_seo") },

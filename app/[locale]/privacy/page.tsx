@@ -90,7 +90,7 @@ export default function PrivacyPage() {
             <li>Withdraw consent for marketing at any time.</li>
             <li>Request a portable copy of your data.</li>
           </ul>
-          <p>To exercise any of these rights, email us at <a href="mailto:hello@aitoolsset.com">hello@aitoolsset.com</a>.</p>
+          <p>To exercise any of these rights, email us at <a href="mailto:sales@aitoolsset.com">sales@aitoolsset.com</a>.</p>
 
           <h2 id="security">Data security</h2>
           <p>We use industry-standard measures — encryption in transit, access controls, and regular reviews — to protect your data. No method of transmission is 100% secure, but we work hard to keep your information safe.</p>
@@ -99,7 +99,7 @@ export default function PrivacyPage() {
           <p>We may update this policy from time to time. When we make material changes, we&rsquo;ll update the &ldquo;last updated&rdquo; date above and, where appropriate, notify you by email.</p>
 
           <h2 id="contact">Contact us</h2>
-          <p>Questions about this policy? Email <a href="mailto:hello@aitoolsset.com">hello@aitoolsset.com</a> or use our <Link href="/contact">contact form</Link>.</p>
+          <p>Questions about this policy? Email <a href="mailto:sales@aitoolsset.com">sales@aitoolsset.com</a> or use our <Link href="/contact">contact form</Link>.</p>
         </div>
       </div>
 

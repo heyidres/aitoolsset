@@ -6,8 +6,8 @@ export async function BenefitsGrid() {
     { icon: "🎯", title: t("benefit_targeted_title"),   desc: t("benefit_targeted_desc") },
     { icon: "🔍", title: t("benefit_seo_title"),         desc: t("benefit_seo_desc") },
     { icon: "⭐", title: t("benefit_social_title"),      desc: t("benefit_social_desc") },
-    { icon: "📊", title: t("benefit_analytics_title"),   desc: t("benefit_analytics_desc") },
-    { icon: "📧", title: t("benefit_newsletter_title"),  desc: t("benefit_newsletter_desc") },
+    { icon: "✅", title: t("benefit_verified_title"),    desc: t("benefit_verified_desc") },
+    { icon: "🏷️", title: t("benefit_deals_title"),       desc: t("benefit_deals_desc") },
     { icon: "🔗", title: t("benefit_embed_title"),       desc: t("benefit_embed_desc") },
   ];
   return (

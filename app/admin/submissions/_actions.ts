@@ -65,7 +65,7 @@ export async function approveSubmission(submissionId: string) {
       logoUrl: sub.logoUrl ?? null,
       screenshotUrl: sub.screenshotUrl ?? null,
       verified: false,
-      featured: sub.plan === "featured",
+      featured: sub.plan === "featured" || sub.plan === "enterprise",
       status: "draft", // editor finishes the polish before going live
     })
     .returning({ id: tools.id });

@@ -98,7 +98,7 @@ export default function CookiesPage() {
           </ul>
 
           <h2 id="contact">Contact us</h2>
-          <p>Questions about our use of cookies? Email <a href="mailto:hello@aitoolsset.com">hello@aitoolsset.com</a> or read our full <Link href="/privacy">Privacy Policy</Link>.</p>
+          <p>Questions about our use of cookies? Email <a href="mailto:sales@aitoolsset.com">sales@aitoolsset.com</a> or read our full <Link href="/privacy">Privacy Policy</Link>.</p>
         </div>
       </div>
 
