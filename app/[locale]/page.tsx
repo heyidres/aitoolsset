@@ -10,7 +10,7 @@ import { PopularTable } from "@/components/PopularTable";
 import { BlogSection } from "@/components/BlogSection";
 import { CtaSection } from "@/components/CtaSection";
 import { TOOLS, WRITER_TOOLS, DEV_TOOLS, WRITER_USECASES, DEV_USECASES } from "@/lib/tools";
-import { getPublishedTools, getEnabledHomeSections, type CmsTool } from "@/lib/cms";
+import { getPublishedTools, getEnabledHomeSections, applyToolTranslations, type CmsTool } from "@/lib/cms";
 import { mergeToolsBySlug } from "@/lib/cms-adapters";
 import { getLocale, getTranslations } from "next-intl/server";
 import { i18n, isLocale } from "@/lib/i18n/config";
@@ -44,10 +44,13 @@ export default async function HomePage() {
     getLocale(),
     getTranslations("home"),
   ]);
-  const mergedTools = mergeToolsBySlug(TOOLS, cmsTools);
-  // Apply the per-locale overlay to tool desc + tags so cards show
-  // Korean copy for the seed catalogue (CMS-managed tools fall back
-  // until Phase 3 wires the translations JSONB column).
+  // CMS-managed tools carry their own per-locale translations column —
+  // apply those BEFORE merging so real tools show translated copy on the
+  // homepage grids, not just on their own detail page. The seed catalogue
+  // (hardcoded demo tools) has no translations column, so it's covered
+  // separately by the static overlay below.
+  const localizedCmsTools = cmsTools.map((t) => applyToolTranslations(t, locale));
+  const mergedTools = mergeToolsBySlug(TOOLS, localizedCmsTools);
   const tools = localizeTools(mergedTools, locale);
   const toolBySlug = new Map(cmsTools.map((t) => [t.slug, t]));
   // For non-default locales we ignore the (English) CMS-edited sections

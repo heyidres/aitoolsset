@@ -13,7 +13,7 @@ import { EmbedSection } from "@/components/tool/EmbedSection";
 import { RelatedSlider } from "@/components/tool/RelatedSlider";
 import { TOOLS, type Tool } from "@/lib/tools";
 import { DEFAULT_TOOL_DETAIL } from "@/lib/tool-detail";
-import { getToolBySlug, getReviewsForTool, getCategoryOptions, getRelatedTools, type CmsTool } from "@/lib/cms";
+import { getToolBySlug, getReviewsForTool, getCategoryOptions, getRelatedTools, applyToolTranslations, type CmsTool } from "@/lib/cms";
 import { cmsToolToLegacy, cmsReviewToLegacy, type LegacyReview } from "@/lib/cms-adapters";
 import { auth } from "@/lib/auth";
 import { JsonLd, toolJsonLd, breadcrumbJsonLd } from "@/lib/json-ld";
@@ -196,42 +196,6 @@ function buildSidebarOverrides(t: CmsTool): ToolSidebarOverrides {
 }
 
 /**
- * Apply per-locale translations to a CmsTool. For each translatable field,
- * use the locale override when present, otherwise pass through the English
- * canonical column. Mutates a copy — never the original row.
- *
- * The fields covered here mirror the `translations` JSONB shape in
- * lib/db/schema.ts (tool table). Adding a new translatable field is a
- * two-step process: declare it on the JSONB type, then merge it here.
- */
-function applyToolTranslations(cms: CmsTool, locale: string): CmsTool {
-  const tr = (cms as unknown as { translations?: Record<string, {
-    tagline?: string;
-    description?: string;
-    features?: Array<{ title: string; desc: string }>;
-    useCases?: string[];
-    pros?: string[];
-    cons?: string[];
-    plans?: Array<{ name: string; price: string; period: string; popular?: boolean; feats: string[] }>;
-    seoTitle?: string;
-    seoDescription?: string;
-  }> }).translations?.[locale];
-  if (!tr) return cms;
-  return {
-    ...cms,
-    tagline:        tr.tagline        ?? cms.tagline,
-    description:    tr.description    ?? cms.description,
-    features:       tr.features       ?? cms.features,
-    useCases:       tr.useCases       ?? cms.useCases,
-    pros:           tr.pros           ?? cms.pros,
-    cons:           tr.cons           ?? cms.cons,
-    plans:          tr.plans          ?? cms.plans,
-    seoTitle:       tr.seoTitle       ?? cms.seoTitle,
-    seoDescription: tr.seoDescription ?? cms.seoDescription,
-  };
-}
-
-/**
  * Decides whether a missing translation should be lazily generated.
  * - Default locale: no translation needed.
  * - Bot user agents: NEVER lazy-translate inline (the 5–10s wait would
@@ -298,15 +262,21 @@ async function findTool(slug: string, locale: string = "en"): Promise<FindToolRe
   // Map CmsTool → the lightweight shape both UI components want.
   // String() / Number() / Boolean() guards ensure the prop crossing the
   // RSC boundary (RelatedSlider is "use client") is JSON-safe regardless
-  // of what Drizzle's row shape includes.
-  const relatedTools = related.map((r) => ({
-    name: String(r.name ?? ""),
-    domain: String(r.domain ?? ""),
-    slug: String(r.slug ?? ""),
-    cat: String(r.category ?? ""),
-    desc: String(r.tagline || (r.description ?? "").replace(/<[^>]+>/g, "").slice(0, 120)),
-    free: Boolean(r.pricing === "free" || r.pricing === "freemium"),
-  }));
+  // of what Drizzle's row shape includes. applyToolTranslations() first so
+  // each related tool's tagline/description reflect its OWN translation
+  // status, not the current page's — getRelatedTools() returns raw
+  // English-column CmsTool rows otherwise.
+  const relatedTools = related.map((raw) => {
+    const r = applyToolTranslations(raw, locale);
+    return {
+      name: String(r.name ?? ""),
+      domain: String(r.domain ?? ""),
+      slug: String(r.slug ?? ""),
+      cat: String(r.category ?? ""),
+      desc: String(r.tagline || (r.description ?? "").replace(/<[^>]+>/g, "").slice(0, 120)),
+      free: Boolean(r.pricing === "free" || r.pricing === "freemium"),
+    };
+  });
 
   return {
     tool: cmsToolToLegacy(cms),

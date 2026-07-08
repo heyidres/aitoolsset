@@ -161,6 +161,36 @@ function toCmsTool(row: typeof tools.$inferSelect): CmsTool {
   };
 }
 
+/**
+ * Apply per-locale translations to a CmsTool. For each translatable field,
+ * use the locale override when present, otherwise pass through the English
+ * canonical column. Returns a new object — never mutates the input.
+ *
+ * The fields covered here mirror the `translations` JSONB shape in
+ * lib/db/schema.ts (tool table). Adding a new translatable field is a
+ * two-step process: declare it on the JSONB type, then merge it here.
+ *
+ * Shared by every surface that renders CmsTool rows in a non-default
+ * locale (tool detail page, its related-tools rail, the homepage grids) —
+ * a tool's own translation status must follow it wherever it's rendered.
+ */
+export function applyToolTranslations(cms: CmsTool, locale: string): CmsTool {
+  const tr = cms.translations?.[locale];
+  if (!tr) return cms;
+  return {
+    ...cms,
+    tagline:        tr.tagline        ?? cms.tagline,
+    description:    tr.description    ?? cms.description,
+    features:       tr.features       ?? cms.features,
+    useCases:       tr.useCases       ?? cms.useCases,
+    pros:           tr.pros           ?? cms.pros,
+    cons:           tr.cons           ?? cms.cons,
+    plans:          tr.plans          ?? cms.plans,
+    seoTitle:       tr.seoTitle       ?? cms.seoTitle,
+    seoDescription: tr.seoDescription ?? cms.seoDescription,
+  };
+}
+
 // ── Tool queries ─────────────────────────────────────────────
 /** Every tool, newest first — admin lists. */
 export async function getAllTools(): Promise<CmsTool[]> {
