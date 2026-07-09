@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { categoryNameForAiTemplate } from "@/lib/category-stats";
 
 type Item = { q: string; a: string };
 
@@ -37,7 +38,7 @@ export function FaqAccordion({ items, categoryName }: { items: Item[]; categoryN
             {t("faq_eyebrow")}
           </div>
           <h2 className="font-display font-black" style={{ fontSize: 36, letterSpacing: "-1.4px", lineHeight: 1.1 }}>
-            {t("faq_heading", { nameLower: categoryName.toLowerCase() })}
+            {t("faq_heading", { nameLower: categoryNameForAiTemplate(categoryName) })}
           </h2>
         </div>
 

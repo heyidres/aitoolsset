@@ -1,11 +1,12 @@
 import { Link } from "@/lib/i18n/navigation";
 import { getTranslations } from "next-intl/server";
+import { categoryNameForAiTemplate } from "@/lib/category-stats";
 
 type Props = { categoryName: string; count: number };
 
 export async function CategoryIntro({ categoryName, count }: Props) {
   const t = await getTranslations("category_page");
-  const lower = categoryName.toLowerCase();
+  const lower = categoryNameForAiTemplate(categoryName);
   return (
     <section className="bg-white px-9 py-12 section-pad-x" style={{ borderBottom: "1px solid var(--border)" }}>
       <div className="max-w-[880px] mx-auto">

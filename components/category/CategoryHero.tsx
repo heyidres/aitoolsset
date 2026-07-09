@@ -1,7 +1,7 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { Breadcrumb } from "../Breadcrumb";
 import { localizeMarketingFacts } from "@/lib/i18n/seed-i18n";
-import type { CategoryFact } from "@/lib/category-stats";
+import { categoryNameForAiTemplate, type CategoryFact } from "@/lib/category-stats";
 
 type Props = {
   categoryName: string;
@@ -20,7 +20,7 @@ export async function CategoryHero({ categoryName, count, facts: rawFacts, avgRa
   // Translate only the fact LABELS (fixed vocabulary); the VALUES are
   // real numbers computed from the category's tools.
   const facts = localizeMarketingFacts(rawFacts, locale);
-  const lower = categoryName.toLowerCase();
+  const lower = categoryNameForAiTemplate(categoryName);
   return (
     <section
       className="relative overflow-hidden px-9 pt-12 pb-14 text-white section-pad-x"

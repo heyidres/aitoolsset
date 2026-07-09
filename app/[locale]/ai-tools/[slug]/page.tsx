@@ -13,7 +13,7 @@ import { RelatedCategories } from "@/components/category/RelatedCategories";
 import { ALL_CATS } from "@/lib/categories";
 import { getToolsByCategory, getCategoryBySlug, applyCategoryTranslations, type CmsCategory, type CmsTool } from "@/lib/cms";
 import { cmsToolToDetail, cmsToolToLegacy } from "@/lib/cms-adapters";
-import { computeCategoryStats } from "@/lib/category-stats";
+import { computeCategoryStats, categoryNameWithAiPrefix } from "@/lib/category-stats";
 import { JsonLd, breadcrumbJsonLd, faqJsonLd } from "@/lib/json-ld";
 import { alternatesFor } from "@/lib/i18n/hreflang";
 import { isLocale } from "@/lib/i18n/config";
@@ -78,10 +78,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     if (!found) return { title: "Category not found" };
     const cms = found.cms;
     const year = new Date().getFullYear();
-    const title = cms?.seoTitle ?? `Best AI ${found.name} Tools ${year} — Top Tools Reviewed | AI Tools Set`;
+    const aiName = categoryNameWithAiPrefix(found.name);
+    const title = cms?.seoTitle ?? `Best ${aiName} Tools ${year} — Top Tools Reviewed | AI Tools Set`;
     const description =
       cms?.seoDescription ??
-      `Discover the best AI ${found.name.toLowerCase()} tools of ${year}. Browse hand-picked AI tools. Compare pricing, features, and user reviews.`;
+      `Discover the best ${aiName.toLowerCase()} tools of ${year}. Browse hand-picked AI tools. Compare pricing, features, and user reviews.`;
     const alternates = isLocale(locale)
       ? alternatesFor({ locale, path: `/ai-tools/${found.slug}` })
       : undefined;
@@ -90,7 +91,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       description,
       alternates,
       openGraph: {
-        title: cms?.seoTitle ?? `Best AI ${found.name} Tools ${year} | AI Tools Set`,
+        title: cms?.seoTitle ?? `Best ${aiName} Tools ${year} | AI Tools Set`,
         description,
         url: alternates?.canonical ?? `https://aitoolsset.com/ai-tools/${found.slug}`,
         images: cms?.bannerImageUrl ? [{ url: cms.bannerImageUrl }] : undefined,
@@ -324,11 +325,11 @@ function CustomCategoryHero({
   facts: Array<{ label: string; val: string }>;
   avgRating: number | null;
 }) {
-  const title = cms.heroTitle ?? `Best AI ${category} tools for 2026, ranked & reviewed`;
+  const title = cms.heroTitle ?? `Best ${categoryNameWithAiPrefix(category)} tools for 2026, ranked & reviewed`;
   const subtitle =
     cms.heroSubtitle ??
     cms.description ??
-    `Hand-picked AI ${category.toLowerCase()} software. Every tool below has been tested by our editors.`;
+    `Hand-picked ${categoryNameWithAiPrefix(category).toLowerCase()} software. Every tool below has been tested by our editors.`;
   const eyebrow = cms.heroEyebrow ?? `CATEGORY · ${category.toUpperCase()}`;
   const updated = (() => {
     const d = cms.updatedAt instanceof Date ? cms.updatedAt : new Date(cms.updatedAt as unknown as string);

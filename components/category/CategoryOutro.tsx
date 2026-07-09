@@ -1,9 +1,10 @@
 import { Link } from "@/lib/i18n/navigation";
 import { getTranslations } from "next-intl/server";
+import { categoryNameForAiTemplate } from "@/lib/category-stats";
 
 export async function CategoryOutro({ categoryName }: { categoryName: string }) {
   const t = await getTranslations("category_page");
-  const lower = categoryName.toLowerCase();
+  const lower = categoryNameForAiTemplate(categoryName);
 
   const bullets = [
     t("outro_bullet_1"),

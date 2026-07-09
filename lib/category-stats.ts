@@ -16,6 +16,27 @@
 
 import type { CmsTool } from "./cms";
 
+/**
+ * Lowercases a category name for interpolation into copy that already
+ * says "AI {x}" (e.g. "AI {nameLower} tools", "Best AI {nameLower} tools").
+ * Categories named "AI Coding", "AI Chatbot", etc. would otherwise render
+ * as "AI ai coding tools" — this strips a redundant leading "ai " so it
+ * reads as "AI coding tools" instead. Categories without an "AI" prefix
+ * (e.g. "Marketing") are returned unchanged.
+ */
+export function categoryNameForAiTemplate(name: string): string {
+  return name.toLowerCase().replace(/^ai\s+/, "");
+}
+
+/**
+ * Ensures a category name reads naturally as a standalone "AI {Name}"
+ * phrase without duplicating "AI" when the name already starts with it
+ * (e.g. keeps "AI Coding" as "AI Coding" instead of "AI AI Coding").
+ */
+export function categoryNameWithAiPrefix(name: string): string {
+  return /^ai\b/i.test(name) ? name : `AI ${name}`;
+}
+
 export type PriceLabel = "Free" | "Freemium" | "Paid";
 export type CategoryFact = { label: string; val: string };
 export type FacetCount = { key: string; label: string; count: number };
