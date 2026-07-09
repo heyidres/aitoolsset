@@ -34,7 +34,7 @@ export async function PopularTable({ toolsOverride }: { toolsOverride?: Tool[] }
               </div>
             </div>
             <Link
-              href="/top-rated"
+              href="/ai-tools"
               className="text-[13.5px] font-semibold flex items-center gap-1"
               style={{ color: "var(--blue)" }}
             >

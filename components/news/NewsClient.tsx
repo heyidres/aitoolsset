@@ -445,7 +445,12 @@ function PostCard({
           {post.tag}
         </div>
         <div className="text-[14.5px] leading-[1.6] mb-[10px] break-words" style={{ color: "var(--text)" }}>
-          {post.text}
+          {/* Real anchor tag so crawlers can discover the article — the
+              rest of the card navigates via onClick for the click/tap
+              UX, but that alone leaves this page uncrawlable. */}
+          <Link href={`/news/${post.slug}`} onClick={(e) => e.stopPropagation()} className="hover:underline">
+            {post.text}
+          </Link>
         </div>
 
         <div

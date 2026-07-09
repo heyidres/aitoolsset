@@ -3,6 +3,25 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { CATEGORIES } from "@/lib/tools";
 import { localizeCategories } from "@/lib/i18n/seed-i18n";
 
+// Real category slugs for each card below — every card used to link to
+// the generic /ai-tools hub regardless of which category it displayed.
+// Mapped by hand since CATEGORIES here uses broad marketing names that
+// don't 1:1 match the CMS's more granular category slugs.
+const CATEGORY_SLUGS: Record<string, string> = {
+  "Writing & Editing": "essay-writing",
+  "Image Generation": "image-generators",
+  "Video": "video-generators",
+  "Code & Developer": "ai-coding",
+  "Marketing": "marketing",
+  "Productivity": "project-management",
+  "Audio & Music": "generating-ai-music",
+  "Research & Data": "research",
+  "Design & Creative": "design-generators",
+  "Business & Finance": "finance",
+  "Education": "education",
+  "Automation": "workflow-automation",
+};
+
 export async function CategoriesGrid() {
   const t = await getTranslations("home");
   const locale = await getLocale();
@@ -25,10 +44,10 @@ export async function CategoriesGrid() {
         </div>
 
         <div className="grid grid-cols-4 gap-[10px] cat-grid-4">
-          {categories.map((c) => (
+          {categories.map((c, i) => (
             <Link
               key={c.name}
-              href="/ai-tools"
+              href={`/ai-tools/${CATEGORY_SLUGS[CATEGORIES[i].name] ?? ""}`}
               className="cat-card-hover rounded p-5 cursor-pointer flex items-center justify-between"
             >
               <div>

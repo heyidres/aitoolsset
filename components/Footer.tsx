@@ -32,8 +32,8 @@ export async function Footer() {
       title: t("footer.discover"),
       links: [
         { href: "/ai-tools", label: t("nav.tools") },
-        { href: "/ai-tools", label: t("nav.categories") },
         { href: "/blog",     label: t("nav.blog") },
+        { href: "/images",   label: t("nav.images") },
         { href: "/deals",    label: t("nav.deals") },
         { href: "/glossary", label: t("nav.glossary") },
       ],

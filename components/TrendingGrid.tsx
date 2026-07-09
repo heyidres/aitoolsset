@@ -24,7 +24,7 @@ export async function TrendingGrid({ toolsOverride }: { toolsOverride?: Tool[] }
               {t("trending_sub")}
             </div>
           </div>
-          <Link href="/trending" className="text-[13.5px] font-semibold" style={{ color: "var(--blue-h)" }}>
+          <Link href="/ai-tools" className="text-[13.5px] font-semibold" style={{ color: "var(--blue-h)" }}>
             {t("trending_see_all")} →
           </Link>
         </div>
