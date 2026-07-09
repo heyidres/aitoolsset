@@ -6,7 +6,7 @@
  *  The public site's client components (DealsClient, GlossaryClient,
  *  AllCategoriesGrid, etc.) were built against the hardcoded shapes
  *  in `lib/deals.ts`, `lib/glossary.ts`, `lib/categories.ts`. Once
- *  editors start publishing in /admin, those rows come from
+ *  editors start publishing in /portal-admin, those rows come from
  *  Postgres in a slightly different shape (CmsDeal, CmsGlossaryTerm,
  *  CmsCategory).
  *

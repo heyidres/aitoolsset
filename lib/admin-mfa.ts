@@ -6,8 +6,8 @@
  *   • This MFA token     = "you passed TOTP recently" (8h, re-auth after)
  *
  * The token is an HS256 JWT bound to the user id, signed with AUTH_SECRET.
- * Middleware verifies it on every /admin hit; when it's missing/expired the
- * user is bounced to /admin/2fa to re-enter a code. That 8h ceiling is the
+ * Middleware verifies it on every /portal-admin hit; when it's missing/expired the
+ * user is bounced to /portal-admin/2fa to re-enter a code. That 8h ceiling is the
  * "short admin session" — closing the laptop for the night logs admin out
  * of the CMS even though the base session is still valid.
  *

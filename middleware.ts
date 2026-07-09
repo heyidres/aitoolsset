@@ -1,12 +1,12 @@
 /**
  * Composed middleware: i18n locale handling for public routes,
- * NextAuth role gating for `/admin/*`.
+ * NextAuth role gating for `/portal-admin/*`.
  *
  * Order matters:
  *   1. Skip middleware entirely for static files, API routes,
  *      OG/icon endpoints, and crawlers (Google crawls each locale
  *      URL on its own — we must NOT auto-redirect bots).
- *   2. If path is /admin/* → run NextAuth gate, then pass through
+ *   2. If path is /portal-admin/* → run NextAuth gate, then pass through
  *      (admin pages are English-only — no i18n routing).
  *   3. Otherwise → run next-intl locale negotiation (detects best
  *      locale from URL, cookie, accept-language, or GeoIP, then
@@ -73,7 +73,7 @@ function geoFirstLocaleRedirect(req: NextRequest): NextResponse | null {
 }
 
 // Pass through, forwarding the pathname to server components so the
-// admin layout can render /admin/login and /admin/2fa "bare" (no CMS
+// admin layout can render /portal-admin/login and /portal-admin/2fa "bare" (no CMS
 // shell / no session redirect) while gating everything else.
 function pass(req: NextRequest): NextResponse {
   const h = new Headers(req.headers);
@@ -101,15 +101,15 @@ export default auth(async (req) => {
   }
 
   // ── 1. Admin gate ─────────────────────────────────────────
-  if (pathname.startsWith("/admin")) {
+  if (pathname.startsWith("/portal-admin")) {
     // The login page is the ONE admin path reachable without a session.
-    if (pathname === "/admin/login" || pathname.startsWith("/admin/login/")) {
+    if (pathname === "/portal-admin/login" || pathname.startsWith("/portal-admin/login/")) {
       return pass(req as unknown as NextRequest);
     }
 
     const session = req.auth;
     if (!session?.user) {
-      const url = new URL("/admin/login", req.url);
+      const url = new URL("/portal-admin/login", req.url);
       url.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(url);
     }
@@ -117,16 +117,16 @@ export default auth(async (req) => {
       return NextResponse.redirect(new URL("/", req.url));
     }
 
-    // Signed in with a CMS role. The /admin/2fa flow is where you OBTAIN
+    // Signed in with a CMS role. The /portal-admin/2fa flow is where you OBTAIN
     // the MFA proof, so it must be reachable without it.
-    if (pathname === "/admin/2fa" || pathname.startsWith("/admin/2fa/")) {
+    if (pathname === "/portal-admin/2fa" || pathname.startsWith("/portal-admin/2fa/")) {
       return pass(req as unknown as NextRequest);
     }
 
     // Enforce the short-lived TOTP proof (8h). Missing/expired → re-verify.
     const mfaOk = await verifyMfaToken(req.cookies.get(MFA_COOKIE)?.value, session.user.id);
     if (!mfaOk) {
-      const url = new URL("/admin/2fa", req.url);
+      const url = new URL("/portal-admin/2fa", req.url);
       url.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(url);
     }

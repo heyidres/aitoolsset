@@ -3,7 +3,7 @@
  *
  * Reads from Postgres. When the DB is empty (clean install) the
  * page renders a small empty state explaining how to publish from
- * /admin/blog so it's never blank-and-confusing.
+ * /portal-admin/blog so it's never blank-and-confusing.
  */
 
 import type { Metadata } from "next";
@@ -169,8 +169,8 @@ function EmptyState() {
       </h2>
       <p style={{ color: "var(--text-2)", fontSize: 14, maxWidth: 480, margin: "0 auto 18px" }}>
         Editorial content lands here as you publish it. Head to{" "}
-        <Link href="/admin/blog/new" className="underline" style={{ color: "var(--blue)", fontWeight: 700 }}>
-          /admin/blog/new
+        <Link href="/portal-admin/blog/new" className="underline" style={{ color: "var(--blue)", fontWeight: 700 }}>
+          /portal-admin/blog/new
         </Link>{" "}
         to write the first article.
       </p>

@@ -2,7 +2,7 @@
  * Legacy hardcoded GPT-5 demo article. Lives at the slug
  * `gpt-5-complete-guide`. Kept around so the original demo
  * stays available while editors build out real content via
- * /admin/blog. The router in page.tsx dispatches here when
+ * /portal-admin/blog. The router in page.tsx dispatches here when
  * that exact slug is requested.
  */
 

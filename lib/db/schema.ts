@@ -113,6 +113,28 @@ export const verificationTokens = pgTable(
   })
 );
 
+/**
+ * DB-backed CMS access allowlist — lets an admin grant/revoke
+ * editor or admin access from the /portal-admin/users UI without editing
+ * the ADMIN_EMAILS env var or redeploying.
+ *
+ * `isAllowedToSignIn()` in lib/auth.ts checks this table (in
+ * addition to the ADMIN_EMAILS env var, which remains a permanent
+ * bootstrap list so the site can never be fully locked out). The
+ * `signIn` callback sets the new user's role from `role` here on
+ * every sign-in, so revoking access (deleting the row) demotes an
+ * already-registered user back to "user" on their very next request
+ * — database session strategy re-reads role live, it isn't cached
+ * in a JWT.
+ */
+export const adminInvites = pgTable("admin_invite", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  email: text("email").notNull().unique(),
+  role: roleEnum("role").notNull().default("editor"),
+  invitedBy: text("invited_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // ── Tools directory ─────────────────────────────────────────
 export const tools = pgTable(
   "tool",
@@ -780,7 +802,7 @@ export const newsDraftJobs = pgTable(
 /**
  * The "For Writers / For Developers / …" blocks on the homepage.
  * Each row drives one UseCaseBlock instance. Editors add/edit/reorder
- * sections via /admin/home; the public homepage maps these in order.
+ * sections via /portal-admin/home; the public homepage maps these in order.
  *
  * When the table is empty, app/page.tsx falls back to the original
  * hardcoded Writers + Developers blocks so the site never goes blank.
@@ -818,6 +840,7 @@ export const homeSections = pgTable(
 // ── Type exports for use in route handlers ──────────────────
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+export type AdminInvite = typeof adminInvites.$inferSelect;
 export type Tool = typeof tools.$inferSelect;
 export type ToolSubmission = typeof toolSubmissions.$inferSelect;
 export type NewsPostRow = typeof newsPosts.$inferSelect;

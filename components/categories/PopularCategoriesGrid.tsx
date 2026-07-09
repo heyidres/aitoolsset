@@ -6,7 +6,7 @@ import { CategoriesSectionHeader } from "./SectionHeader";
 import { localizeCategories, localizePopularCategoryDescs } from "@/lib/i18n/seed-i18n";
 import { getSlotOverrides, type SlotKey } from "@/lib/site-content";
 
-// Each popular card's description is editable from /admin/site-content.
+// Each popular card's description is editable from /portal-admin/site-content.
 // Keyed by the stable card slug so the mapping survives localization.
 const CARD_DESC_SLOT: Record<string, SlotKey> = {
   "writing-and-editing": "categories.cards.writing-and-editing.desc",

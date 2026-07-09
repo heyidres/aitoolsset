@@ -228,7 +228,7 @@ async function findTool(slug: string, locale: string = "en"): Promise<FindToolRe
 
   if (!hasTranslation && shouldLazyTranslate(locale, "en")) {
     try {
-      const { translateToolUnauthenticated } = await import("@/app/admin/tools/_translate-actions");
+      const { translateToolUnauthenticated } = await import("@/app/portal-admin/tools/_translate-actions");
       // actorId=null → no audit row for anonymous public traffic.
       const result = await translateToolUnauthenticated(cmsRaw.id, locale, null);
       if (result.ok) {

@@ -50,7 +50,7 @@ DSN-conditional — completely silent without `NEXT_PUBLIC_SENTRY_DSN` set.
 After activation, all uncaught errors (client + server + edge runtime) flow to Sentry with stack traces.
 
 ### Audit log — `lib/audit.ts` + DB `audit_log` table
-Writes admin actions to Postgres. Every tool publish, page delete, role change, etc. has an indelible record of who did what and when. View at `/admin` once the dashboard surfaces it.
+Writes admin actions to Postgres. Every tool publish, page delete, role change, etc. has an indelible record of who did what and when. View at `/portal-admin` once the dashboard surfaces it.
 
 ---
 

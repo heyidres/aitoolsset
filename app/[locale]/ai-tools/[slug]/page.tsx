@@ -49,7 +49,7 @@ async function findCategory(slug: string, locale: string = "en"): Promise<FoundC
       Object.keys(cmsRaw.translations[locale] ?? {}).length > 0;
     if (!hasTranslation && locale !== "en") {
       try {
-        const { translateCategoryUnauthenticated } = await import("@/app/admin/categories/_translate-actions");
+        const { translateCategoryUnauthenticated } = await import("@/app/portal-admin/categories/_translate-actions");
         const result = await translateCategoryUnauthenticated(cmsRaw.id, locale, null);
         if (result.ok) {
           const refreshed = await getCategoryBySlug(slug);

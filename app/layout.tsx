@@ -4,7 +4,7 @@
  *
  * `<html lang>` is set dynamically from the active locale so screen
  * readers + Google get the correct signal on every public page.
- * For unmatched routes (e.g. /admin/*) where no locale is in the URL,
+ * For unmatched routes (e.g. /portal-admin/*) where no locale is in the URL,
  * we fall back to the default locale's lang tag.
  */
 
@@ -79,7 +79,7 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // next-intl returns the resolved locale OR the default if the request
-  // didn't have a locale segment (e.g. on /admin/*, /api/*).
+  // didn't have a locale segment (e.g. on /portal-admin/*, /api/*).
   const rawLocale = await getLocale();
   const locale = isLocale(rawLocale) ? rawLocale : i18n.defaultLocale;
   const htmlLang = i18n.htmlLang[locale] ?? locale;

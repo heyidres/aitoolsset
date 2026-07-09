@@ -1,10 +1,10 @@
 /**
  * Catch-all for CMS-managed site pages — About, Privacy, Terms,
  * Contact, and any other arbitrary slug the editor creates from
- * /admin/pages.
+ * /portal-admin/pages.
  *
  * Routing precedence in Next.js: every specific route in /app
- * (/blog, /ai-tool, /admin, /api, /ai-tools, etc.) is matched
+ * (/blog, /ai-tool, /portal-admin, /api, /ai-tools, etc.) is matched
  * before this catch-all, so it can never shadow a core feature.
  * Slugs that match reserved words (just-in-case defence) get a
  * 404 so the editor is gently nudged to pick a different slug

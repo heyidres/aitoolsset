@@ -4,7 +4,7 @@
  * ─────────────────────────────────────────────────────────────
  *
  *  Each named "slot" is a piece of page copy that the editor
- *  can override from /admin/site-content. The defaults below
+ *  can override from /portal-admin/site-content. The defaults below
  *  live in code (version-controlled, type-safe). The override —
  *  if any — lives in the `site_section` Postgres table.
  *
@@ -19,7 +19,7 @@
  *        const text = await getSlot("page.section.field");
  *      (only works inside Server Components)
  *   3) The admin sees it automatically the next time they load
- *      /admin/site-content.
+ *      /portal-admin/site-content.
  *
  *  No migration needed — overrides are sparse rows.
  * ─────────────────────────────────────────────────────────────

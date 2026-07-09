@@ -8,7 +8,7 @@ import { i18n } from "@/lib/i18n/config";
 export async function Hero() {
   // Strategy:
   //   - Default locale (English): pull editable copy from the slot
-  //     registry — admin can still tweak it in /admin/site-content.
+  //     registry — admin can still tweak it in /portal-admin/site-content.
   //   - Other locales: pull from messages catalog. (Per-locale CMS
   //     overrides land in Phase 3 when the translations JSONB column
   //     is added to site_content.)

@@ -2,17 +2,18 @@ import type { MetadataRoute } from "next";
 
 const BASE = process.env.SITE_URL ?? "https://aitoolsset.com";
 
-// Paths that are private, duplicative, or index bloat.
-// /search is also noindexed at the page level (belt and braces).
-const DISALLOW = [
-  "/admin",
-  "/admin/",
-  "/api/",
-  "/saved",
-  "/search",
-  "/u/",
-  "/uploads/",
-];
+// Paths that are duplicative or index bloat for ordinary app routes.
+// Deliberately does NOT list /portal-admin or /api/ — robots.txt is a public,
+// unauthenticated file any crawler (or attacker doing recon) can fetch,
+// so it must never be used to "hide" sensitive infrastructure; doing so
+// just hands out a map of interesting paths. Real protection for those
+// comes from auth (NextAuth + MFA gate on /portal-admin) and from each route's
+// own `robots: { index: false }` metadata (see app/portal-admin/layout.tsx,
+// app/[locale]/saved/page.tsx), which keeps them out of Google without
+// broadcasting the path here. /search is listed below for a different,
+// non-security reason: it has effectively unbounded query-parameter
+// URL space, so disallowing it here also protects crawl budget.
+const DISALLOW = ["/saved", "/search", "/u/", "/uploads/"];
 
 // AI/LLM crawlers named explicitly so a future edit can't silently
 // block them. Being crawlable by these engines is core strategy:

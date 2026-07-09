@@ -10,7 +10,7 @@
  * all see the localized URL.
  *
  * External URLs (http:// or https://) and absolute paths to
- * non-localized routes (/api/*, /admin/*) pass through unchanged.
+ * non-localized routes (/api/*, /portal-admin/*) pass through unchanged.
  */
 
 import { createNavigation } from "next-intl/navigation";

@@ -26,7 +26,7 @@ existing search equity. Target: **Monday**.
       - [ ] `NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`
       - [ ] `ORG_SAMEAS` — comma-separated social profile URLs (X, LinkedIn, …) once created
       - [ ] Leave `REDIRECT_TO_APEX` **unset** until Phase 2 is done
-- [ ] **Test the admin flow on the current deployment**: `/admin` → login → magic link
+- [ ] **Test the admin flow on the current deployment**: `/portal-admin` → login → magic link
       → 2FA QR enrollment → save backup codes → dashboard loads.
 
 ## Phase 1 — Domain cutover (Monday)
@@ -42,7 +42,7 @@ existing search equity. Target: **Monday**.
       - [ ] `https://aitoolsset.com/ai-tool/zapier` renders with pricing table
       - [ ] `https://aitoolsset.com/robots.txt` shows the new rules (GPTBot etc.)
       - [ ] `https://aitoolsset.com/llms.txt` returns the content map
-      - [ ] `https://aitoolsset.com/admin` → login → 2FA works on the real domain
+      - [ ] `https://aitoolsset.com/portal-admin` → login → 2FA works on the real domain
       - [ ] A couple of old WP URLs 301 to their mapped targets
 
 ## Phase 2 — Immediately after cutover
@@ -61,7 +61,7 @@ existing search equity. Target: **Monday**.
 - [ ] Check `site:aitoolsset.com` on Google — WP pages should progressively swap to new ones.
 - [ ] Watch Vercel logs for traffic to weird legacy paths (`/wp-content/…`) — safe to ignore,
       or 410 them later.
-- [ ] Uptime check on `/` and `/admin/login` (e.g. UptimeRobot free).
+- [ ] Uptime check on `/` and `/portal-admin/login` (e.g. UptimeRobot free).
 
 ## Rollback
 

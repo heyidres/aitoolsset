@@ -2,8 +2,8 @@
  * /submit form server action.
  *
  * Public — no auth required. Anyone can submit a tool; the
- * admin queue at /admin/submissions reviews + approves before
- * the tool lands in /admin/tools as a draft.
+ * admin queue at /portal-admin/submissions reviews + approves before
+ * the tool lands in /portal-admin/tools as a draft.
  */
 
 "use server";
@@ -86,8 +86,8 @@ export async function submitTool(formData: FormData): Promise<SubmitToolResult> 
       })
       .returning({ id: toolSubmissions.id });
 
-    revalidatePath("/admin/submissions");
-    revalidatePath("/admin");
+    revalidatePath("/portal-admin/submissions");
+    revalidatePath("/portal-admin");
     await notifySubmission(parsed);
     return { ok: true, id: row.id };
   } catch (err) {
@@ -119,7 +119,7 @@ async function notifySubmission(parsed: z.infer<typeof SubmissionInput>) {
       from,
       to: process.env.SUBMISSIONS_INBOX || "sales@aitoolsset.com",
       subject: `[Submission] ${parsed.name} (${parsed.plan})`,
-      text: `New tool submission awaiting review:\n\nName: ${parsed.name}\nWebsite: ${parsed.websiteUrl}\nPlan: ${parsed.plan}\nCategory: ${parsed.category}\nSubmitter: ${parsed.submitterName} <${parsed.submitterEmail}>\n\nReview at /admin/submissions.`,
+      text: `New tool submission awaiting review:\n\nName: ${parsed.name}\nWebsite: ${parsed.websiteUrl}\nPlan: ${parsed.plan}\nCategory: ${parsed.category}\nSubmitter: ${parsed.submitterName} <${parsed.submitterEmail}>\n\nReview at /portal-admin/submissions.`,
     });
   } catch (e) {
     console.error("[submit-tool] notification email failed:", e);

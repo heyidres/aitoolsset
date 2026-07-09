@@ -77,7 +77,7 @@ async function findBlogPost(slug: string, locale: string): Promise<CmsBlogPost |
 
   if (!hasTranslation && shouldLazyTranslate(locale, "en")) {
     try {
-      const { translateBlogPostUnauthenticated } = await import("@/app/admin/blog/_translate-actions");
+      const { translateBlogPostUnauthenticated } = await import("@/app/portal-admin/blog/_translate-actions");
       const result = await translateBlogPostUnauthenticated(post.id, locale, null);
       if (result.ok) {
         const refreshed = await getBlogPostBySlug(slug);
