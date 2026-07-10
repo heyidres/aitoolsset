@@ -25,6 +25,19 @@ type Loaded = {
 };
 
 async function load(slug: string): Promise<Loaded | null> {
+  // CMS is the source of truth whenever a published row exists — mirrors
+  // the priority fix in ../page.tsx findTool(). Seed array is only a
+  // fallback for slugs never entered into the CMS.
+  const cms = await getToolBySlug(slug).catch(() => null);
+  if (cms && cms.status === "published") {
+    return {
+      name: cms.name,
+      tagline: cms.tagline,
+      domain: cms.domain,
+      verified: cms.verified,
+      category: cms.category,
+    };
+  }
   const hardcoded = TOOLS.find((t) => t.id === slug);
   if (hardcoded) {
     return {
@@ -35,15 +48,7 @@ async function load(slug: string): Promise<Loaded | null> {
       category: hardcoded.cat,
     };
   }
-  const cms = await getToolBySlug(slug).catch(() => null);
-  if (!cms || cms.status !== "published") return null;
-  return {
-    name: cms.name,
-    tagline: cms.tagline,
-    domain: cms.domain,
-    verified: cms.verified,
-    category: cms.category,
-  };
+  return null;
 }
 
 export default async function ToolOgImage({ params }: { params: Promise<{ slug: string }> }) {

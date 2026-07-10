@@ -210,10 +210,18 @@ function shouldLazyTranslate(locale: string, defaultLocale: string): boolean {
 }
 
 async function findTool(slug: string, locale: string = "en"): Promise<FindToolResult> {
-  const hardcoded = TOOLS.find((t) => t.id === slug);
-  if (hardcoded) return { tool: hardcoded };
+  // CMS is the source of truth whenever a published row exists — several
+  // legacy seed slugs (chatgpt, v0, perplexity, etc.) were later re-added
+  // as real CMS tools, and checking the seed array first was serving their
+  // stale placeholder detail copy (DEFAULT_TOOL_DETAIL) instead of the
+  // tool's own CMS content. The seed array is now only a fallback for
+  // slugs that were never entered into the CMS.
   let cmsRaw = await getToolBySlug(slug);
-  if (!cmsRaw || cmsRaw.status !== "published") return null;
+  if (!cmsRaw || cmsRaw.status !== "published") {
+    const hardcoded = TOOLS.find((t) => t.id === slug);
+    if (hardcoded) return { tool: hardcoded };
+    return null;
+  }
 
   // Runtime safety net: if a non-default locale URL is hit but the
   // translation cache is empty, generate + cache it inline. Costs the
