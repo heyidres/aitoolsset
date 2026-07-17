@@ -105,6 +105,7 @@ export async function createBlogPost(fd: FormData) {
   revalidatePath("/portal-admin/blog");
   revalidatePath(`/blog/${input.slug}`);
   revalidatePath("/blog");
+  revalidatePath("/"); // homepage "latest articles" rail
   redirect("/portal-admin/blog");
 }
 
@@ -118,6 +119,7 @@ export async function updateBlogPost(id: string, fd: FormData) {
   revalidatePath("/portal-admin/blog");
   revalidatePath(`/blog/${input.slug}`);
   revalidatePath("/blog");
+  revalidatePath("/"); // homepage "latest articles" rail
   redirect("/portal-admin/blog");
 }
 
@@ -126,4 +128,5 @@ export async function deleteBlogPost(id: string) {
   await db.delete(blogPosts).where(eq(blogPosts.id, id));
   revalidatePath("/portal-admin/blog");
   revalidatePath("/blog");
+  revalidatePath("/"); // homepage "latest articles" rail
 }

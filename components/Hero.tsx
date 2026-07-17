@@ -5,7 +5,7 @@ import { HeroMosaic } from "./HeroMosaic";
 import { getSlots } from "@/lib/site-content";
 import { i18n } from "@/lib/i18n/config";
 
-export async function Hero() {
+export async function Hero({ toolCount, categoryCount }: { toolCount: number; categoryCount: number }) {
   // Strategy:
   //   - Default locale (English): pull editable copy from the slot
   //     registry — admin can still tweak it in /portal-admin/site-content.
@@ -46,9 +46,14 @@ export async function Hero() {
     { label: `✦ ${t("hero_pill_new")}`,     q: "new" },
   ];
 
+  // Round down to the nearest 10 so the number doesn't need updating on
+  // every single tool add — it only ticks up when the site crosses a
+  // visible threshold, and "N+" reads honestly (never overstates).
+  const toolStat = `${Math.floor(toolCount / 10) * 10}+`;
+
   const STATS = [
-    { num: "590+", label: t("stat_tools") },
-    { num: "48",     label: t("stat_categories") },
+    { num: toolStat, label: t("stat_tools") },
+    { num: String(categoryCount), label: t("stat_categories") },
     { num: "50k+",   label: t("stat_users") },
     { num: "12k",    label: t("stat_reviews") },
   ];

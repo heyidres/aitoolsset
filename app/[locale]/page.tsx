@@ -10,7 +10,7 @@ import { PopularTable } from "@/components/PopularTable";
 import { BlogSection } from "@/components/BlogSection";
 import { CtaSection } from "@/components/CtaSection";
 import { TOOLS, WRITER_TOOLS, DEV_TOOLS, WRITER_USECASES, DEV_USECASES } from "@/lib/tools";
-import { getPublishedTools, getEnabledHomeSections, applyToolTranslations, type CmsTool } from "@/lib/cms";
+import { getPublishedTools, getEnabledHomeSections, getCategoriesCount, applyToolTranslations, type CmsTool } from "@/lib/cms";
 import { mergeToolsBySlug } from "@/lib/cms-adapters";
 import { getLocale, getTranslations } from "next-intl/server";
 import { i18n, isLocale } from "@/lib/i18n/config";
@@ -38,9 +38,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default async function HomePage() {
   // Pull every published tool + every enabled homepage section in parallel.
-  const [cmsTools, sections, locale, t] = await Promise.all([
+  const [cmsTools, sections, categoryCount, locale, t] = await Promise.all([
     getPublishedTools().catch(() => []),
     getEnabledHomeSections().catch(() => []),
+    getCategoriesCount().catch(() => 48),
     getLocale(),
     getTranslations("home"),
   ]);
@@ -69,7 +70,7 @@ export default async function HomePage() {
   return (
     <main>
       <Nav />
-      <Hero />
+      <Hero toolCount={mergedTools.length} categoryCount={categoryCount} />
       <TrustedTicker />
       <FeaturedTools toolsOverride={tools} />
       <TrendingGrid toolsOverride={tools} />
