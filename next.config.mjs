@@ -1,4 +1,5 @@
 import createNextIntlPlugin from "next-intl/plugin";
+import { WP_REDIRECTS } from "./redirects-wp.mjs";
 
 const withNextIntl = createNextIntlPlugin("./lib/i18n/request.ts");
 
@@ -38,6 +39,8 @@ const nextConfig = {
         destination: "/ai-tools/:path*",
         permanent: true,
       },
+      // WordPress → Next.js cutover map (generated from the live WP sitemap).
+      ...WP_REDIRECTS,
     ];
   },
   // Security headers applied to every route. Calibrated to be
