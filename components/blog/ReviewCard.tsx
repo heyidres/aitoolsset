@@ -30,7 +30,9 @@ export type ReviewCardTool = {
 };
 
 function priceLabel(t: ReviewCardTool): string {
-  if (t.startingPrice && t.startingPrice.trim()) return t.startingPrice.trim();
+  const sp = t.startingPrice?.trim();
+  // A stored "$0" / "0" is really a free plan — show that, not a bare "$0".
+  if (sp && !/^\$?0(\.0+)?$/.test(sp)) return sp;
   switch (t.pricing) {
     case "free": return "Free";
     case "freemium": return "Free plan available";
@@ -121,7 +123,9 @@ export function ReviewCard({
         )}
 
         <div className="blog-review-foot">
-          <span className="blog-review-saves">♥ {tool.saveCount.toLocaleString()} saves</span>
+          {tool.saveCount > 0 && (
+            <span className="blog-review-saves">♥ {tool.saveCount.toLocaleString()} saves</span>
+          )}
           <span className="blog-review-cta">Read full review →</span>
         </div>
       </Link>
