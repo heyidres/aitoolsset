@@ -45,8 +45,7 @@ export type ParsedBlock =
   | { kind: "verdict"; left: { title: string; text: string }; right: { title: string; text: string } }
   | { kind: "proscons"; pros: string[]; cons: string[] }
   | { kind: "round"; n: number; title: string; winner?: string; body: string }
-  | { kind: "usecase"; audience: string; pick: string; reason: string }
-  | { kind: "review"; n: number; slug: string; best: string; body: string; pros: string[]; cons: string[] };
+  | { kind: "usecase"; audience: string; pick: string; reason: string };
 
 export type BodySegment =
   | { kind: "html"; value: string }
@@ -60,7 +59,7 @@ export type BodySegment =
  * Multiline + dotAll so block-style markers can span newlines.
  */
 const ALL_MARKERS_RE =
-  /\[\[tool:([a-z0-9-]+)\]\]|\[\[tldr\]\]([\s\S]*?)\[\[\/tldr\]\]|\[\[highlight(?:\s+([^\]]*))?\]\]([\s\S]*?)\[\[\/highlight\]\]|\[\[verdict\]\]([\s\S]*?)\[\[\/verdict\]\]|\[\[proscons\]\]([\s\S]*?)\[\[\/proscons\]\]|\[\[round(?:\s+([^\]]*))?\]\]([\s\S]*?)\[\[\/round\]\]|\[\[usecase(?:\s+([^\]]*))?\]\]([\s\S]*?)\[\[\/usecase\]\]|\[\[review(?:\s+([^\]]*))?\]\]([\s\S]*?)\[\[\/review\]\]/g;
+  /\[\[tool:([a-z0-9-]+)\]\]|\[\[tldr\]\]([\s\S]*?)\[\[\/tldr\]\]|\[\[highlight(?:\s+([^\]]*))?\]\]([\s\S]*?)\[\[\/highlight\]\]|\[\[verdict\]\]([\s\S]*?)\[\[\/verdict\]\]|\[\[proscons\]\]([\s\S]*?)\[\[\/proscons\]\]|\[\[round(?:\s+([^\]]*))?\]\]([\s\S]*?)\[\[\/round\]\]|\[\[usecase(?:\s+([^\]]*))?\]\]([\s\S]*?)\[\[\/usecase\]\]/g;
 
 /**
  * Pull `key="value"` pairs out of a marker's attribute string.
@@ -120,8 +119,6 @@ export function parseBlogBody(html: string): BodySegment[] {
       roundBody,
       useCaseAttrs,
       useCaseBody,
-      reviewAttrs,
-      reviewBody,
     ] = match;
 
     if (toolSlug) {
@@ -161,21 +158,6 @@ export function parseBlogBody(html: string): BodySegment[] {
           reason: useCaseBody.trim(),
         },
       });
-    } else if (reviewBody !== undefined) {
-      const a = parseAttrs(reviewAttrs);
-      const { verdict, pros, cons } = splitReviewBody(reviewBody);
-      segments.push({
-        kind: "block",
-        block: {
-          kind: "review",
-          n: parseInt(a.n ?? "0", 10) || 0,
-          slug: a.slug ?? "",
-          best: a.best ?? "",
-          body: verdict,
-          pros,
-          cons,
-        },
-      });
     }
 
     lastIdx = idx + match[0].length;
@@ -205,30 +187,6 @@ function parseVerdict(body: string): Extract<ParsedBlock, { kind: "verdict" }> {
     };
   }
   return { kind: "verdict", left: sides.LEFT, right: sides.RIGHT };
-}
-
-/**
- * A [[review]] body carries an editorial verdict plus optional
- * `PROS:` / `CONS:` lines (pipe-separated, same grammar as [[proscons]]).
- * Pull the pros/cons out and return the remaining verdict HTML so the
- * card can render everything as one unified block.
- */
-function splitReviewBody(body: string): { verdict: string; pros: string[]; cons: string[] } {
-  let pros: string[] = [];
-  let cons: string[] = [];
-  const verdictLines: string[] = [];
-  for (const rawLine of body.split(/\r?\n/)) {
-    const line = rawLine.trim();
-    const m = line.match(/^(PROS|CONS)\s*:\s*(.+)$/i);
-    if (m) {
-      const items = m[2].split("|").map((p) => p.trim()).filter(Boolean);
-      if (m[1].toUpperCase() === "PROS") pros = items;
-      else cons = items;
-    } else if (line) {
-      verdictLines.push(rawLine);
-    }
-  }
-  return { verdict: verdictLines.join("\n").trim(), pros, cons };
 }
 
 function parseProsCons(body: string): Extract<ParsedBlock, { kind: "proscons" }> {
@@ -301,13 +259,6 @@ export const BLOCK_TEMPLATES: Array<{
     label: "Tool card",
     description: "Full embedded tool card (logo, tagline, CTA).",
     template: "<p>[[tool:replace-with-slug]]</p>",
-  },
-  {
-    id: "review",
-    label: "Ranked review card",
-    description: "Numbered #1/#2 review card: rank, logo, best-for pill, verdict, real price, CTA.",
-    template:
-      '<p>[[review n=1 slug=replace-with-slug best="Overall quality"]]One or two sentences on what this tool is best at and its main tradeoff. Wrap key facts in <strong>bold</strong>.[[/review]]</p>',
   },
   {
     id: "table",

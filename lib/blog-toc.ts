@@ -110,10 +110,6 @@ export function extractToolSlugs(html: string | null | undefined): string[] {
   for (const m of html.matchAll(/\[\[tool:([a-z0-9-]+)\]\]/gi)) {
     push(m[1]);
   }
-  // [[review ... slug=my-slug ...]] ranked-review markers
-  for (const m of html.matchAll(/\[\[review\b[^\]]*?\bslug\s*=\s*["']?([a-z0-9-]+)/gi)) {
-    push(m[1]);
-  }
   // /ai-tool/<slug> links — optional locale prefix
   for (const m of html.matchAll(/href=["'](?:\/[a-z]{2})?\/ai-tool\/([a-z0-9-]+)/gi)) {
     push(m[1]);
