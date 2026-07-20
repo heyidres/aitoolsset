@@ -22,10 +22,13 @@ import { i18n, isLocale } from "@/lib/i18n/config";
 // honor GeoIP (Vercel sets x-vercel-ip-country) on first visit.
 const intlMiddleware = createIntlMiddleware({
   ...routing,
-  // We do our own negotiation in `geoFirstLocaleRedirect` below
-  // so we can layer GeoIP on top of next-intl's accept-language
-  // detection. localeDetection still runs as a fallback.
-  localeDetection: true,
+  // localeDetection OFF: with it on, next-intl inspects Accept-Language
+  // (adding a Vary header) and writes a locale cookie, both of which make
+  // page responses uncacheable at the CDN — forcing a cold render on every
+  // visit. Locale now comes from the URL prefix plus our GeoIP first-visit
+  // redirect (`geoFirstLocaleRedirect`), and responses stay cacheable so
+  // ISR/static pages serve instantly from the edge.
+  localeDetection: false,
 });
 
 const BOT_UA_RE = /bot|crawl|slurp|spider|facebookexternalhit|whatsapp|telegram|skypeuripreview|linkedinbot/i;

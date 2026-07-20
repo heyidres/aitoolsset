@@ -22,11 +22,12 @@ import { ToolCard } from "@/components/ToolCard";
 
 export const runtime = "nodejs";
 export const dynamicParams = true;
-// ISR: generated on first visit (generateStaticParams returns [] so
-// nothing pre-renders at build), then cached and refreshed every 5 min.
-// The Nav no longer reads the session server-side, so the old
-// DYNAMIC_SERVER_USAGE constraint is gone and this route caches cleanly.
-export const revalidate = 300;
+// force-dynamic: kept dynamic on purpose. As an on-demand ISR route
+// (generateStaticParams=[]) something in this page's render tree reads
+// request-scoped data at generation time, which throws
+// DYNAMIC_SERVER_USAGE and 500s the page under `revalidate`. Rendered
+// per-request instead; keep-warm covers its cold-start.
+export const dynamic = "force-dynamic";
 
 type FoundCategory = {
   name: string;
