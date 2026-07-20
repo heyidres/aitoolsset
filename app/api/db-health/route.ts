@@ -10,9 +10,14 @@ import { NextResponse } from "next/server";
 import postgres from "postgres";
 import { sql as dsql } from "drizzle-orm";
 import { db } from "@/lib/db";
+import { getPublishedTools, getToolBySlug, getRelatedTools } from "@/lib/cms";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+// Set once when the module first loads (i.e. on a cold start). Comparing
+// it to request time reveals whether this invocation paid a cold-start.
+const MODULE_LOADED_AT = Date.now();
 
 function hostOf(raw: string | undefined): string | null {
   if (!raw) return null;
@@ -64,6 +69,33 @@ export async function GET() {
       report.sharedDb = { ok: true, toolCount: r[0].n, ms: Date.now() - t };
     } catch (e) {
       report.sharedDb = { ok: false, error: e instanceof Error ? e.message : String(e), ms: Date.now() - t };
+    }
+  }
+
+  // 3. Time the REAL heavy page-data functions to locate the 20s.
+  report.ageSinceModuleLoadMs = Date.now() - MODULE_LOADED_AT; // small => likely cold start
+  {
+    const t = Date.now();
+    try {
+      const tools = await withTimeout(getPublishedTools(), 25000);
+      report.getPublishedTools = { ok: true, count: tools.length, ms: Date.now() - t };
+    } catch (e) {
+      report.getPublishedTools = { ok: false, error: e instanceof Error ? e.message : String(e), ms: Date.now() - t };
+    }
+  }
+  {
+    const t = Date.now();
+    try {
+      const tool = await withTimeout(getToolBySlug("midjourney"), 25000);
+      const rel = tool
+        ? await withTimeout(
+            getRelatedTools({ excludeSlug: tool.slug, primaryCategory: tool.category, extraCategories: tool.categories, limit: 8 }),
+            25000,
+          )
+        : [];
+      report.toolPageData = { ok: true, found: Boolean(tool), related: rel.length, ms: Date.now() - t };
+    } catch (e) {
+      report.toolPageData = { ok: false, error: e instanceof Error ? e.message : String(e), ms: Date.now() - t };
     }
   }
 
