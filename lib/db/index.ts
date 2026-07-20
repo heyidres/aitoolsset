@@ -25,9 +25,15 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
 
-const url = process.env.DATABASE_URL;
+// Prefer SUPABASE_URL. The site migrated off Neon (its free-tier compute
+// hit the quota cap and 402s); DATABASE_URL may still hold the old Neon
+// string in some environments, and connecting the postgres-js TCP driver
+// to Neon's suspended compute HANGS instead of erroring. Reading the
+// Supabase var first guarantees we talk to the live database everywhere,
+// falling back to DATABASE_URL for envs that already point at Supabase.
+const url = process.env.SUPABASE_URL ?? process.env.DATABASE_URL;
 if (!url) {
-  console.warn("[db] DATABASE_URL is not set — DB-dependent routes will fail.");
+  console.warn("[db] Neither SUPABASE_URL nor DATABASE_URL is set — DB-dependent routes will fail.");
 }
 
 // Lazy: postgres-js doesn't open a connection until the first query, so an
