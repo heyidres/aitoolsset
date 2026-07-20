@@ -32,6 +32,17 @@ if (!url) {
 
 // Lazy: postgres-js doesn't open a connection until the first query, so an
 // empty string here is safe at import time (matches the old neon() behavior).
-const client = postgres(url ?? "", { prepare: false, max: 1 });
+//
+// connect_timeout / idle_timeout: without these, a connection attempt that
+// gets no response (rather than an explicit refusal) hangs indefinitely —
+// no error, nothing for a caller's .catch() to catch, just a request that
+// never completes. Bounding both means a bad connection surfaces as a fast,
+// catchable error instead of hanging the whole page render.
+const client = postgres(url ?? "", {
+  prepare: false,
+  max: 1,
+  connect_timeout: 10,
+  idle_timeout: 20,
+});
 export const db = drizzle(client, { schema });
 export { schema };

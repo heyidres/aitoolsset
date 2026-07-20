@@ -21,11 +21,13 @@ import { alternatesFor } from "@/lib/i18n/hreflang";
 import { isLocale } from "@/lib/i18n/config";
 
 // Dynamic so DB-managed tools resolve at request time — any slug
-// falls through and hits Postgres on the fly, then gets cached.
+// falls through and hits Postgres on the fly.
 export const dynamicParams = true;
-// Revalidate hourly so a CMS edit reaches this page without a full
-// redeploy, and so no page stays on stale cached content forever.
-export const revalidate = 3600;
+// force-dynamic, not revalidate: something in this page's render tree
+// (session/cookie reads via Nav etc.) needs real per-request dynamic
+// data, which Next.js disallows on an ISR/revalidate-cached route
+// (throws DYNAMIC_SERVER_USAGE). force-dynamic removes that constraint.
+export const dynamic = "force-dynamic";
 
 type FindToolResult =
   | {

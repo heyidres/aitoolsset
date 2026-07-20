@@ -81,7 +81,14 @@ function pass(req: NextRequest): NextResponse {
   return NextResponse.next({ request: { headers: h } });
 }
 
-export default auth(async (req) => {
+// IMPORTANT: this is a plain middleware function, NOT wrapped in the
+// `auth()` HOC. Middleware runs on the Edge runtime, which can't open the
+// raw TCP sockets the postgres-js driver needs (the old Neon HTTP driver
+// could, since it was fetch-based — that's what let `auth()` wrap
+// everything before). `auth()` now only gets called below for
+// /portal-admin paths, which actually need the session; every public
+// page skips it entirely and never touches the DB from middleware.
+export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // ── 0. Canonical-host redirect (post-cutover only) ─────────
@@ -104,10 +111,10 @@ export default auth(async (req) => {
   if (pathname.startsWith("/portal-admin")) {
     // The login page is the ONE admin path reachable without a session.
     if (pathname === "/portal-admin/login" || pathname.startsWith("/portal-admin/login/")) {
-      return pass(req as unknown as NextRequest);
+      return pass(req);
     }
 
-    const session = req.auth;
+    const session = await auth();
     if (!session?.user) {
       const url = new URL("/portal-admin/login", req.url);
       url.searchParams.set("callbackUrl", pathname);
@@ -120,7 +127,7 @@ export default auth(async (req) => {
     // Signed in with a CMS role. The /portal-admin/2fa flow is where you OBTAIN
     // the MFA proof, so it must be reachable without it.
     if (pathname === "/portal-admin/2fa" || pathname.startsWith("/portal-admin/2fa/")) {
-      return pass(req as unknown as NextRequest);
+      return pass(req);
     }
 
     // Enforce the short-lived TOTP proof (8h). Missing/expired → re-verify.
@@ -130,18 +137,18 @@ export default auth(async (req) => {
       url.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(url);
     }
-    return pass(req as unknown as NextRequest);
+    return pass(req);
   }
 
   // ── 2. Public routes — i18n negotiation ───────────────────
   // GeoIP first (only for first-time visitors).
-  const geo = geoFirstLocaleRedirect(req as unknown as NextRequest);
+  const geo = geoFirstLocaleRedirect(req);
   if (geo) return geo;
 
   // next-intl handles everything else (locale prefix detection,
   // accept-language fallback, cookie write).
-  return intlMiddleware(req as unknown as NextRequest);
-});
+  return intlMiddleware(req);
+}
 
 export const config = {
   // Match everything EXCEPT:

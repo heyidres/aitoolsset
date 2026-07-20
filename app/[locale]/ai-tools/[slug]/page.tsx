@@ -22,7 +22,11 @@ import { ToolCard } from "@/components/ToolCard";
 
 export const runtime = "nodejs";
 export const dynamicParams = true;
-export const revalidate = 60;
+// force-dynamic, not revalidate: something in this page's render tree
+// (session/cookie reads via Nav etc.) needs real per-request dynamic
+// data, which Next.js disallows on an ISR/revalidate-cached route
+// (throws DYNAMIC_SERVER_USAGE). force-dynamic removes that constraint.
+export const dynamic = "force-dynamic";
 
 type FoundCategory = {
   name: string;
