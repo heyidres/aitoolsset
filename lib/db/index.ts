@@ -1,24 +1,26 @@
 /**
- * Drizzle client — Neon HTTP driver.
+ * Drizzle client — postgres-js driver.
  *
- * The Neon serverless driver works in every Next.js runtime
- * (Node, edge, Vercel functions). For local dev you can point
- * DATABASE_URL at any Postgres instance; the HTTP driver only
- * matters for the serverless Neon transport.
+ * Works with any standard Postgres (Supabase, Neon's pooled connection,
+ * local). For Supabase on serverless use the Transaction pooler
+ * connection string (port 6543); `prepare: false` is required because
+ * transaction-mode pooling doesn't support prepared statements.
+ *
+ * DATABASE_URL not set → we don't throw at import so the rest of the app
+ * keeps working; DB-dependent routes throw when they actually query.
  */
 
-import { drizzle } from "drizzle-orm/neon-http";
-import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import * as schema from "./schema";
 
 const url = process.env.DATABASE_URL;
 if (!url) {
-  // We don't throw at import-time so the rest of the app keeps
-  // working without a database. Routes that need the DB throw
-  // when they try to query.
   console.warn("[db] DATABASE_URL is not set — DB-dependent routes will fail.");
 }
 
-const sql = neon(url ?? "");
-export const db = drizzle(sql, { schema });
+// Lazy: postgres-js doesn't open a connection until the first query, so an
+// empty string here is safe at import time (matches the old neon() behavior).
+const client = postgres(url ?? "", { prepare: false });
+export const db = drizzle(client, { schema });
 export { schema };

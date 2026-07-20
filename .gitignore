@@ -14,3 +14,6 @@ next-env.d.ts
 
 # Vercel CLI artifacts
 .vercel
+
+# Raw DB export (contains user/session data) — local migration artifact only
+neon-export.json

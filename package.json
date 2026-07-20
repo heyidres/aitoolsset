@@ -37,6 +37,7 @@
     "next-auth": "5.0.0-beta.25",
     "next-intl": "^4.13.0",
     "otplib": "^12.0.1",
+    "postgres": "^3.4.9",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

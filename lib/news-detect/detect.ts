@@ -175,5 +175,6 @@ export async function claimEventsForDrafting(limit: number) {
     WHERE e.id = next.id
     RETURNING e.*
   `);
-  return rows.rows as Array<typeof newsDetectionEvents.$inferSelect>;
+  // postgres-js returns the rows directly (a RowList), not wrapped in `.rows`.
+  return rows as unknown as Array<typeof newsDetectionEvents.$inferSelect>;
 }
