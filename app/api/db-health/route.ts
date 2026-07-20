@@ -19,6 +19,30 @@ export const dynamic = "force-dynamic";
 // it to request time reveals whether this invocation paid a cold-start.
 const MODULE_LOADED_AT = Date.now();
 
+// COLD-START PROFILER: on this module's first load, dynamically import the
+// heavy modules the homepage pulls in and time each one. Dynamic import is
+// cached, so this measures the real cold load cost exactly once per
+// instance. Reveals which import dominates the homepage's cold start.
+const importTimings: Record<string, number> = {};
+const coldProfile = (async () => {
+  const time = async (name: string, load: () => Promise<unknown>) => {
+    const t = Date.now();
+    try {
+      await load();
+    } catch {
+      /* ignore — we only care about load time */
+    }
+    importTimings[name] = Date.now() - t;
+  };
+  await time("seed-i18n", () => import("@/lib/i18n/seed-i18n"));
+  await time("tools", () => import("@/lib/tools"));
+  await time("cms", () => import("@/lib/cms"));
+  await time("cms-adapters", () => import("@/lib/cms-adapters"));
+  await time("Nav", () => import("@/components/Nav"));
+  await time("Footer", () => import("@/components/Footer"));
+  await time("next-intl-server", () => import("next-intl/server"));
+})();
+
 function hostOf(raw: string | undefined): string | null {
   if (!raw) return null;
   const cleaned = raw.trim().replace(/^["']|["']$/g, "");
@@ -38,10 +62,13 @@ export async function GET() {
   const dbUrl = process.env.DATABASE_URL;
   const chosen = (supa ?? dbUrl)?.trim().replace(/^["']|["']$/g, "");
 
+  await coldProfile.catch(() => {});
   const report: Record<string, unknown> = {
     commit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "unknown",
     usingHost: hostOf(supa ?? dbUrl),
     hasSUPABASE_URL: Boolean(supa),
+    ageSinceModuleLoadMs: Date.now() - MODULE_LOADED_AT,
+    coldImportMs: importTimings,
   };
 
   // 1. Fresh, isolated connection (control — this always worked).
