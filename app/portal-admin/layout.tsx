@@ -13,21 +13,20 @@
  */
 
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { toolSubmissions, reviews } from "@/lib/db/schema";
 import { getToolsCount } from "@/lib/cms";
+import { verifyMfaToken, MFA_COOKIE } from "@/lib/admin-mfa";
 import { Sidebar, type SidebarCounts } from "./_components/Sidebar";
 import { Topbar } from "./_components/Topbar";
 import "./admin.css";
 
-// These render standalone (no CMS shell, no session redirect): the
-// login page is pre-auth, and the 2fa page runs after sign-in but
-// before the MFA proof exists. Middleware sets x-pathname so we can
-// tell without a client-side pathname hook.
-const BARE_PATHS = new Set(["/portal-admin/login", "/portal-admin/2fa"]);
+function isBarePath(pathname: string, base: string): boolean {
+  return pathname === base || pathname.startsWith(`${base}/`);
+}
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,14 +58,36 @@ async function loadCounts(): Promise<SidebarCounts> {
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = (await headers()).get("x-pathname") ?? "";
-  // Login / 2fa render bare — no shell, no gate. They own their own auth.
-  if (BARE_PATHS.has(pathname)) {
+
+  // The full admin gate (auth → role → MFA) lives HERE, on the Node
+  // runtime, NOT in the Edge middleware: the postgres-js driver that
+  // auth() needs can't run on Edge (it hangs → MIDDLEWARE_INVOCATION_TIMEOUT).
+
+  // 1. Login is fully pre-auth — render bare, it owns its own flow.
+  if (isBarePath(pathname, "/portal-admin/login")) {
     return <div className="admin-root">{children}</div>;
   }
 
+  // 2. Everything else requires a signed-in CMS user with a CMS role.
   const session = await auth();
   if (!session?.user) {
     redirect("/portal-admin/login");
+  }
+  if (session.user.role !== "admin" && session.user.role !== "editor") {
+    redirect("/");
+  }
+
+  // 3. The 2fa page is where a signed-in user OBTAINS the MFA proof, so it
+  //    must be reachable without one — but only by an authenticated CMS user.
+  if (isBarePath(pathname, "/portal-admin/2fa")) {
+    return <div className="admin-root">{children}</div>;
+  }
+
+  // 4. Enforce the short-lived (8h) TOTP proof on every other admin page.
+  const mfaToken = (await cookies()).get(MFA_COOKIE)?.value;
+  const mfaOk = await verifyMfaToken(mfaToken, session.user.id);
+  if (!mfaOk) {
+    redirect("/portal-admin/2fa");
   }
 
   const counts = await loadCounts();

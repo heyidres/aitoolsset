@@ -15,8 +15,6 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
-import { auth } from "@/lib/auth";
-import { verifyMfaToken, MFA_COOKIE } from "@/lib/admin-mfa";
 import { routing } from "@/lib/i18n/routing";
 import { i18n, isLocale } from "@/lib/i18n/config";
 
@@ -107,36 +105,17 @@ export default async function middleware(req: NextRequest) {
     }
   }
 
-  // ── 1. Admin gate ─────────────────────────────────────────
+  // ── 1. Admin paths ────────────────────────────────────────
+  // NO database work happens here. Middleware runs on the Edge runtime,
+  // which can't open the TCP sockets the postgres-js driver needs — so
+  // calling auth() (a DB session lookup) here hangs the request until the
+  // platform kills it (MIDDLEWARE_INVOCATION_TIMEOUT). That's why the old
+  // Neon HTTP driver worked here and postgres-js does not.
+  //
+  // Auth + role + MFA are enforced instead in the Node-runtime admin
+  // layout (app/portal-admin/layout.tsx), where the DB driver works. Here
+  // we only forward the pathname so the layout knows which page it's on.
   if (pathname.startsWith("/portal-admin")) {
-    // The login page is the ONE admin path reachable without a session.
-    if (pathname === "/portal-admin/login" || pathname.startsWith("/portal-admin/login/")) {
-      return pass(req);
-    }
-
-    const session = await auth();
-    if (!session?.user) {
-      const url = new URL("/portal-admin/login", req.url);
-      url.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(url);
-    }
-    if (session.user.role !== "admin" && session.user.role !== "editor") {
-      return NextResponse.redirect(new URL("/", req.url));
-    }
-
-    // Signed in with a CMS role. The /portal-admin/2fa flow is where you OBTAIN
-    // the MFA proof, so it must be reachable without it.
-    if (pathname === "/portal-admin/2fa" || pathname.startsWith("/portal-admin/2fa/")) {
-      return pass(req);
-    }
-
-    // Enforce the short-lived TOTP proof (8h). Missing/expired → re-verify.
-    const mfaOk = await verifyMfaToken(req.cookies.get(MFA_COOKIE)?.value, session.user.id);
-    if (!mfaOk) {
-      const url = new URL("/portal-admin/2fa", req.url);
-      url.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(url);
-    }
     return pass(req);
   }
 
