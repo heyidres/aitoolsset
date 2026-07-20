@@ -22,11 +22,11 @@ import { ToolCard } from "@/components/ToolCard";
 
 export const runtime = "nodejs";
 export const dynamicParams = true;
-// force-dynamic, not revalidate: something in this page's render tree
-// (session/cookie reads via Nav etc.) needs real per-request dynamic
-// data, which Next.js disallows on an ISR/revalidate-cached route
-// (throws DYNAMIC_SERVER_USAGE). force-dynamic removes that constraint.
-export const dynamic = "force-dynamic";
+// ISR: generated on first visit (generateStaticParams returns [] so
+// nothing pre-renders at build), then cached and refreshed every 5 min.
+// The Nav no longer reads the session server-side, so the old
+// DYNAMIC_SERVER_USAGE constraint is gone and this route caches cleanly.
+export const revalidate = 300;
 
 type FoundCategory = {
   name: string;

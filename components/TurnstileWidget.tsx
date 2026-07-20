@@ -17,6 +17,14 @@ type Props = {
   siteKey?: string;
   /** Optional: light or dark theme. Defaults to "auto". */
   theme?: "light" | "dark" | "auto";
+  /**
+   * Widget visibility. "always" shows the managed checkbox (default,
+   * used on login/contact/submit). "interaction-only" stays invisible
+   * and still issues a token silently, only surfacing a challenge if
+   * Cloudflare actually demands one — used for low-risk spots like the
+   * footer newsletter so the "Verify you are human" box isn't visible.
+   */
+  appearance?: "always" | "interaction-only";
   /** Optional: pre-rendered widget id callback for managed forms. */
   onVerified?: (token: string) => void;
 };
@@ -29,6 +37,7 @@ declare global {
         opts: {
           sitekey: string;
           theme?: string;
+          appearance?: string;
           callback?: (token: string) => void;
         }
       ) => string;
@@ -37,7 +46,7 @@ declare global {
   }
 }
 
-export function TurnstileWidget({ siteKey, theme = "auto", onVerified }: Props) {
+export function TurnstileWidget({ siteKey, theme = "auto", appearance = "always", onVerified }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [token, setToken] = useState("");
 
@@ -48,6 +57,7 @@ export function TurnstileWidget({ siteKey, theme = "auto", onVerified }: Props) 
       window.turnstile.render(ref.current, {
         sitekey: siteKey,
         theme,
+        appearance,
         callback: (t: string) => {
           setToken(t);
           onVerified?.(t);
@@ -60,7 +70,7 @@ export function TurnstileWidget({ siteKey, theme = "auto", onVerified }: Props) 
       if (tryRender()) clearInterval(id);
     }, 200);
     return () => clearInterval(id);
-  }, [siteKey, theme, onVerified]);
+  }, [siteKey, theme, appearance, onVerified]);
 
   if (!siteKey) return null;
 

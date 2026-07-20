@@ -23,10 +23,12 @@ import {
 } from "@/lib/i18n/seed-i18n";
 
 export const runtime = "nodejs";
-// force-dynamic (not build-time ISR) — see app/[locale]/ai-tools/page.tsx
-// for why: avoids bursting the DB pool during static generation. Admin
-// publishes still show immediately (this page always renders fresh).
-export const dynamic = "force-dynamic";
+// ISR: serve cached HTML, regenerate every 5 min in the background.
+// Data is ~50ms so freshness isn't the concern — this was force-dynamic
+// only to dodge build-time DB bursts, which lib/db now handles by not
+// churning connections during the build. Cached pages skip the per-visit
+// cold-start render entirely. Admin publishes appear within 5 min.
+export const revalidate = 300;
 
 // Homepage canonical + hreflang. Title/description inherit from the
 // root layout; this only pins the URL identity (en at root, ko at /ko)

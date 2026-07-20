@@ -52,7 +52,18 @@ if (!url) {
 // replaced. Well under any pooler idle timeout, so a reused connection is
 // always genuinely alive; large enough that a burst of concurrent queries
 // (e.g. Promise.all on one page) still shares a single warm connection.
-const IDLE_LIMIT_MS = 8_000;
+//
+// EXCEPTION — during `next build`: there is no serverless freeze, so
+// connections never go stale, and recycling would only CHURN connections
+// (open/close repeatedly between page renders). That churn hammers
+// Supabase's free-tier pooler while it's already generating hundreds of
+// pages, exhausting connection slots so page queries block past the 60s
+// static-generation timeout and fail the build. During build we therefore
+// keep ONE stable connection (never recycle) so ISR-cached pages can be
+// pre-rendered without bursting the pool. Detected via NEXT_PHASE, which
+// Next sets to "phase-production-build" for the duration of the build.
+const IS_BUILD = process.env.NEXT_PHASE === "phase-production-build";
+const IDLE_LIMIT_MS = IS_BUILD ? Number.POSITIVE_INFINITY : 8_000;
 
 function makeClient(): Sql {
   return postgres(url, {

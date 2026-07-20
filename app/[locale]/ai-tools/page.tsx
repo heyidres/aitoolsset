@@ -21,10 +21,12 @@ import { alternatesFor } from "@/lib/i18n/hreflang";
 import { isLocale } from "@/lib/i18n/config";
 
 export const runtime = "nodejs";
-// Render per-request rather than pre-building this page (x every locale)
-// during the build — see the category [slug] route for why: bursting
-// DB-backed pages during static generation overwhelms a pooled connection
-// (Supabase's free-tier Transaction pooler). Same content either way.
+// Stays force-dynamic: this listing aggregates stats across all ~840
+// tools and 80+ categories, which is heavy enough that pre-rendering it
+// for every locale at build time blows the 60s static-generation budget
+// (verified in a local build). Rendered per-request instead; keep-warm
+// covers its cold-start. The lighter content pages (home, blog, deals,
+// category detail) are ISR-cached.
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {

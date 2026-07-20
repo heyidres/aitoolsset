@@ -119,7 +119,10 @@ export function NewsletterSignup({
         >
           {pending ? t("submitting") : status === "ok" ? t("subscribed") : t("submit")}
         </button>
-        <TurnstileWidget siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} />
+        <TurnstileWidget
+          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+          appearance="interaction-only"
+        />
       </form>
 
       {status === "ok" && (
