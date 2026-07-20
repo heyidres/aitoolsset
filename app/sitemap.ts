@@ -19,7 +19,12 @@ import {
 import { i18n } from "@/lib/i18n/config";
 import { localeUrl } from "@/lib/i18n/hreflang";
 
-export const revalidate = 21600; // 6 hours
+// force-dynamic (not build-time render) — see app/[locale]/ai-tools/page.tsx
+// for why: keeps every DB query out of the build, since a fresh Vercel
+// build can start while Supabase's free-tier compute is cold, and the
+// build has no tolerance for that wake-up latency. Crawl volume is low
+// enough that rendering per-request (instead of caching 6h) is fine.
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const BASE = process.env.SITE_URL ?? "https://aitoolsset.com";

@@ -17,7 +17,11 @@ import {
   getPublishedBlogPosts,
 } from "@/lib/cms";
 
-export const revalidate = 21600; // 6 hours
+// force-dynamic (not build-time render) — see app/[locale]/ai-tools/page.tsx
+// for why: keeps DB queries out of the build (a fresh Vercel build can
+// start while the free-tier DB compute is cold). LLM crawl volume is low
+// enough that per-request rendering is fine without the 6h cache.
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const BASE = process.env.SITE_URL ?? "https://aitoolsset.com";

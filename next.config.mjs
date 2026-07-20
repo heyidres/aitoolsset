@@ -18,6 +18,15 @@ const nextConfig = {
     "@anthropic-ai/sdk",
     "@google/genai",
   ],
+  experimental: {
+    // Cap how many pages each build worker renders at once. Default (8)
+    // meant many DB-backed pages fired their queries in the same instant
+    // during static generation, bursting past what a pooled free-tier
+    // Postgres connection (Supabase's Transaction pooler) can serve —
+    // pages then timed out and failed the build. Rendering pages more
+    // serially spreads the same queries out instead of batching them.
+    staticGenerationMaxConcurrency: 2,
+  },
   // 301 redirects preserving SEO + bookmarks during the URL rename:
   //   /tools/<slug>     →  /ai-tool/<slug>     (tool detail, singular)
   //   /categories       →  /ai-tools           (categories landing)

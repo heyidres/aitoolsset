@@ -23,8 +23,10 @@ import {
 } from "@/lib/i18n/seed-i18n";
 
 export const runtime = "nodejs";
-// 60-second ISR — admin publishes are also instant via revalidatePath().
-export const revalidate = 60;
+// force-dynamic (not build-time ISR) — see app/[locale]/ai-tools/page.tsx
+// for why: avoids bursting the DB pool during static generation. Admin
+// publishes still show immediately (this page always renders fresh).
+export const dynamic = "force-dynamic";
 
 // Homepage canonical + hreflang. Title/description inherit from the
 // root layout; this only pins the URL identity (en at root, ko at /ko)

@@ -67,8 +67,14 @@ async function findCategory(slug: string, locale: string = "en"): Promise<FoundC
   return null;
 }
 
+// Render every category on-demand (dynamicParams + revalidate above already
+// support this) instead of forcing all ~80 categories x every locale to
+// query the DB during the build. Pre-rendering that many DB-backed pages
+// in one burst overwhelms a pooled connection (e.g. Supabase's free-tier
+// Transaction pooler) — spreading the same queries across real first-visit
+// traffic is gentler and doesn't change what visitors or crawlers see.
 export function generateStaticParams() {
-  return ALL_CATS.map((c) => ({ slug: c.slug }));
+  return [];
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Metadata> {

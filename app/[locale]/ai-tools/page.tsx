@@ -21,7 +21,11 @@ import { alternatesFor } from "@/lib/i18n/hreflang";
 import { isLocale } from "@/lib/i18n/config";
 
 export const runtime = "nodejs";
-export const revalidate = 60;
+// Render per-request rather than pre-building this page (x every locale)
+// during the build — see the category [slug] route for why: bursting
+// DB-backed pages during static generation overwhelms a pooled connection
+// (Supabase's free-tier Transaction pooler). Same content either way.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;

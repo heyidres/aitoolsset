@@ -20,10 +20,12 @@ import { JsonLd, toolJsonLd, breadcrumbJsonLd } from "@/lib/json-ld";
 import { alternatesFor } from "@/lib/i18n/hreflang";
 import { isLocale } from "@/lib/i18n/config";
 
-// Dynamic so DB-managed tools resolve at request time —
-// `generateStaticParams` only lists hardcoded seed tools, but
-// any extra slug falls through and hits Postgres on the fly.
+// Dynamic so DB-managed tools resolve at request time — any slug
+// falls through and hits Postgres on the fly, then gets cached.
 export const dynamicParams = true;
+// Revalidate hourly so a CMS edit reaches this page without a full
+// redeploy, and so no page stays on stale cached content forever.
+export const revalidate = 3600;
 
 type FindToolResult =
   | {
@@ -302,8 +304,12 @@ async function findTool(slug: string, locale: string = "en"): Promise<FindToolRe
   };
 }
 
+// Render every tool on-demand rather than pre-rendering the hardcoded seed
+// list (+ every locale) at build time — see the ai-tools category page for
+// why: bursting DB-backed pages during the build overwhelms a pooled
+// connection like Supabase's free-tier pooler. Same content either way.
 export function generateStaticParams() {
-  return TOOLS.map((t) => ({ slug: t.id }));
+  return [];
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Metadata> {
