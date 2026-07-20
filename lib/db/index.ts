@@ -31,7 +31,12 @@ import * as schema from "./schema";
 // to Neon's suspended compute HANGS instead of erroring. Reading the
 // Supabase var first guarantees we talk to the live database everywhere,
 // falling back to DATABASE_URL for envs that already point at Supabase.
-const url = process.env.SUPABASE_URL ?? process.env.DATABASE_URL;
+// Trim stray whitespace/quotes: pasting a value into a hosting dashboard
+// (Vercel) often carries the surrounding quotes from a .env file, and a
+// URL like `"postgres://…"` (quotes included) silently fails to connect.
+const url = (process.env.SUPABASE_URL ?? process.env.DATABASE_URL ?? "")
+  .trim()
+  .replace(/^["']|["']$/g, "");
 if (!url) {
   console.warn("[db] Neither SUPABASE_URL nor DATABASE_URL is set — DB-dependent routes will fail.");
 }
