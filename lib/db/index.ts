@@ -83,10 +83,16 @@ function getClient(): Sql {
   if (!client || now - lastUsed > IDLE_LIMIT_MS) {
     const stale = client;
     client = makeClient();
-    // Tear down the old (likely dead) connection in the background — never
-    // block the new query on it, and swallow errors from closing a socket
-    // that may already be gone.
-    if (stale) void stale.end({ timeout: 5 }).catch(() => {});
+    // Close the old client GRACEFULLY: end() with no timeout waits for any
+    // in-flight queries to finish before closing sockets. It must NOT be
+    // end({ timeout: n }) — that force-destroys sockets after n seconds
+    // EVEN WITH QUERIES STILL RUNNING, which meant one request triggering
+    // a recycle could kill another still-rendering request's queries
+    // mid-flight (random 500s/hangs that got worse the more traffic
+    // overlapped — e.g. once keep-warm pings started). Fire-and-forget:
+    // nothing awaits this, and if the socket is already dead the catch
+    // swallows it while idle_timeout reaps the remains.
+    if (stale) void stale.end().catch(() => {});
   }
   lastUsed = now;
   return client;
