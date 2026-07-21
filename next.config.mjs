@@ -5,6 +5,9 @@ const withNextIntl = createNextIntlPlugin("./lib/i18n/request.ts");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Don't advertise the framework in a response header — it's free recon
+  // for an attacker (lets them target Next.js-specific CVEs). No downside.
+  poweredByHeader: false,
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "www.google.com", pathname: "/s2/favicons/**" },
