@@ -307,15 +307,18 @@ export async function getToolById(id: string): Promise<CmsTool | null> {
  *
  * The `@>` operator does a containment check against the jsonb array.
  */
-export async function getToolsByCategory(categorySlug: string): Promise<CmsTool[]> {
+export async function getToolsByCategory(categorySlug: string, limit?: number): Promise<CmsTool[]> {
   const containsArg = JSON.stringify([categorySlug]);
-  const rows = await db
+  let query = db
     .select()
     .from(tools)
     .where(
       sql`(${tools.category} = ${categorySlug} OR ${tools.categories} @> ${containsArg}::jsonb) AND ${tools.status} = 'published'`
     )
-    .orderBy(desc(tools.saveCount));
+    .orderBy(desc(tools.saveCount))
+    .$dynamic();
+  if (limit !== undefined) query = query.limit(limit);
+  const rows = await query;
   return rows.map(toCmsTool);
 }
 
@@ -342,10 +345,16 @@ export async function getRelatedTools({
 }): Promise<CmsTool[]> {
   const cats = Array.from(new Set([primaryCategory, ...extraCategories].filter(Boolean)));
 
-  // Fetch siblings per category in parallel (each query reuses the same
-  // index on tool.category / tool.categories @> [...] so cost is small).
+  // Fetch siblings per category in parallel, LIMITED — we only ever keep
+  // up to `limit` total across every category, but without a limit here
+  // this fetched (and toCmsTool-mapped) EVERY published tool in the
+  // category on every single tool-page render, which for a large/popular
+  // category (exactly the categories a popular tool like ChatGPT or
+  // Midjourney sits in) meant transforming dozens to 100+ rows just to
+  // use 8 of them. `limit` per category is generous (covers every
+  // category contributing its full share) while bounding the worst case.
   const buckets = cats.length > 0
-    ? await Promise.all(cats.map((c) => getToolsByCategory(c).catch(() => [] as CmsTool[])))
+    ? await Promise.all(cats.map((c) => getToolsByCategory(c, limit).catch(() => [] as CmsTool[])))
     : [];
 
   // Merge, dedupe by id, drop self, cap to limit.
