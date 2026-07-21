@@ -13,7 +13,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { auth } from "@/lib/auth";
+import { authWithRetry } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { generateTotpSecret, totpQrDataUrl } from "@/lib/totp";
@@ -33,7 +33,7 @@ export default async function TwoFactorPage({
 }: {
   searchParams: Promise<{ callbackUrl?: string }>;
 }) {
-  const session = await auth();
+  const session = await authWithRetry();
   if (!session?.user) redirect("/portal-admin/login");
 
   const sp = await searchParams;

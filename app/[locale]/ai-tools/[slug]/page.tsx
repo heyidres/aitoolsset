@@ -22,11 +22,10 @@ import { ToolCard } from "@/components/ToolCard";
 
 export const runtime = "nodejs";
 export const dynamicParams = true;
-// force-dynamic: kept dynamic on purpose. As an on-demand ISR route
-// (generateStaticParams=[]) something in this page's render tree reads
-// request-scoped data at generation time, which throws
-// DYNAMIC_SERVER_USAGE and 500s the page under `revalidate`. Rendered
-// per-request instead; keep-warm covers its cold-start.
+// force-dynamic, not revalidate: something in this page's render tree
+// (session/cookie reads via Nav etc.) needs real per-request dynamic
+// data, which Next.js disallows on an ISR/revalidate-cached route
+// (throws DYNAMIC_SERVER_USAGE). force-dynamic removes that constraint.
 export const dynamic = "force-dynamic";
 
 type FoundCategory = {

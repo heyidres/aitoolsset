@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { auth } from "@/lib/auth";
+import { authWithRetry } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { logAdmin } from "@/lib/audit";
@@ -22,7 +22,7 @@ function safeCallback(url: string | undefined): string {
 }
 
 async function requireCmsUser() {
-  const session = await auth();
+  const session = await authWithRetry();
   if (!session?.user) throw new Error("Not signed in");
   if (session.user.role !== "admin" && session.user.role !== "editor") {
     throw new Error("Not authorised");

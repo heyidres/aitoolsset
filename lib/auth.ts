@@ -30,7 +30,7 @@
  * "passed 2FA recently" flag cleanly.
  */
 
-import NextAuth, { type DefaultSession } from "next-auth";
+import NextAuth, { type DefaultSession, type Session } from "next-auth";
 import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
@@ -135,3 +135,26 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     },
   },
 });
+
+/**
+ * Resilient session lookup for the admin gate. `session: { strategy:
+ * "database" }` means every `auth()` call is a live DB read through the
+ * same serverless-recycled connection as everything else — on the very
+ * first request a Lambda instance serves after a cold start (exactly the
+ * request that follows a fresh sign-in or a 2FA redirect), that lookup can
+ * occasionally come back empty even for a genuinely valid session: a
+ * fresh connection under first-use load takes a bit longer to establish,
+ * and NextAuth treats any hiccup as "no session" rather than surfacing an
+ * error. We've confirmed the same session resolves correctly moments
+ * later (a direct re-check always succeeds), so a single short, bounded
+ * retry absorbs that blip instead of bouncing a signed-in admin back to
+ * the login screen. Not used on public pages — this is intentionally
+ * scoped to the low-traffic admin gate where the extra latency is
+ * invisible and the cost of a false "not logged in" is high.
+ */
+export async function authWithRetry(): Promise<Session | null> {
+  const first = await auth();
+  if (first?.user) return first;
+  await new Promise((resolve) => setTimeout(resolve, 400));
+  return auth();
+}

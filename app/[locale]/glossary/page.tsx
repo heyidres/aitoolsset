@@ -8,9 +8,8 @@ import { alternatesFor } from "@/lib/i18n/hreflang";
 import { isLocale } from "@/lib/i18n/config";
 
 export const runtime = "nodejs";
-// Stays force-dynamic: pre-rendering the full glossary for every locale
-// at build time exceeds the 60s static-generation budget (verified in a
-// local build). Rendered per-request; keep-warm covers cold-start.
+// force-dynamic (not build-time ISR) — see app/[locale]/ai-tools/page.tsx
+// for why: avoids bursting the DB pool during static generation.
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {

@@ -15,7 +15,7 @@
 import { redirect } from "next/navigation";
 import { headers, cookies } from "next/headers";
 import { sql } from "drizzle-orm";
-import { auth } from "@/lib/auth";
+import { authWithRetry } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { toolSubmissions, reviews } from "@/lib/db/schema";
 import { getToolsCount } from "@/lib/cms";
@@ -69,7 +69,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   // 2. Everything else requires a signed-in CMS user with a CMS role.
-  const session = await auth();
+  const session = await authWithRetry();
   if (!session?.user) {
     redirect("/portal-admin/login");
   }
