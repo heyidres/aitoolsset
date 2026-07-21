@@ -68,7 +68,18 @@ const IDLE_LIMIT_MS = IS_BUILD ? Number.POSITIVE_INFINITY : 8_000;
 function makeClient(): Sql {
   return postgres(url, {
     prepare: false, // required by Supabase's transaction pooler (port 6543)
-    max: 1,
+    // max: 1 during build (hundreds of pages rendering at once must not
+    // burst the pooler), but MORE THAN 1 at runtime. This is load-bearing:
+    // with max:1, a page that runs concurrent queries (generateMetadata in
+    // parallel with the page body, or a Promise.all fan-out) reliably
+    // WEDGED the single-connection queue after a recycle — first render
+    // after a fresh client worked, every later one hung forever (the
+    // /ai-tool/[slug] production hang). Reproduced against production
+    // Supabase: max:1 hung 5/6 iterations of the tool page's exact query
+    // shape; max:4 ran 6/6 clean. Four connections per instance is well
+    // within Supavisor's free-tier pool while giving concurrent page
+    // queries real parallel lanes instead of one wedgeable queue.
+    max: IS_BUILD ? 1 : 4,
     connect_timeout: 10,
     idle_timeout: 20,
     max_lifetime: 60 * 10,
