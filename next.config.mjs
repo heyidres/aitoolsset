@@ -88,6 +88,10 @@ const nextConfig = {
           // HSTS — Vercel domains are HTTPS only, so we can safely enforce
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
           { key: "Content-Security-Policy", value: cspDirectives },
+          // Which build is serving — baked in at build time. Zero info
+          // disclosure (the repo is public, so the short hash already is),
+          // and lets us confirm exactly which commit a request hit.
+          { key: "X-App-Commit", value: (process.env.VERCEL_GIT_COMMIT_SHA ?? "dev").slice(0, 7) },
         ],
       },
     ];
