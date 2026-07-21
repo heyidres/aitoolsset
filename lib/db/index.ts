@@ -1,45 +1,43 @@
 /**
- * Drizzle client — postgres-js driver against Supabase (Transaction pooler).
+ * Drizzle client — postgres-js against Supabase (Transaction pooler).
  *
- * Deliberately a PLAIN postgres-js connection pool — no custom connection
- * recycling. An earlier version wrapped the client in a Proxy that tore
- * down and recreated the connection whenever it had been idle >8s, to work
- * around a "stale socket hangs forever after a serverless freeze" problem.
- * That problem turned out to be the app pointing at a DEAD Neon database
- * (DATABASE_URL still held the retired Neon string); once it pointed at
- * Supabase, the recycling was unnecessary — and actively harmful. It
- * introduced two production outages of its own:
- *   1. It closed old clients with end({ timeout: 5 }), which force-destroys
- *      sockets mid-query — one request's recycle killed another request's
- *      in-flight queries ("write CONNECTION_DESTROYED" 500s).
- *   2. Combined with max:1, concurrent page queries (generateMetadata in
- *      parallel with the page body, plus Promise.all fan-outs) wedged the
- *      single-connection queue permanently after a recycle — the tool-page
- *      hang.
+ * RUNTIME: a FRESH connection pool PER REQUEST (not a long-lived shared
+ * pool). This is the crux fix. A pooled connection reused across a Vercel
+ * serverless freeze/thaw can be silently dead — Supabase/NAT drops the idle
+ * socket without a clean FIN, so postgres-js keeps writing queries into a
+ * black hole that never responds. Bounded to 8s by the fail-fast wrapper
+ * below, but still an error; and once several of an instance's connections
+ * are stuck that way, every request to it errors until it recycles (the
+ * "tool page returns 500" symptom). A brand-new connection per request is
+ * never stale — the exact pattern the health probe used that NEVER once
+ * hung across all debugging. `cache()` memoizes the pool for the duration
+ * of a single request so all of that request's queries share it; `after()`
+ * closes it once the response is sent so nothing leaks or lingers to go
+ * stale. Opening a connection is network-wait, not CPU, so this is cheap on
+ * the CPU quota — and Supabase's transaction pooler is built for exactly
+ * this connect/disconnect churn.
  *
- * A standard pool avoids all of it. Verified against production Supabase:
- * the tool page's exact concurrent-query shape ran 8/8 clean across
- * repeated 25s idle gaps (each gap > idle_timeout, forcing postgres-js to
- * close and cleanly reconnect). postgres-js manages the pool itself:
- *   • `max` connections opened on demand, so concurrent queries get real
- *     parallel lanes instead of one wedgeable queue;
- *   • `idle_timeout` closes idle connections; Supabase's pooler closes its
- *     side gracefully (TCP FIN), so postgres-js detects the close and
- *     reconnects on the next query rather than hanging;
- *   • `max_lifetime` recycles long-lived connections.
+ * BUILD: one stable pool instead — `next build` renders hundreds of pages
+ * sequentially with no request scope and no freeze, so reuse is correct and
+ * avoids opening a connection per generated page.
  *
- * Build uses max:1: `next build` renders hundreds of pages, and a bigger
- * pool per worker could burst Supabase's free-tier pooler during static
- * generation. Runtime uses a small pool for the concurrency above.
+ * FAIL-FAST: postgres-js has no per-query timeout; every runtime query is
+ * wrapped in an 8s bounded race so a pathological hang rejects fast (letting
+ * page `.catch()` fallbacks render) instead of running to Vercel's 300s
+ * limit and burning CPU. Kept as a safety net even with per-request
+ * connections. Not applied at build (long healthy queries mustn't false-out).
  *
  * URL: prefer SUPABASE_URL (the live DB); DATABASE_URL may still hold the
- * retired Neon string in some environments. Trim stray quotes/whitespace
- * so a value pasted from a .env file (`"postgres://…"`) still connects.
+ * retired Neon string. Trim stray quotes/whitespace off a pasted value.
  */
 
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { cache } from "react";
+import { after } from "next/server";
 import * as schema from "./schema";
+
+type Sql = ReturnType<typeof postgres>;
 
 const url = (process.env.SUPABASE_URL ?? process.env.DATABASE_URL ?? "")
   .trim()
@@ -49,77 +47,83 @@ if (!url) {
 }
 
 const IS_BUILD = process.env.NEXT_PHASE === "phase-production-build";
+const QUERY_TIMEOUT_MS = 8000;
 
-const rawClient = postgres(url, {
-  prepare: false, // required by Supabase's transaction pooler (port 6543)
-  max: IS_BUILD ? 1 : 5,
-  connect_timeout: 10,
-  idle_timeout: 20,
-  max_lifetime: 60 * 30,
+function makePool(max: number): Sql {
+  return postgres(url, {
+    prepare: false, // required by Supabase's transaction pooler (port 6543)
+    max,
+    connect_timeout: 10,
+    idle_timeout: 10,
+    max_lifetime: 60 * 5,
+  });
+}
+
+// Build path: one stable pool, reused across the whole build.
+const buildPool: Sql | null = IS_BUILD ? makePool(1) : null;
+
+// Runtime path: one fresh pool per request, memoized for that request and
+// closed after the response. max:3 gives concurrent page queries real
+// parallel lanes without opening many sockets.
+const getRequestPool = cache((): Sql => {
+  const pool = makePool(3);
+  try {
+    after(() => void pool.end({ timeout: 3 }).catch(() => {}));
+  } catch {
+    // No request scope to hook into (shouldn't happen for a real request) —
+    // idle_timeout still reaps the pool shortly after it goes quiet.
+  }
+  return pool;
 });
 
-/**
- * FAIL-FAST safeguard. postgres-js has no per-query timeout, so if a pooled
- * connection is silently dead after a serverless freeze/thaw, a query
- * written into it can hang until the platform's 300s function limit —
- * which burns CPU quota, blocks the page, and makes crawlers time out
- * (SEO). Wrapping every query in a bounded race turns that worst case into
- * a fast rejection instead: the page's own `.catch()` fallbacks then render
- * content immediately rather than spinning. A timed-out request just uses
- * another pooled connection next time (verified: the pool recovers), and
- * normal queries are untouched — 8s is far above any healthy query
- * (typically <200ms) but far below the 300s hang it prevents.
- *
- * Not applied during build: static generation runs long, sequential, and
- * has no freeze, so an 8s cap there would only risk false failures.
- */
-const QUERY_TIMEOUT_MS = 8000;
+const activePool = (): Sql => buildPool ?? getRequestPool();
 
 function raceTimeout<T>(pending: Promise<T>): Promise<T> {
   let timer: ReturnType<typeof setTimeout>;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(
-      () => reject(new Error(`[db] query exceeded ${QUERY_TIMEOUT_MS}ms (likely a dead pooled connection) — failing fast`)),
+      () => reject(new Error(`[db] query exceeded ${QUERY_TIMEOUT_MS}ms — failing fast`)),
       QUERY_TIMEOUT_MS,
     );
   });
   return Promise.race([Promise.resolve(pending).finally(() => clearTimeout(timer)), timeout]);
 }
 
-type Unsafe = (typeof rawClient)["unsafe"];
-
-// Drizzle runs every query through `client.unsafe(query, params)` (awaited
-// directly) or `.unsafe(...).values()`. Wrap `unsafe` so both paths are
-// time-bounded while preserving the thenable + `.values()`/`.execute()`
-// shape Drizzle relies on. Everything else on the client is passed through
-// untouched (transactions via `.begin`, etc.).
-const wrappedUnsafe = ((query: string, params?: unknown[], options?: unknown) => {
-  const pending = (rawClient.unsafe as (q: string, p?: unknown[], o?: unknown) => {
-    values: () => Promise<unknown>;
-    execute: () => Promise<unknown>;
-  } & Promise<unknown>)(query, params, options);
-  return {
-    then: (res: ((v: unknown) => unknown) | undefined, rej: ((e: unknown) => unknown) | undefined) =>
-      raceTimeout(pending).then(res, rej),
-    catch: (rej: (e: unknown) => unknown) => raceTimeout(pending).catch(rej),
-    finally: (f: () => void) => raceTimeout(pending).finally(f),
-    values: () => raceTimeout(pending.values()),
-    execute: () => raceTimeout(pending.execute()),
+// Wrap postgres-js `unsafe` (Drizzle's query entry point) so both the
+// direct-await and `.values()` paths are time-bounded, preserving the
+// thenable shape Drizzle relies on.
+function wrapUnsafe(pool: Sql) {
+  return (query: string, params?: unknown[], options?: unknown) => {
+    const pending = (pool.unsafe as (q: string, p?: unknown[], o?: unknown) => {
+      values: () => Promise<unknown>;
+      execute: () => Promise<unknown>;
+    } & Promise<unknown>)(query, params, options);
+    return {
+      then: (res: ((v: unknown) => unknown) | undefined, rej: ((e: unknown) => unknown) | undefined) =>
+        raceTimeout(pending).then(res, rej),
+      catch: (rej: (e: unknown) => unknown) => raceTimeout(pending).catch(rej),
+      finally: (f: () => void) => raceTimeout(pending).finally(f),
+      values: () => raceTimeout(pending.values()),
+      execute: () => raceTimeout(pending.execute()),
+    };
   };
-}) as unknown as Unsafe;
+}
 
-// Runtime gets the fail-fast wrapper; build uses the raw client so a slow
-// (but healthy) static-generation query can't be false-timed-out into
-// rendering fallback content into a pre-built page.
-const client = IS_BUILD
-  ? rawClient
-  : (new Proxy(rawClient, {
-      get(target, prop, receiver) {
-        if (prop === "unsafe") return wrappedUnsafe;
-        const value = Reflect.get(target, prop, receiver);
-        return typeof value === "function" ? value.bind(target) : value;
-      },
-    }) as typeof rawClient);
+// A single stable proxy is handed to Drizzle at module load. Every access
+// resolves to the CURRENT request's pool (or the build pool); `unsafe` is
+// fail-fast-wrapped at runtime. Everything else (transactions via `.begin`,
+// tag calls) passes through to the real pool.
+const clientProxy = new Proxy(function () {} as unknown as Sql, {
+  get(_target, prop) {
+    const pool = activePool();
+    if (prop === "unsafe" && !IS_BUILD) return wrapUnsafe(pool);
+    const value = (pool as unknown as Record<PropertyKey, unknown>)[prop];
+    return typeof value === "function" ? (value as (...a: unknown[]) => unknown).bind(pool) : value;
+  },
+  apply(_target, _thisArg, args: unknown[]) {
+    return (activePool() as unknown as (...a: unknown[]) => unknown)(...args);
+  },
+}) as Sql;
 
-export const db = drizzle(client, { schema });
+export const db = drizzle(clientProxy, { schema });
 export { schema };
