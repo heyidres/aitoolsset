@@ -50,13 +50,76 @@ if (!url) {
 
 const IS_BUILD = process.env.NEXT_PHASE === "phase-production-build";
 
-const client = postgres(url, {
+const rawClient = postgres(url, {
   prepare: false, // required by Supabase's transaction pooler (port 6543)
   max: IS_BUILD ? 1 : 5,
   connect_timeout: 10,
   idle_timeout: 20,
   max_lifetime: 60 * 30,
 });
+
+/**
+ * FAIL-FAST safeguard. postgres-js has no per-query timeout, so if a pooled
+ * connection is silently dead after a serverless freeze/thaw, a query
+ * written into it can hang until the platform's 300s function limit —
+ * which burns CPU quota, blocks the page, and makes crawlers time out
+ * (SEO). Wrapping every query in a bounded race turns that worst case into
+ * a fast rejection instead: the page's own `.catch()` fallbacks then render
+ * content immediately rather than spinning. A timed-out request just uses
+ * another pooled connection next time (verified: the pool recovers), and
+ * normal queries are untouched — 8s is far above any healthy query
+ * (typically <200ms) but far below the 300s hang it prevents.
+ *
+ * Not applied during build: static generation runs long, sequential, and
+ * has no freeze, so an 8s cap there would only risk false failures.
+ */
+const QUERY_TIMEOUT_MS = 8000;
+
+function raceTimeout<T>(pending: Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`[db] query exceeded ${QUERY_TIMEOUT_MS}ms (likely a dead pooled connection) — failing fast`)),
+      QUERY_TIMEOUT_MS,
+    );
+  });
+  return Promise.race([Promise.resolve(pending).finally(() => clearTimeout(timer)), timeout]);
+}
+
+type Unsafe = (typeof rawClient)["unsafe"];
+
+// Drizzle runs every query through `client.unsafe(query, params)` (awaited
+// directly) or `.unsafe(...).values()`. Wrap `unsafe` so both paths are
+// time-bounded while preserving the thenable + `.values()`/`.execute()`
+// shape Drizzle relies on. Everything else on the client is passed through
+// untouched (transactions via `.begin`, etc.).
+const wrappedUnsafe = ((query: string, params?: unknown[], options?: unknown) => {
+  const pending = (rawClient.unsafe as (q: string, p?: unknown[], o?: unknown) => {
+    values: () => Promise<unknown>;
+    execute: () => Promise<unknown>;
+  } & Promise<unknown>)(query, params, options);
+  return {
+    then: (res: ((v: unknown) => unknown) | undefined, rej: ((e: unknown) => unknown) | undefined) =>
+      raceTimeout(pending).then(res, rej),
+    catch: (rej: (e: unknown) => unknown) => raceTimeout(pending).catch(rej),
+    finally: (f: () => void) => raceTimeout(pending).finally(f),
+    values: () => raceTimeout(pending.values()),
+    execute: () => raceTimeout(pending.execute()),
+  };
+}) as unknown as Unsafe;
+
+// Runtime gets the fail-fast wrapper; build uses the raw client so a slow
+// (but healthy) static-generation query can't be false-timed-out into
+// rendering fallback content into a pre-built page.
+const client = IS_BUILD
+  ? rawClient
+  : (new Proxy(rawClient, {
+      get(target, prop, receiver) {
+        if (prop === "unsafe") return wrappedUnsafe;
+        const value = Reflect.get(target, prop, receiver);
+        return typeof value === "function" ? value.bind(target) : value;
+      },
+    }) as typeof rawClient);
 
 export const db = drizzle(client, { schema });
 export { schema };
