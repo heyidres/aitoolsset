@@ -349,7 +349,16 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default async function ToolDetailPage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
   const { locale, slug } = await params;
-  const [found, session, t] = await Promise.all([findTool(slug, locale), auth(), getTranslations("tool_page")]);
+  // auth() runs BEFORE findTool()/getTranslations(), not alongside them in
+  // the same Promise.all. findTool() fans out into several of its own
+  // concurrent DB queries; running auth() (itself a DB-backed session
+  // lookup) at the same time meant multiple independent operations
+  // competed for our single free-tier DB connection (max:1) at once —
+  // which intermittently hung the whole request rather than erroring.
+  // Every other page in the app already awaits auth() on its own for
+  // exactly this reason; this route is no exception.
+  const session = await auth();
+  const [found, t] = await Promise.all([findTool(slug, locale), getTranslations("tool_page")]);
   if (!found) notFound();
   const { tool, descriptionHtml, headerOverrides, overviewOverrides, sidebarOverrides, cmsToolId, reviewsOverride, relatedTools } = found;
   const detail = DEFAULT_TOOL_DETAIL;
