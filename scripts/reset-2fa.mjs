@@ -13,9 +13,14 @@
 
 import { config } from "dotenv";
 config({ path: ".env.local" });
-import { neon } from "@neondatabase/serverless";
+import postgres from "postgres";
 
-const sql = neon(process.env.DATABASE_URL);
+const url = (process.env.SUPABASE_URL ?? process.env.DATABASE_URL ?? "").trim();
+if (!url) {
+  console.error("Set SUPABASE_URL or DATABASE_URL in .env.local first.");
+  process.exit(1);
+}
+const sql = postgres(url, { prepare: false });
 const arg = process.argv[2];
 
 if (!arg) {
@@ -54,3 +59,4 @@ await sql`
 
 console.log(`✔ Reset 2FA for ${user.email}.`);
 console.log("  They'll be prompted to set up a new authenticator on next sign-in.");
+await sql.end();
