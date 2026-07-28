@@ -32,21 +32,27 @@ COPY . .
 # Build-time configuration.
 #
 # These MUST be present during `next build`, not just at runtime:
-#   • DATABASE_URL          — pages with generateStaticParams query Postgres
-#                             while rendering at build time
+#   • SUPABASE_URL / DATABASE_URL — pages with generateStaticParams query
+#                             Postgres while rendering at build time.
+#                             lib/db/index.ts prefers SUPABASE_URL and only
+#                             falls back to DATABASE_URL if that's unset —
+#                             both are declared here so the build honors the
+#                             same precedence runtime does.
 #   • SITE_URL              — becomes metadataBase for every canonical URL
 #   • NEXT_PUBLIC_*         — inlined into the client bundle by the compiler,
 #                             so setting them only at runtime has no effect
 #
 # Railway passes service variables to Docker builds as build args, but only
 # for args the Dockerfile actually declares — hence the explicit ARG list.
+ARG SUPABASE_URL
 ARG DATABASE_URL
 ARG SITE_URL
 ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY
 ARG NEXT_PUBLIC_SENTRY_DSN
 ARG RAILWAY_GIT_COMMIT_SHA
 
-ENV DATABASE_URL=$DATABASE_URL \
+ENV SUPABASE_URL=$SUPABASE_URL \
+    DATABASE_URL=$DATABASE_URL \
     SITE_URL=$SITE_URL \
     NEXT_PUBLIC_TURNSTILE_SITE_KEY=$NEXT_PUBLIC_TURNSTILE_SITE_KEY \
     NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN \
