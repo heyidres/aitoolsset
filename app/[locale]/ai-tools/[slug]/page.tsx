@@ -22,11 +22,19 @@ import { ToolCard } from "@/components/ToolCard";
 
 export const runtime = "nodejs";
 export const dynamicParams = true;
-// force-dynamic, not revalidate: something in this page's render tree
-// (session/cookie reads via Nav etc.) needs real per-request dynamic
-// data, which Next.js disallows on an ISR/revalidate-cached route
-// (throws DYNAMIC_SERVER_USAGE). force-dynamic removes that constraint.
-export const dynamic = "force-dynamic";
+// ISR, not force-dynamic. Nothing in this route's server tree reads
+// per-request state — Nav is a client component, and this page never calls
+// auth() — so there's no DYNAMIC_SERVER_USAGE to dodge. force-dynamic here
+// meant every category x every locale re-queried Postgres on every single
+// request (including each crawler hit), which is what made page rendering
+// the dominant cost.
+//
+// Paired with `generateStaticParams: []` below, this is on-demand ISR:
+// nothing is pre-rendered at build time (so builds never burst the pooled
+// DB connection), but the first request for a category caches its HTML for
+// an hour. Admin edits call revalidatePath("/ai-tools"), so CMS changes
+// still publish immediately rather than waiting out the window.
+export const revalidate = 3600;
 
 type FoundCategory = {
   name: string;
