@@ -29,6 +29,13 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# This repo has no public/ dir checked in (favicons come from Google's API,
+# images from Vercel Blob; robots.txt/sitemap.xml are dynamic routes) — but
+# `next start` still expects the directory to exist. Guarantee it's present
+# so the runtime stage's COPY below has something to copy, whether or not
+# one ever gets added to the repo later.
+RUN mkdir -p public
+
 # Build-time configuration.
 #
 # These MUST be present during `next build`, not just at runtime:
