@@ -5,6 +5,10 @@ const withNextIntl = createNextIntlPlugin("./lib/i18n/request.ts");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Emit .next/standalone — a self-contained server bundle with only the
+  // node_modules it actually imports. This is what the Dockerfile ships, and
+  // it keeps the runtime image small enough to build on a modest VPS.
+  output: "standalone",
   // Don't advertise the framework in a response header — it's free recon
   // for an attacker (lets them target Next.js-specific CVEs). No downside.
   poweredByHeader: false,
@@ -62,12 +66,14 @@ const nextConfig = {
   async headers() {
     const cspDirectives = [
       "default-src 'self'",
-      // Next.js + Tailwind + Vercel Analytics need 'unsafe-inline' and 'unsafe-eval' for runtime
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://challenges.cloudflare.com",
+      // Next.js + Tailwind need 'unsafe-inline' and 'unsafe-eval' for runtime
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' https://vitals.vercel-insights.com https://vercel.live https://*.public.blob.vercel-storage.com https://challenges.cloudflare.com",
+      // Blob storage stays allow-listed: existing CMS images are still served
+      // from the Vercel Blob CDN even though the app no longer runs on Vercel.
+      "connect-src 'self' https://*.public.blob.vercel-storage.com https://challenges.cloudflare.com",
       "frame-src 'self' https://challenges.cloudflare.com",
       "frame-ancestors 'none'",
       "form-action 'self'",
@@ -85,13 +91,23 @@ const nextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), interest-cohort=()" },
           { key: "X-DNS-Prefetch-Control", value: "on" },
-          // HSTS — Vercel domains are HTTPS only, so we can safely enforce
+          // HSTS — the site is served over HTTPS only (Railway terminates TLS
+          // and redirects http→https), so we can safely enforce this.
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
           { key: "Content-Security-Policy", value: cspDirectives },
           // Which build is serving — baked in at build time. Zero info
           // disclosure (the repo is public, so the short hash already is),
           // and lets us confirm exactly which commit a request hit.
-          { key: "X-App-Commit", value: (process.env.VERCEL_GIT_COMMIT_SHA ?? "dev").slice(0, 7) },
+          // Railway exposes RAILWAY_GIT_COMMIT_SHA; the Vercel var is kept as
+          // a fallback so the header still resolves on a Vercel deployment.
+          {
+            key: "X-App-Commit",
+            value: (
+              process.env.RAILWAY_GIT_COMMIT_SHA ??
+              process.env.VERCEL_GIT_COMMIT_SHA ??
+              "dev"
+            ).slice(0, 7),
+          },
         ],
       },
     ];

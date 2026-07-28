@@ -51,7 +51,9 @@ export const i18n = {
 
   /**
    * GeoIP country code → locale.
-   * Vercel edge sets `x-vercel-ip-country` on every request.
+   * Cloudflare sets `cf-ipcountry` on every request it proxies (see
+   * `visitorCountry` in middleware.ts, which also falls back to Vercel's
+   * `x-vercel-ip-country`).
    * If the visitor's country isn't mapped, we fall back to Accept-Language.
    */
   countryToLocale: {

@@ -19,7 +19,7 @@ import { routing } from "@/lib/i18n/routing";
 import { i18n, isLocale } from "@/lib/i18n/config";
 
 // next-intl returns a middleware-fn. We wrap it so we can also
-// honor GeoIP (Vercel sets x-vercel-ip-country) on first visit.
+// honor GeoIP (see `visitorCountry` below) on first visit.
 const intlMiddleware = createIntlMiddleware({
   ...routing,
   // We do our own negotiation in `geoFirstLocaleRedirect` below
@@ -35,8 +35,23 @@ function isBot(req: NextRequest): boolean {
 }
 
 /**
+ * Visitor's country as reported by whatever sits in front of us.
+ * Cloudflare (`cf-ipcountry`) is the primary source now that the app runs
+ * on a plain Node server behind Cloudflare; `x-vercel-ip-country` is kept
+ * as a fallback so the same code still works on a Vercel deployment.
+ * Returns null when neither header is present (direct-to-origin, local dev).
+ */
+function visitorCountry(req: NextRequest): string | null {
+  const country =
+    req.headers.get("cf-ipcountry") ?? req.headers.get("x-vercel-ip-country");
+  // Cloudflare sends "XX" for unknown / Tor exits — treat as no signal.
+  if (!country || country === "XX" || country === "T1") return null;
+  return country.toUpperCase();
+}
+
+/**
  * If the visitor has no locale cookie, no locale prefix in the URL,
- * and their Vercel-edge country maps to a non-default locale, send
+ * and their edge-reported country maps to a non-default locale, send
  * them there. This is the GeoIP layer that fires BEFORE next-intl's
  * accept-language detection.
  */
@@ -51,7 +66,7 @@ function geoFirstLocaleRedirect(req: NextRequest): NextResponse | null {
   // Cookie set? — respect the user's prior choice; let next-intl handle.
   if (req.cookies.has(i18n.cookieName)) return null;
 
-  const country = req.headers.get("x-vercel-ip-country");
+  const country = visitorCountry(req);
   if (!country) return null;
 
   const mappedLocale = i18n.countryToLocale[country];
@@ -90,16 +105,22 @@ export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // ── 0. Canonical-host redirect (post-cutover only) ─────────
-  // Once aitoolsset.com points at Vercel, set REDIRECT_TO_APEX=1 so the
-  // *.vercel.app mirror 308s to the canonical domain instead of serving
-  // duplicate content. Env-gated because BEFORE cutover vercel.app IS
-  // the site — redirecting it early would take the whole site down.
+  // Set REDIRECT_TO_APEX=1 once aitoolsset.com resolves to this server, so
+  // every non-canonical hostname 308s to the real domain instead of serving
+  // duplicate content. That covers the www subdomain, the raw server IP, and
+  // any platform-generated preview hostname (*.vercel.app previously, the
+  // Coolify-assigned subdomain now) — anything that isn't SITE_URL's host.
+  //
+  // Env-gated because BEFORE cutover the platform hostname IS the live site;
+  // redirecting it early would take the whole site down.
   if (process.env.REDIRECT_TO_APEX === "1") {
-    const host = req.headers.get("host") ?? "";
-    const canonical = (process.env.SITE_URL ?? "https://aitoolsset.com").replace(/\/$/, "");
-    if (host.endsWith(".vercel.app")) {
+    const canonical = new URL(process.env.SITE_URL ?? "https://aitoolsset.com");
+    // Strip any :port before comparing — Host carries it, URL.host does too,
+    // but a proxy fronting us on 443 won't include it.
+    const host = (req.headers.get("host") ?? "").toLowerCase().split(":")[0];
+    if (host && host !== canonical.hostname) {
       return NextResponse.redirect(
-        new URL(`${req.nextUrl.pathname}${req.nextUrl.search}`, canonical),
+        new URL(`${req.nextUrl.pathname}${req.nextUrl.search}`, canonical.origin),
         308
       );
     }
