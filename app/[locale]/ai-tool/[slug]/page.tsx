@@ -15,6 +15,7 @@ import { TOOLS, type Tool } from "@/lib/tools";
 import { DEFAULT_TOOL_DETAIL } from "@/lib/tool-detail";
 import { getToolBySlug, getReviewsForTool, getCategoryOptions, getRelatedTools, applyToolTranslations, type CmsTool } from "@/lib/cms";
 import { cmsToolToLegacy, cmsReviewToLegacy, type LegacyReview } from "@/lib/cms-adapters";
+import { auth } from "@/lib/auth";
 import { JsonLd, toolJsonLd, breadcrumbJsonLd } from "@/lib/json-ld";
 import { alternatesFor } from "@/lib/i18n/hreflang";
 import { isLocale } from "@/lib/i18n/config";
@@ -22,17 +23,11 @@ import { isLocale } from "@/lib/i18n/config";
 // Dynamic so DB-managed tools resolve at request time — any slug
 // falls through and hits Postgres on the fly.
 export const dynamicParams = true;
-// ISR, not force-dynamic. The old comment here blamed "session/cookie reads
-// via Nav", but Nav is a client component and can't force server-side
-// dynamic rendering; the actual culprit was this page's own auth() call,
-// which has since moved into ToolReviews on the client.
-//
-// Paired with `generateStaticParams: []` below this is on-demand ISR:
-// nothing is pre-rendered during the build (so builds never burst the
-// pooled DB connection), but each tool page caches its HTML for an hour
-// after the first request. Admin edits already call
-// revalidatePath(`/ai-tool/${slug}`), so CMS changes publish immediately.
-export const revalidate = 3600;
+// force-dynamic, not revalidate: something in this page's render tree
+// (session/cookie reads via Nav etc.) needs real per-request dynamic
+// data, which Next.js disallows on an ISR/revalidate-cached route
+// (throws DYNAMIC_SERVER_USAGE). force-dynamic removes that constraint.
+export const dynamic = "force-dynamic";
 
 type FindToolResult =
   | {
@@ -354,19 +349,22 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default async function ToolDetailPage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
   const { locale, slug } = await params;
-  // No auth() here on purpose. It reads cookies, which would force this
-  // route to render dynamically on every request — and this is the largest
-  // page group on the site (~590 tools x 10 locales), so that single call
-  // was the difference between "cached HTML" and "re-render + re-query
-  // Postgres for every visitor and every crawler hit".
-  //
-  // The only thing that needed the session was the review form's
-  // currentUser; ToolReviews is a client component and now fetches
-  // /api/auth/session itself. See the comment there.
+  // auth() runs BEFORE findTool()/getTranslations(), not alongside them in
+  // the same Promise.all. findTool() fans out into several of its own
+  // concurrent DB queries; running auth() (itself a DB-backed session
+  // lookup) at the same time meant multiple independent operations
+  // competed for our single free-tier DB connection (max:1) at once —
+  // which intermittently hung the whole request rather than erroring.
+  // Every other page in the app already awaits auth() on its own for
+  // exactly this reason; this route is no exception.
+  const session = await auth();
   const [found, t] = await Promise.all([findTool(slug, locale), getTranslations("tool_page")]);
   if (!found) notFound();
   const { tool, descriptionHtml, headerOverrides, overviewOverrides, sidebarOverrides, cmsToolId, reviewsOverride, relatedTools } = found;
   const detail = DEFAULT_TOOL_DETAIL;
+  const currentUser = session?.user
+    ? { id: session.user.id, name: session.user.name ?? null, image: session.user.image ?? null }
+    : null;
   // aggregateRating from REAL reviews only. Synthetic ratings in schema
   // are a Google structured-data policy violation and poison AI-engine
   // trust; when a tool has no reviews yet we emit no rating at all.
@@ -479,6 +477,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ loc
         detail={detail}
         toolId={cmsToolId}
         reviewsOverride={reviewsOverride}
+        currentUser={currentUser}
       />
       <RelatedSlider category={detail.category} itemsOverride={relatedTools?.slice(0, 7)} />
       <Footer />

@@ -85,12 +85,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# ISR writes rendered pages into .next/cache at RUNTIME. The server runs as
-# `nextjs`, so that directory has to exist and be owned by it — otherwise
-# every revalidate write fails and pages silently re-render on every request,
-# quietly undoing the caching the routes ask for.
-RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next
-
 USER nextjs
 
 # Railway injects PORT at runtime; 3000 is the local-docker default.

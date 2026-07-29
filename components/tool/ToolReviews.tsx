@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import type { ToolDetail } from "@/lib/tool-detail";
 import { REVIEW_BREAKDOWN } from "@/lib/tool-detail";
@@ -22,6 +22,7 @@ export function ToolReviews({
   detail,
   toolId,
   reviewsOverride,
+  currentUser,
 }: {
   name: string;
   detail: ToolDetail;
@@ -29,44 +30,15 @@ export function ToolReviews({
   toolId?: string;
   /** Real DB reviews. When provided, replaces the demo list. */
   reviewsOverride?: Review[];
+  /** Session user, if signed in. Null = show "Sign in to review" prompt. */
+  currentUser?: CurrentUser;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const t = useTranslations("tool_page");
   const [hoverRating, setHoverRating] = useState(0);
-  const [author, setAuthor] = useState("");
-  // Session is read HERE on the client rather than passed down from the page.
-  //
-  // The tool page used to call auth() server-side just to hand this component
-  // a currentUser. auth() reads cookies, which forced the whole route to
-  // render dynamically — meaning every tool x every locale re-queried Postgres
-  // on every request and nothing could ever be cached. Fetching the session
-  // client-side instead lets the page itself be cached as static HTML while
-  // this one interactive widget resolves who you are after hydration.
-  //
-  // Signed-out is the correct initial state: the form is behind a click, and
-  // the session lands well before anyone can open it.
-  const [currentUser, setCurrentUser] = useState<CurrentUser>(null);
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/auth/session")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (cancelled) return;
-        const u = data?.user;
-        if (!u?.id) return;
-        setCurrentUser({ id: u.id, name: u.name ?? null, image: u.image ?? null });
-        // Prefill the display name, but never clobber something already typed.
-        setAuthor((prev) => prev || u.name || "");
-      })
-      .catch(() => {
-        /* signed out, or the session endpoint is unreachable — stay anonymous */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const [author, setAuthor] = useState(currentUser?.name ?? "");
   const [role, setRole] = useState("");
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
