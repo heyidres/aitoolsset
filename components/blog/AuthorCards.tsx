@@ -1,13 +1,18 @@
 import Link from "next/link";
 import type { CmsAuthor } from "@/lib/cms";
 import { AuthorAvatar } from "./AuthorByline";
-import { sanitizeHtml } from "@/lib/sanitize";
+import { LinkedInIcon, XIcon, GitHubIcon, WebsiteIcon } from "./SocialIcons";
 
 /**
- * Rich author bios rendered below the article. Each card shows
- * photo, role, full bio, credential chips, and verifiable external
- * profile links. Together they feed Google's E-E-A-T signal: real
- * humans, real credentials, real off-site identity.
+ * Author attribution rendered below the article: photo, name, role
+ * tagline, credential chips, and verifiable external profile links.
+ * Feeds Google's E-E-A-T signal — real humans, real credentials, real
+ * off-site identity.
+ *
+ * Deliberately does NOT render the long-form bio (`bioHtml`). The full
+ * bio lives on the author's own profile page; repeating it under every
+ * article buried the links and pushed the footer down. The one-line role
+ * is the tagline shown here instead.
  */
 export function AuthorCards({
   authors,
@@ -51,11 +56,11 @@ export function AuthorCards({
 
 function AuthorCard({ author, role }: { author: CmsAuthor; role: string }) {
   const profiles = [
-    author.websiteUrl && { label: "Website", url: author.websiteUrl },
-    author.linkedinUrl && { label: "LinkedIn", url: author.linkedinUrl },
-    author.xUrl && { label: "X", url: author.xUrl },
-    author.githubUrl && { label: "GitHub", url: author.githubUrl },
-  ].filter(Boolean) as Array<{ label: string; url: string }>;
+    author.websiteUrl && { label: "Website", url: author.websiteUrl, Icon: WebsiteIcon },
+    author.linkedinUrl && { label: "LinkedIn", url: author.linkedinUrl, Icon: LinkedInIcon },
+    author.xUrl && { label: "X", url: author.xUrl, Icon: XIcon },
+    author.githubUrl && { label: "GitHub", url: author.githubUrl, Icon: GitHubIcon },
+  ].filter(Boolean) as Array<{ label: string; url: string; Icon: (p: { size?: number }) => React.ReactElement }>;
 
   return (
     <div
@@ -106,13 +111,6 @@ function AuthorCard({ author, role }: { author: CmsAuthor; role: string }) {
             {author.role}
           </div>
         )}
-        {author.bioHtml && (
-          <div
-            className="author-bio"
-            style={{ fontSize: 14, color: "var(--text-2)", lineHeight: 1.65, marginBottom: 12 }}
-            dangerouslySetInnerHTML={{ __html: sanitizeHtml(author.bioHtml) }}
-          />
-        )}
         {author.credentials.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
             {author.credentials.map((c) => (
@@ -134,16 +132,31 @@ function AuthorCard({ author, role }: { author: CmsAuthor; role: string }) {
           </div>
         )}
         {profiles.length > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, fontSize: 12.5 }}>
-            {profiles.map((p) => (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {profiles.map(({ label, url, Icon }) => (
               <a
-                key={p.label}
-                href={p.url}
+                key={label}
+                href={url}
                 target="_blank"
+                // rel="me" is what makes these count as identity verification
+                // rather than ordinary outbound links.
                 rel="me noopener noreferrer"
-                style={{ color: "var(--blue)", textDecoration: "none", fontWeight: 600 }}
+                aria-label={`${author.name} on ${label}`}
+                title={label}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  border: "1px solid var(--border)",
+                  background: "var(--white)",
+                  color: "var(--text-2)",
+                  textDecoration: "none",
+                }}
               >
-                {p.label} ↗
+                <Icon size={15} />
               </a>
             ))}
           </div>

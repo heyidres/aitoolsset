@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { TocItem } from "@/lib/blog-toc";
 
 /**
@@ -10,11 +10,18 @@ import type { TocItem } from "@/lib/blog-toc";
  * IntersectionObserver so the highlight follows the scroll position
  * instead of being driven by clicks alone.
  *
- * When `items` is empty (an article with no H2/H3), the component
- * renders a soft "—" so the sidebar slot still has something to show
- * instead of an awkward gap.
+ * Only H2s are listed. extractToc still collects H3s and injects anchor
+ * ids on them (so deep links to subsections keep working) — they're just
+ * filtered out here, because on listicle posts every tool is an H3 and
+ * including them turned the TOC into a second copy of the article.
+ *
+ * When there are no H2s, the component renders a soft "—" so the sidebar
+ * slot still has something to show instead of an awkward gap.
  */
-export function TableOfContents({ items }: { items: TocItem[] }) {
+export function TableOfContents({ items: allItems }: { items: TocItem[] }) {
+  // Memoized: the effect below depends on `items`, and a fresh array from
+  // .filter() on every render would retrigger it in a loop.
+  const items = useMemo(() => allItems.filter((it) => it.level === 2), [allItems]);
   const [activeId, setActiveId] = useState<string | null>(items[0]?.id ?? null);
 
   useEffect(() => {
@@ -73,8 +80,8 @@ export function TableOfContents({ items }: { items: TocItem[] }) {
               background: isActive ? "var(--blue-soft)" : "transparent",
               borderLeft: `2px solid ${isActive ? "var(--blue)" : "transparent"}`,
               fontWeight: isActive ? 700 : 400,
-              paddingLeft: it.level === 3 ? 24 : 10,
-              fontSize: it.level === 3 ? 12.5 : 13,
+              paddingLeft: 10,
+              fontSize: 13,
             }}
           >
             {it.label}

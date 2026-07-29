@@ -160,6 +160,37 @@ function fmtDate(d: Date | string | null): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Which date to show in the byline, and how to label it.
+ *
+ * An article that's been revised since publication should advertise the
+ * revision — it's the more useful date for a reader and the fresher signal
+ * for search. But a typo fix ten minutes after publishing isn't an update,
+ * so `updatedAt` only wins once it's a full day past `publishedAt`.
+ * Returns null when there's no publish date at all (drafts/previews).
+ */
+function bylineDate(
+  publishedAt: Date | string | null,
+  updatedAt: Date | string | null,
+): { label: string; value: string; iso: string } | null {
+  if (!publishedAt) return null;
+  const published = typeof publishedAt === "string" ? new Date(publishedAt) : publishedAt;
+  if (isNaN(published.getTime())) return null;
+
+  const updated = updatedAt ? (typeof updatedAt === "string" ? new Date(updatedAt) : updatedAt) : null;
+  const meaningfullyUpdated =
+    updated && !isNaN(updated.getTime()) && updated.getTime() - published.getTime() >= DAY_MS;
+
+  const shown = meaningfullyUpdated ? updated : published;
+  return {
+    label: meaningfullyUpdated ? "Last updated on" : "Published",
+    value: fmtDate(shown),
+    iso: shown.toISOString(),
+  };
+}
+
 async function CmsPostRenderer({
   post,
   authors,
@@ -297,14 +328,19 @@ async function CmsPostRenderer({
             ) : (
               <LegacyByline name={legacyAuthorName ?? "AI Tools Set"} />
             )}
-            {post.publishedAt && (
-              <>
-                <span className="w-[3px] h-[3px] rounded-full" style={{ background: "var(--border-2)" }} />
-                <div className="text-[13px] font-medium" style={{ color: "var(--text-2)" }}>
-                  📅 {fmtDate(post.publishedAt)}
-                </div>
-              </>
-            )}
+            {(() => {
+              const shown = bylineDate(post.publishedAt, post.updatedAt);
+              if (!shown) return null;
+              return (
+                <>
+                  <span className="w-[3px] h-[3px] rounded-full" style={{ background: "var(--border-2)" }} />
+                  <div className="text-[13px] font-medium" style={{ color: "var(--text-2)" }}>
+                    {shown.label}{" "}
+                    <time dateTime={shown.iso}>{shown.value}</time>
+                  </div>
+                </>
+              );
+            })()}
             {post.readMinutes && (
               <>
                 <span className="w-[3px] h-[3px] rounded-full" style={{ background: "var(--border-2)" }} />
