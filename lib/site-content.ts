@@ -208,6 +208,43 @@ export const SLOT_REGISTRY = {
     kind: "text",
     default: "© 2026 AI Tools Set. All rights reserved.",
   },
+
+  // ── Blog trust / disclosure ──
+  // Copy that appears on articles as an E-E-A-T signal. Editable here so
+  // the wording can be corrected without a deploy — it makes factual
+  // claims about how reviews are produced, so it must stay accurate.
+  // Defaults are intentionally conservative: they claim only what the
+  // site verifiably does. Sharpen them in the admin, don't inflate them.
+  "blog.disclosure.byline": {
+    label: "Byline disclosure (small print beside the author)",
+    page: "Blog",
+    section: "Trust",
+    kind: "textarea",
+    default:
+      "We review tools independently. When you buy through our links we may earn a commission, which helps fund our testing.",
+  },
+  "blog.trust.title": {
+    label: "Trust box — heading",
+    page: "Blog",
+    section: "Trust",
+    kind: "text",
+    default: "Why Trust Our Software Reviews",
+  },
+  "blog.trust.body": {
+    label: "Trust box — body copy",
+    page: "Blog",
+    section: "Trust",
+    kind: "textarea",
+    default:
+      "We test the tools we write about, and we only recommend software we would use ourselves. Every listing is checked against the vendor's current pricing and feature set before publication, and articles are revised when that changes.",
+  },
+  "blog.trust.cta_label": {
+    label: "Trust box — methodology link text",
+    page: "Blog",
+    section: "Trust",
+    kind: "text",
+    default: "Read our review methodology",
+  },
 } as const;
 
 export type SlotKey = keyof typeof SLOT_REGISTRY;

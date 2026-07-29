@@ -15,6 +15,7 @@ import { Footer } from "@/components/Footer";
 import { ReadingProgress } from "@/components/blog/ReadingProgress";
 import { BlogSidebar } from "@/components/blog/BlogSidebar";
 import { BlogBody } from "@/components/blog/BlogBody";
+import { BylineDisclosure, WhyTrustBox } from "@/components/blog/TrustBox";
 import { BlogFaqs } from "@/components/blog/BlogFaqs";
 import { AuthorByline } from "@/components/blog/AuthorByline";
 import { AuthorCards } from "@/components/blog/AuthorCards";
@@ -322,6 +323,10 @@ async function CmsPostRenderer({
             </p>
           )}
 
+          {/* Byline on the left, independence disclosure on the right —
+              the disclosure belongs next to the author, where a reader
+              decides whether to trust the piece, not buried in a footer. */}
+          <div className="flex items-start justify-between gap-8 flex-wrap">
           <div className="flex items-center gap-[14px] flex-wrap">
             {authors.length > 0 ? (
               <AuthorByline authors={authors} reviewedBy={reviewedBy} />
@@ -358,6 +363,8 @@ async function CmsPostRenderer({
               </>
             )}
           </div>
+            <BylineDisclosure />
+          </div>
         </div>
       </section>
 
@@ -381,6 +388,10 @@ async function CmsPostRenderer({
       <section className="px-9 py-14 section-pad-x">
         <div className="blog-layout mx-auto max-w-[1320px]">
           <article className="blog-body-col" style={{ minWidth: 0 }}>
+            {/* Only on posts that actually review tools — the box makes
+                claims about how software is evaluated, so it would be
+                dishonest on a post that evaluates nothing. */}
+            {referencedSlugs.length > 0 && <WhyTrustBox />}
             <BlogBody html={postWithTocIds.body} />
             {post.faqs.length > 0 && <BlogFaqs items={post.faqs} />}
             {(authors.length > 0 || reviewedBy) && (
