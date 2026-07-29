@@ -10,6 +10,9 @@ const CATEGORIES = ["Guide", "Comparison", "Roundup", "Tutorial", "News", "Revie
 export type AuthorOpt = { slug: string; name: string };
 export type ToolOpt = { slug: string; name: string };
 
+/** One row of the roundup comparison table. Order = ranking. */
+export type ToolTableRowValue = { slug: string; bestFor: string; trialInfo: string };
+
 export type BlogFormValues = {
   title: string;
   slug: string;
@@ -24,6 +27,8 @@ export type BlogFormValues = {
   tagsCsv: string;
   body: string;
   faqs: Array<{ q: string; a: string }>;
+  /** Ranked roundup table. Empty on posts that aren't "best X" listicles. */
+  toolTable: ToolTableRowValue[];
   readMinutes: string;
   status: "draft" | "scheduled" | "published";
   publishedAt: string; // datetime-local
@@ -43,6 +48,7 @@ const EMPTY: BlogFormValues = {
   tagsCsv: "",
   body: "",
   faqs: [],
+  toolTable: [],
   readMinutes: "",
   status: "draft",
   publishedAt: "",
@@ -95,6 +101,7 @@ export function BlogForm({
       <input type="hidden" name="status" value={values.status} />
       <input type="hidden" name="authorSlugsJson" value={JSON.stringify(values.authorSlugs)} />
       <input type="hidden" name="faqsJson" value={JSON.stringify(values.faqs)} />
+      <input type="hidden" name="toolTableJson" value={JSON.stringify(values.toolTable)} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 28 }}>
         <div>
@@ -172,6 +179,19 @@ export function BlogForm({
                 value={values.body}
                 onChange={(v) => u("body", v)}
                 toolOptions={toolOptions}
+              />
+            </Field>
+          </Section>
+
+          <Section title="Tool comparison table">
+            <Field
+              label="Ranked tools (roundup / “best X” posts)"
+              hint="Renders as a numbered summary table above the article. Order here is the ranking — use ↑ ↓ to reorder. Logo, link and price come from each tool's own record, so they stay correct when pricing changes. Leave empty on non-roundup posts."
+            >
+              <ToolTableEditor
+                rows={values.toolTable}
+                toolOptions={toolOptions}
+                onChange={(r) => u("toolTable", r)}
               />
             </Field>
           </Section>
@@ -636,6 +656,123 @@ function FaqEditor({
       ))}
       <button type="button" onClick={add} className="adm-btn-sm ghost" style={{ padding: "8px 14px" }}>
         + Add another FAQ
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Ranked tool table builder for roundup posts.
+ *
+ * Captures only what's editorial per post: which tools, in what order, and
+ * the two prose columns. Name, logo, link and price are resolved from the
+ * tool record at render time, so they're deliberately NOT editable here —
+ * a price typed into a roundup would go stale the moment the vendor
+ * changed it, and would then contradict the tool's own page.
+ */
+function ToolTableEditor({
+  rows,
+  toolOptions,
+  onChange,
+}: {
+  rows: ToolTableRowValue[];
+  toolOptions: ToolOpt[];
+  onChange: (next: ToolTableRowValue[]) => void;
+}) {
+  const update = (i: number, patch: Partial<ToolTableRowValue>) => {
+    const next = rows.slice();
+    next[i] = { ...next[i], ...patch };
+    onChange(next);
+  };
+  const remove = (i: number) => onChange(rows.filter((_, idx) => idx !== i));
+  const add = () => onChange([...rows, { slug: "", bestFor: "", trialInfo: "" }]);
+  const move = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= rows.length) return;
+    const next = rows.slice();
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  };
+
+  if (toolOptions.length === 0) {
+    return (
+      <div style={{ fontSize: 12.5, color: "var(--text-3)" }}>
+        No published tools available to list yet.
+      </div>
+    );
+  }
+
+  if (rows.length === 0) {
+    return (
+      <button type="button" onClick={add} className="adm-btn-sm ghost" style={{ padding: "8px 14px" }}>
+        + Add first tool row
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {rows.map((r, i) => (
+        <div
+          key={i}
+          style={{
+            border: "1px solid var(--border)",
+            borderRadius: 10,
+            padding: 12,
+            display: "grid",
+            gridTemplateColumns: "28px 1fr 1fr 1fr auto",
+            gap: 8,
+            alignItems: "start",
+          }}
+        >
+          <div style={{ fontWeight: 800, fontSize: 13, paddingTop: 9, color: "var(--text-3)" }}>
+            {i + 1}
+          </div>
+
+          <select
+            value={r.slug}
+            onChange={(e) => update(i, { slug: e.target.value })}
+            style={{ border: "1.5px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 13, outline: "none", fontWeight: 600 }}
+          >
+            <option value="">— pick a tool —</option>
+            {toolOptions.map((t) => (
+              <option key={t.slug} value={t.slug}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="text"
+            value={r.bestFor}
+            onChange={(e) => update(i, { bestFor: e.target.value })}
+            placeholder="Best for…"
+            style={{ border: "1.5px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 13, outline: "none" }}
+          />
+
+          <input
+            type="text"
+            value={r.trialInfo}
+            onChange={(e) => update(i, { trialInfo: e.target.value })}
+            placeholder="Trial info…"
+            style={{ border: "1.5px solid var(--border)", borderRadius: 8, padding: "8px 10px", fontSize: 13, outline: "none" }}
+          />
+
+          <div style={{ display: "flex", gap: 4 }}>
+            <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="adm-btn-sm ghost" aria-label="Move up" title="Move up">
+              ↑
+            </button>
+            <button type="button" onClick={() => move(i, 1)} disabled={i === rows.length - 1} className="adm-btn-sm ghost" aria-label="Move down" title="Move down">
+              ↓
+            </button>
+            <button type="button" onClick={() => remove(i)} className="adm-btn-sm ghost" style={{ color: "var(--red)" }} aria-label="Remove row" title="Remove row">
+              ✕
+            </button>
+          </div>
+        </div>
+      ))}
+      <button type="button" onClick={add} className="adm-btn-sm ghost" style={{ padding: "8px 14px" }}>
+        + Add another tool
       </button>
     </div>
   );

@@ -40,6 +40,7 @@ export default async function EditBlogPostPage({ params }: { params: Promise<{ i
     tagsCsv: post.tags.join(", "),
     body: post.body,
     faqs: post.faqs ?? [],
+    toolTable: post.toolTable ?? [],
     readMinutes: post.readMinutes ? String(post.readMinutes) : "",
     status: post.status,
     publishedAt: toLocal(post.publishedAt),

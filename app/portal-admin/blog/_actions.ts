@@ -29,6 +29,7 @@ const Input = z.object({
   tagsCsv: z.string().optional().default(""),
   body: z.string().min(1),
   faqsJson: z.string().optional().default(""),
+  toolTableJson: z.string().optional().default(""),
   readMinutes: z.string().optional().default(""),
   status: z.enum(["draft", "scheduled", "published"]).default("draft"),
   publishedAt: z.string().optional().default(""), // datetime-local
@@ -49,6 +50,7 @@ function parse(fd: FormData) {
     tagsCsv: (fd.get("tagsCsv") as string) ?? "",
     body: (fd.get("body") as string) ?? "",
     faqsJson: (fd.get("faqsJson") as string) ?? "",
+    toolTableJson: (fd.get("toolTableJson") as string) ?? "",
     readMinutes: (fd.get("readMinutes") as string) ?? "",
     status: ((fd.get("status") as string) ?? "draft") as "draft" | "scheduled" | "published",
     publishedAt: (fd.get("publishedAt") as string) ?? "",
@@ -73,6 +75,17 @@ function values(i: z.infer<typeof Input>) {
     .filter((s) => typeof s === "string" && s.length > 0);
   const faqs = safeParseArr<{ q: string; a: string }>(i.faqsJson)
     .filter((f) => f && typeof f.q === "string" && typeof f.a === "string" && f.q.trim() && f.a.trim());
+  // A roundup row is only meaningful once it points at a tool; the two
+  // editorial columns may legitimately be left blank. Trimmed so a row of
+  // whitespace doesn't render as an empty table cell.
+  const toolTable = safeParseArr<{ slug: string; bestFor: string; trialInfo: string }>(i.toolTableJson)
+    .filter((r) => r && typeof r.slug === "string" && r.slug.trim())
+    .map((r) => ({
+      slug: r.slug.trim(),
+      bestFor: typeof r.bestFor === "string" ? r.bestFor.trim() : "",
+      trialInfo: typeof r.trialInfo === "string" ? r.trialInfo.trim() : "",
+    }))
+    .slice(0, 30);
   return {
     slug: i.slug,
     title: i.title,
@@ -85,6 +98,7 @@ function values(i: z.infer<typeof Input>) {
     tags,
     body: i.body,
     faqs,
+    toolTable,
     readMinutes: i.readMinutes ? parseInt(i.readMinutes, 10) : null,
     status: i.status,
     publishedAt: i.publishedAt

@@ -539,6 +539,21 @@ export const blogPosts = pgTable(
     body: text("body").notNull().default(""), // HTML from rich text editor
     /** Q&A pairs rendered below the body as accordion + emitted as FAQ JSON-LD. */
     faqs: jsonb("faqs").$type<Array<{ q: string; a: string }>>().notNull().default([]),
+    /**
+     * Ordered comparison table for roundup / "best X" posts, rendered above
+     * the article body as a summary of the tools reviewed.
+     *
+     * Stores ONLY the per-post editorial columns. Everything factual about
+     * the tool — name, logo, link, price — is looked up from the `tool` table
+     * by slug at render time, so a pricing change updates every roundup at
+     * once instead of going stale in N copies.
+     *
+     * Row order is the ranking; the renderer numbers rows by array index.
+     */
+    toolTable: jsonb("tool_table")
+      .$type<Array<{ slug: string; bestFor: string; trialInfo: string }>>()
+      .notNull()
+      .default([]),
     readMinutes: integer("read_minutes"),
     status: text("status").notNull().default("draft"), // draft | scheduled | published
     publishedAt: timestamp("published_at", { withTimezone: true }),

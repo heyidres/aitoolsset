@@ -299,6 +299,22 @@ export async function getToolById(id: string): Promise<CmsTool | null> {
 }
 
 /**
+ * Bulk tool lookup, keyed by slug — one query for many slugs.
+ *
+ * Used by the blog roundup table, which resolves a whole ranked list at
+ * once; doing it per-row would fan out into N queries against a pooled
+ * connection. Returns a Map so callers can preserve THEIR ordering (the
+ * editor's ranking) rather than inheriting the database's. Slugs with no
+ * matching row are simply absent — callers skip them.
+ */
+export async function getToolsBySlugs(slugs: string[]): Promise<Map<string, CmsTool>> {
+  const unique = [...new Set(slugs.filter(Boolean))];
+  if (unique.length === 0) return new Map();
+  const rows = await db.select().from(tools).where(inArray(tools.slug, unique));
+  return new Map(rows.map((r) => [r.slug, toCmsTool(r)]));
+}
+
+/**
  * Tools listed under a category slug, published only.
  *
  * A tool belongs to a category page if EITHER:
@@ -561,6 +577,12 @@ export type CmsBlogPost = {
   body: string;
   /** Q&A pairs rendered below body + emitted as FAQ JSON-LD. */
   faqs: Array<{ q: string; a: string }>;
+  /**
+   * Roundup comparison table rows, in ranking order. Holds only the
+   * per-post editorial columns — the tool's name, logo, link and price are
+   * resolved from the tool table by slug at render time.
+   */
+  toolTable: Array<{ slug: string; bestFor: string; trialInfo: string }>;
   readMinutes: number | null;
   status: "draft" | "scheduled" | "published";
   publishedAt: Date | null;
@@ -598,6 +620,7 @@ function toCmsBlogPost(row: typeof blogPosts.$inferSelect): CmsBlogPost {
     tags: row.tags,
     body: row.body,
     faqs: Array.isArray(row.faqs) ? row.faqs : [],
+    toolTable: Array.isArray(row.toolTable) ? row.toolTable : [],
     readMinutes: row.readMinutes,
     status: row.status as CmsBlogPost["status"],
     publishedAt: row.publishedAt,

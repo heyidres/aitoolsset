@@ -16,6 +16,7 @@ import { ReadingProgress } from "@/components/blog/ReadingProgress";
 import { BlogSidebar } from "@/components/blog/BlogSidebar";
 import { BlogBody } from "@/components/blog/BlogBody";
 import { BylineDisclosure, WhyTrustBox } from "@/components/blog/TrustBox";
+import { ToolTable } from "@/components/blog/ToolTable";
 import { BlogFaqs } from "@/components/blog/BlogFaqs";
 import { AuthorByline } from "@/components/blog/AuthorByline";
 import { AuthorCards } from "@/components/blog/AuthorCards";
@@ -392,6 +393,9 @@ async function CmsPostRenderer({
                 claims about how software is evaluated, so it would be
                 dishonest on a post that evaluates nothing. */}
             {referencedSlugs.length > 0 && <WhyTrustBox />}
+            {post.toolTable.length > 0 && (
+              <ToolTable rows={post.toolTable} title={`${post.title} Summary`} />
+            )}
             <BlogBody html={postWithTocIds.body} />
             {post.faqs.length > 0 && <BlogFaqs items={post.faqs} />}
             {(authors.length > 0 || reviewedBy) && (
