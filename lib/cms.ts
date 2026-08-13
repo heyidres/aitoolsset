@@ -161,6 +161,102 @@ function toCmsTool(row: typeof tools.$inferSelect): CmsTool {
   };
 }
 
+// Column set for CARD/LISTING contexts (homepage grids, category grids,
+// search results, the tool-detail "related tools" rail) — every field a
+// <ToolCard>/DetailTool/related-tools mapper or computeCategoryStats()
+// actually reads, verified against each of those call sites before
+// trimming. Excludes detail-page-only fields (features, useCases,
+// pros/cons, integrations, platforms, socials, seoTitle/seoDescription,
+// screenshotUrl, websiteUrl, launched/weeklyUsers/startingPrice/etc,
+// createdAt/updatedAt) and — biggest win — the full `translations` blob's
+// per-locale copies of those same heavy fields aren't touched either,
+// since Drizzle only ever sends the columns named here over the wire.
+// These are large JSON columns repeated across hundreds of rows on every
+// homepage/category-page render; a listing card never displays them.
+const LEAN_TOOL_COLUMNS = {
+  id: tools.id,
+  slug: tools.slug,
+  name: tools.name,
+  tagline: tools.tagline,
+  domain: tools.domain,
+  category: tools.category,
+  categories: tools.categories,
+  tags: tools.tags,
+  description: tools.description,
+  pricing: tools.pricing,
+  logoUrl: tools.logoUrl,
+  verified: tools.verified,
+  featured: tools.featured,
+  saveCount: tools.saveCount,
+  voteCount: tools.voteCount,
+  reviewCount: tools.reviewCount,
+  avgRating: tools.avgRating,
+  deal: tools.deal,
+  homepageOrder: tools.homepageOrder,
+  plans: tools.plans, // read by computeCategoryStats() for the price table
+  translations: tools.translations, // tagline/description locale overrides
+} as const;
+
+/** Row shape produced by `db.select(LEAN_TOOL_COLUMNS)`. */
+type LeanToolRow = {
+  [K in keyof typeof LEAN_TOOL_COLUMNS]: (typeof tools.$inferSelect)[K];
+};
+
+/**
+ * Maps a lean row to the full CmsTool shape so every existing adapter
+ * (cmsToolToLegacy, cmsToolToDetail, applyToolTranslations) keeps working
+ * unchanged. Fields not selected by LEAN_TOOL_COLUMNS get inert placeholder
+ * values — safe ONLY because no card/listing consumer reads them; a detail
+ * page must keep using toCmsTool()/getToolBySlug() instead.
+ */
+function toCmsToolLean(row: LeanToolRow): CmsTool {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    tagline: row.tagline,
+    domain: row.domain,
+    websiteUrl: "",
+    linkRel: "nofollow",
+    category: row.category,
+    categories: Array.isArray(row.categories) ? row.categories : [],
+    tags: row.tags,
+    description: row.description,
+    pricing: row.pricing as CmsTool["pricing"],
+    logoUrl: row.logoUrl,
+    screenshotUrl: null,
+    verified: row.verified,
+    featured: row.featured,
+    status: "published",
+    saveCount: row.saveCount,
+    voteCount: row.voteCount,
+    reviewCount: row.reviewCount,
+    avgRating: row.avgRating,
+    deal: row.deal,
+    homepageOrder: row.homepageOrder,
+    madeBy: null,
+    launched: null,
+    weeklyUsers: null,
+    startingPrice: null,
+    hasApi: null,
+    mobileApp: null,
+    browserExtension: null,
+    socials: null,
+    features: null,
+    useCases: null,
+    platforms: null,
+    integrations: null,
+    pros: null,
+    cons: null,
+    plans: row.plans,
+    seoTitle: null,
+    seoDescription: null,
+    translations: (row.translations ?? {}) as CmsTool["translations"],
+    createdAt: new Date(0),
+    updatedAt: new Date(0),
+  };
+}
+
 /**
  * Apply per-locale translations to a CmsTool. For each translatable field,
  * use the locale override when present, otherwise pass through the English
@@ -206,6 +302,22 @@ export async function getPublishedTools(): Promise<CmsTool[]> {
     .where(eq(tools.status, "published"))
     .orderBy(desc(tools.saveCount));
   return rows.map(toCmsTool);
+}
+
+/**
+ * Same rows as getPublishedTools(), but column-scoped for card/listing
+ * rendering (see LEAN_TOOL_COLUMNS) — use this on any page that only ever
+ * turns the result into <ToolCard>s (homepage, search). Pages that need
+ * full tool detail (sitemap lastmod dates, llms.txt's rich per-tool text)
+ * should keep using getPublishedTools().
+ */
+export async function getPublishedToolsForCards(): Promise<CmsTool[]> {
+  const rows = await db
+    .select(LEAN_TOOL_COLUMNS)
+    .from(tools)
+    .where(eq(tools.status, "published"))
+    .orderBy(desc(tools.saveCount));
+  return rows.map(toCmsToolLean);
 }
 
 /** Featured tools for the homepage rail. */
@@ -326,13 +438,13 @@ export async function getToolsBySlugs(slugs: string[]): Promise<Map<string, CmsT
 export async function getToolsByCategory(categorySlug: string): Promise<CmsTool[]> {
   const containsArg = JSON.stringify([categorySlug]);
   const rows = await db
-    .select()
+    .select(LEAN_TOOL_COLUMNS)
     .from(tools)
     .where(
       sql`(${tools.category} = ${categorySlug} OR ${tools.categories} @> ${containsArg}::jsonb) AND ${tools.status} = 'published'`
     )
     .orderBy(desc(tools.saveCount));
-  return rows.map(toCmsTool);
+  return rows.map(toCmsToolLean);
 }
 
 /**
@@ -381,7 +493,7 @@ export async function getRelatedTools({
   // Pad with global top-save tools if we still need more (niche category).
   if (merged.length < limit) {
     const padding = await db
-      .select()
+      .select(LEAN_TOOL_COLUMNS)
       .from(tools)
       .where(sql`${tools.status} = 'published'`)
       .orderBy(desc(tools.saveCount))
@@ -391,7 +503,7 @@ export async function getRelatedTools({
       if (seen.has(row.slug) || seen.has(row.id)) continue;
       seen.add(row.slug);
       seen.add(row.id);
-      merged.push(toCmsTool(row));
+      merged.push(toCmsToolLean(row));
     }
   }
 
@@ -415,7 +527,7 @@ export async function searchTools(query: string, limit = 50): Promise<CmsTool[]>
   if (!query || query.length < 2) return [];
   const like = `%${query.replace(/[%_]/g, "\\$&")}%`;
   const rows = await db
-    .select()
+    .select(LEAN_TOOL_COLUMNS)
     .from(tools)
     .where(
       sql`${tools.status} = 'published' AND (
@@ -428,7 +540,7 @@ export async function searchTools(query: string, limit = 50): Promise<CmsTool[]>
     )
     .orderBy(desc(tools.saveCount))
     .limit(limit);
-  return rows.map(toCmsTool);
+  return rows.map(toCmsToolLean);
 }
 
 // ─────────────────────────────────────────────────────────────

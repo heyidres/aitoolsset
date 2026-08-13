@@ -10,7 +10,7 @@ import { PopularTable } from "@/components/PopularTable";
 import { BlogSection } from "@/components/BlogSection";
 import { CtaSection } from "@/components/CtaSection";
 import { TOOLS, WRITER_TOOLS, DEV_TOOLS, WRITER_USECASES, DEV_USECASES } from "@/lib/tools";
-import { getPublishedTools, getEnabledHomeSections, getCategoriesCount, applyToolTranslations, type CmsTool } from "@/lib/cms";
+import { getPublishedToolsForCards, getEnabledHomeSections, getCategoriesCount, applyToolTranslations, type CmsTool } from "@/lib/cms";
 import { mergeToolsBySlug } from "@/lib/cms-adapters";
 import { getLocale, getTranslations } from "next-intl/server";
 import { i18n, isLocale } from "@/lib/i18n/config";
@@ -23,10 +23,19 @@ import {
 } from "@/lib/i18n/seed-i18n";
 
 export const runtime = "nodejs";
-// force-dynamic (not build-time ISR) — see app/[locale]/ai-tools/page.tsx
-// for why: avoids bursting the DB pool during static generation. Admin
-// publishes still show immediately (this page always renders fresh).
-export const dynamic = "force-dynamic";
+// ISR, not force-dynamic: this is the single highest-traffic route (the
+// bulk of ~51k monthly visits), and it was re-querying every published
+// tool on every single request — the dominant driver of a Supabase
+// free-tier egress overage (10GB used against a 5GB cap). This page has
+// no generateStaticParams of its own, but app/[locale]/layout.tsx does
+// (all 10 locales), so `next build` pre-renders all 10 locale variants
+// up front via the build's single reused connection (lib/db/index.ts) —
+// a bounded, sequential handful of queries, not the unbounded per-tool/
+// per-category burst that force-dynamic exists elsewhere to avoid. Every
+// locale then serves from cache for an hour. Admin tool/blog actions
+// already call revalidatePath("/") on publish, so new content still
+// appears immediately rather than waiting out the window.
+export const revalidate = 3600;
 
 // Homepage canonical + hreflang. Title/description inherit from the
 // root layout; this only pins the URL identity (en at root, ko at /ko)
@@ -41,7 +50,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function HomePage() {
   // Pull every published tool + every enabled homepage section in parallel.
   const [cmsTools, sections, categoryCount, locale, t] = await Promise.all([
-    getPublishedTools().catch(() => []),
+    getPublishedToolsForCards().catch(() => []),
     getEnabledHomeSections().catch(() => []),
     getCategoriesCount().catch(() => 48),
     getLocale(),

@@ -19,12 +19,13 @@ import {
 import { i18n } from "@/lib/i18n/config";
 import { localeUrl } from "@/lib/i18n/hreflang";
 
-// force-dynamic (not build-time render) — see app/[locale]/ai-tools/page.tsx
-// for why: keeps every DB query out of the build, since a fresh Vercel
-// build can start while Supabase's free-tier compute is cold, and the
-// build has no tolerance for that wake-up latency. Crawl volume is low
-// enough that rendering per-request (instead of caching 6h) is fine.
-export const dynamic = "force-dynamic";
+// This file's header comment has long claimed "cached 6h via revalidate",
+// but `dynamic = "force-dynamic"` actually disabled that — every crawler
+// hit re-queried every tool, category, and post. Fixing it to match the
+// documented intent: this route has no dynamic segments, so `next build`
+// pre-renders it exactly once (not per-locale, not per-tool), then it
+// serves from cache and refreshes every 6h.
+export const revalidate = 21600; // 6h
 export const runtime = "nodejs";
 
 const BASE = process.env.SITE_URL ?? "https://aitoolsset.com";

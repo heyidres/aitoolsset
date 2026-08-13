@@ -81,8 +81,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     // If only a pricing filter is set (no query), surface every CMS
     // tool whose pricing tier matches — bypass the search-string layer.
     if (tier && query.length < 2) {
-      const { getPublishedTools } = await import("@/lib/cms");
-      const all = await getPublishedTools().catch(() => []);
+      const { getPublishedToolsForCards } = await import("@/lib/cms");
+      const all = await getPublishedToolsForCards().catch(() => []);
       for (const c of all) merged.set(c.slug, cmsToolToLegacy(c));
     }
 

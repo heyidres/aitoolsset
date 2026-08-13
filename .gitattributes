@@ -1,0 +1,6 @@
+# Shell scripts run inside Linux containers — a CRLF shebang line
+# (`#!/bin/sh\r`) fails to exec at all. Force LF regardless of any
+# developer's local core.autocrlf setting (this repo's default is
+# autocrlf=true on Windows, which would otherwise reintroduce CRLF on
+# checkout).
+*.sh text eol=lf

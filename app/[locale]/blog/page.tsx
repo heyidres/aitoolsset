@@ -15,9 +15,14 @@ import { alternatesFor } from "@/lib/i18n/hreflang";
 import { isLocale } from "@/lib/i18n/config";
 
 export const runtime = "nodejs";
-// force-dynamic (not build-time ISR) — see app/[locale]/ai-tools/page.tsx
-// for why: avoids bursting the DB pool during static generation.
-export const dynamic = "force-dynamic";
+// ISR — see app/[locale]/page.tsx for the mechanics (this page has no
+// generateStaticParams of its own, but the parent [locale] layout's does,
+// so `next build` pre-renders all 10 locale variants via the build's
+// single reused DB connection — bounded, not the unbounded per-tool burst
+// force-dynamic exists elsewhere to avoid). Admin blog actions already
+// call revalidatePath("/blog") on publish/update/delete, so new posts
+// still appear immediately rather than waiting out the hour.
+export const revalidate = 3600;
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;

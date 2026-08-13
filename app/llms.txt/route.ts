@@ -17,11 +17,12 @@ import {
   getPublishedBlogPosts,
 } from "@/lib/cms";
 
-// force-dynamic (not build-time render) — see app/[locale]/ai-tools/page.tsx
-// for why: keeps DB queries out of the build (a fresh Vercel build can
-// start while the free-tier DB compute is cold). LLM crawl volume is low
-// enough that per-request rendering is fine without the 6h cache.
-export const dynamic = "force-dynamic";
+// This file's header comment has long claimed "cached 6h", but
+// `dynamic = "force-dynamic"` actually disabled that — every hit re-queried
+// every tool, category, and post. Fixing it to match the documented
+// intent: this route has no dynamic segments, so `next build` pre-renders
+// it exactly once, then it serves from cache and refreshes every 6h.
+export const revalidate = 21600; // 6h
 export const runtime = "nodejs";
 
 const BASE = process.env.SITE_URL ?? "https://aitoolsset.com";

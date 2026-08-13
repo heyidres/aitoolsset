@@ -89,19 +89,24 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     const cms = found.cms;
     const year = new Date().getFullYear();
     const aiName = categoryNameWithAiPrefix(found.name);
-    const title = cms?.seoTitle ?? `Best ${aiName} Tools ${year} — Top Tools Reviewed | AI Tools Set`;
+    // "List of ..." (not "Best ... Ranked and Reviewed") so this doesn't read
+    // as the same claim as our "Best X Tools" blog roundups — the category
+    // page is a directory listing, the blog post is the editorial ranking.
+    const title = cms?.seoTitle ?? `List of ${aiName} Tools & Software in ${year}`;
     const description =
       cms?.seoDescription ??
-      `Discover the best ${aiName.toLowerCase()} tools of ${year}. Browse hand-picked AI tools. Compare pricing, features, and user reviews.`;
+      `Browse ${aiName.toLowerCase()} tools and software for ${year}. Compare pricing, features, and user reviews.`;
     const alternates = isLocale(locale)
       ? alternatesFor({ locale, path: `/ai-tools/${found.slug}` })
       : undefined;
     return {
-      title,
+      // `absolute` bypasses the root layout's "%s — AI Tools Set" template
+      // so the title renders exactly as written (matches editorial intent).
+      title: { absolute: title },
       description,
       alternates,
       openGraph: {
-        title: cms?.seoTitle ?? `Best ${aiName} Tools ${year} | AI Tools Set`,
+        title,
         description,
         url: alternates?.canonical ?? `https://aitoolsset.com/ai-tools/${found.slug}`,
         images: cms?.bannerImageUrl ? [{ url: cms.bannerImageUrl }] : undefined,
@@ -111,7 +116,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     // Metadata MUST never throw — if it does Next.js 500s the whole
     // route segment before error.tsx can render. Swallow + log.
     console.error("[ai-tools/[slug]] generateMetadata failed", err);
-    return { title: "AI Tools — AI Tools Set" };
+    return { title: { absolute: "AI Tools — AI Tools Set" } };
   }
 }
 

@@ -85,7 +85,22 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-USER nextjs
+# ISR (export const revalidate = ...) writes its cache here at runtime.
+# Baked in at build time so it exists (and is nextjs-owned) even without
+# a mounted volume — local `docker run`, or before a Railway Volume is
+# attached at this exact path. Once a volume IS mounted here, Railway
+# remounts it root-owned on every container start regardless of this
+# chown — docker-entrypoint.sh below re-fixes ownership at runtime to
+# cover that case, which build time can't reach.
+RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next/cache
+
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Deliberately NOT switching to `USER nextjs` here (unlike before) — the
+# entrypoint needs to start as root so it can chown a freshly-mounted
+# volume, then drops to nextjs itself before exec'ing the server. See
+# docker-entrypoint.sh.
 
 # Railway injects PORT at runtime; 3000 is the local-docker default.
 # HOSTNAME=0.0.0.0 is required — the standalone server binds localhost
@@ -94,4 +109,5 @@ ENV PORT=3000 \
     HOSTNAME=0.0.0.0
 EXPOSE 3000
 
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["node", "server.js"]
