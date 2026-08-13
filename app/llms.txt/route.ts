@@ -3,11 +3,9 @@
  *
  * Generated from the live DB so counts and links never go stale.
  * Neither Futurepedia nor most directories ship one; the cost is a
- * single cached route and the upside is better retrieval/citation by
- * AI assistants (Anthropic, Perplexity, and several agent frameworks
+ * single per-request render and the upside is better retrieval/citation
+ * by AI assistants (Anthropic, Perplexity, and several agent frameworks
  * fetch it in practice — no engine *requires* it).
- *
- * Cached 6h to match the sitemap cadence.
  */
 
 import {
@@ -17,12 +15,15 @@ import {
   getPublishedBlogPosts,
 } from "@/lib/cms";
 
-// This file's header comment has long claimed "cached 6h", but
-// `dynamic = "force-dynamic"` actually disabled that — every hit re-queried
-// every tool, category, and post. Fixing it to match the documented
-// intent: this route has no dynamic segments, so `next build` pre-renders
-// it exactly once, then it serves from cache and refreshes every 6h.
-export const revalidate = 21600; // 6h
+// force-dynamic, NOT revalidate — see app/sitemap.ts for why: this route
+// has no dynamic segment either, so `revalidate` makes `next build` try
+// to pre-render it once, sharing the build's single DB connection with
+// ~450+ other pages (including ~50 news pages hammering external RSS
+// feeds live) and risking the same build-time starvation/timeout that
+// actually broke the build on sitemap.xml. LLM crawl volume is low enough
+// that per-request rendering is fine — matches this route's original,
+// working state.
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const BASE = process.env.SITE_URL ?? "https://aitoolsset.com";

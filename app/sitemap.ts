@@ -1,6 +1,6 @@
 /**
  * Dynamic sitemap.xml — generated at request time so Google
- * always sees fresh CMS content. Cached for 6h via revalidate.
+ * always sees fresh CMS content.
  *
  * Includes every static route + every published tool, blog post,
  * category, and glossary term from both Postgres and the
@@ -19,13 +19,19 @@ import {
 import { i18n } from "@/lib/i18n/config";
 import { localeUrl } from "@/lib/i18n/hreflang";
 
-// This file's header comment has long claimed "cached 6h via revalidate",
-// but `dynamic = "force-dynamic"` actually disabled that — every crawler
-// hit re-queried every tool, category, and post. Fixing it to match the
-// documented intent: this route has no dynamic segments, so `next build`
-// pre-renders it exactly once (not per-locale, not per-tool), then it
-// serves from cache and refreshes every 6h.
-export const revalidate = 21600; // 6h
+// force-dynamic, NOT revalidate — tried the latter once (revalidate=21600)
+// and it broke the production build: this route has no dynamic segment,
+// so `next build` tries to pre-render it once, which means it now shares
+// the build's single max:1 DB connection with the ~450+ other pages being
+// generated at the same time — including ~50 news article pages that each
+// make live HTTP calls to ~20 external RSS feeds (lib/news.ts). Those
+// feeds rate-limit under that load (visible as a flood of HTTP 429s in the
+// build log), the machine is saturated, and this route's DB queries
+// starved past Next's 60s per-page render timeout three times in a row,
+// failing the entire build. Crawl volume on this route is low enough that
+// per-request rendering (never touching the build at all) is the safer
+// trade — matches this route's original, working state.
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const BASE = process.env.SITE_URL ?? "https://aitoolsset.com";
