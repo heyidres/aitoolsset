@@ -328,14 +328,49 @@ async function fetchFeed(feed: FeedSource): Promise<NewsPost[]> {
   }
 }
 
-export async function fetchAllNews(): Promise<{ posts: NewsPost[]; live: number; total: number }> {
-  const results = await Promise.allSettled(FEEDS.map(fetchFeed));
-  const live = results
-    .flatMap((r) => (r.status === "fulfilled" ? r.value : []))
-    .sort((a, b) => b.timestamp - a.timestamp);
-  const liveCount = live.length;
-  const merged = live.length >= 6 ? live : [...live, ...FALLBACK_POSTS.filter((f) => !live.some((l) => l.cardTitle === f.cardTitle))];
-  return { posts: merged.slice(0, 30), live: liveCount, total: merged.length };
+type NewsResult = { posts: NewsPost[]; live: number; total: number };
+
+// Module-level memoization, NOT just the `next: { revalidate }` option on
+// each feed's fetch() call below. During `next build`, generateStaticParams
+// (once per locale), generateMetadata, and the page body EACH independently
+// call fetchAllNews()/findPostBySlug() for every one of the ~50 statically
+// generated news pages x up to 10 locales — hundreds of near-simultaneous
+// FIRST calls, all racing before Next's fetch cache has a single entry to
+// serve, each one fanning out to all ~20 external RSS feeds. That stampede
+// is what actually broke two production builds in a row (Anthropic's feed
+// rate-limiting under the load, visible as a flood of HTTP 429s, saturating
+// the build and timing out whatever page happened to be rendering at that
+// moment — sitemap.xml the first time, two news article pages the second).
+// A plain in-memory promise cache guarantees every caller within the same
+// process awaits the SAME in-flight/resolved fetch, cutting concurrent
+// requests to each feed from hundreds down to at most one per build worker
+// (staticGenerationMaxConcurrency: 2) — that's what the fetch-level cache
+// was supposed to provide but couldn't, since none of those callers arrive
+// after the cache is actually populated.
+let cachedNews: { promise: Promise<NewsResult>; at: number } | null = null;
+const NEWS_CACHE_TTL_MS = 1800_000; // matches the `revalidate: 1800` below
+
+export async function fetchAllNews(): Promise<NewsResult> {
+  const now = Date.now();
+  if (cachedNews && now - cachedNews.at < NEWS_CACHE_TTL_MS) {
+    return cachedNews.promise;
+  }
+  const promise = (async (): Promise<NewsResult> => {
+    const results = await Promise.allSettled(FEEDS.map(fetchFeed));
+    const live = results
+      .flatMap((r) => (r.status === "fulfilled" ? r.value : []))
+      .sort((a, b) => b.timestamp - a.timestamp);
+    const liveCount = live.length;
+    const merged = live.length >= 6 ? live : [...live, ...FALLBACK_POSTS.filter((f) => !live.some((l) => l.cardTitle === f.cardTitle))];
+    return { posts: merged.slice(0, 30), live: liveCount, total: merged.length };
+  })();
+  cachedNews = { promise, at: now };
+  // A failed fetch shouldn't poison the cache for the full TTL — let the
+  // next caller retry instead of every page silently getting an empty feed.
+  promise.catch(() => {
+    if (cachedNews?.promise === promise) cachedNews = null;
+  });
+  return promise;
 }
 
 // Fallback static posts (used when feeds fail or aren't enough)
