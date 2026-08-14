@@ -28,7 +28,7 @@ const COOKIES: Array<{ name: string; type: "ess" | "ana" | "mkt"; label: string;
   { name: "ats-campaign", type: "mkt", label: "Marketing", purpose: "Tracks which campaign referred you", duration: "30 days" },
 ];
 
-export default function CookiesPage() {
+export default async function CookiesPage() {
   return (
     <main>
       <Nav />

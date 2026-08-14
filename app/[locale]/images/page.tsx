@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ImagesPage() {
+export default async function ImagesPage() {
   return (
     <main>
       <Nav />

@@ -64,7 +64,7 @@ const METHODS = [
   },
 ];
 
-export default function ContactPage() {
+export default async function ContactPage() {
   return (
     <main>
       <Nav />

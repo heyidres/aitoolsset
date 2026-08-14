@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function SubmitPage() {
+export default async function SubmitPage() {
   return (
     <main>
       <Nav />

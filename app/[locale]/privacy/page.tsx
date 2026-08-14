@@ -22,7 +22,7 @@ const TOC = [
   { id: "contact", label: "Contact" },
 ];
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
   return (
     <main>
       <Nav />

@@ -26,7 +26,7 @@ const TEAM = [
   { initials: "PN", grad: "linear-gradient(135deg,#fbbf24,#d97706)", name: "Priya Nair", role: "Reviews Editor", bio: "Tests every submitted tool and moderates community reviews to keep quality high." },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
   return (
     <main>
       <Nav />

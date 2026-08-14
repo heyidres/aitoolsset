@@ -23,7 +23,7 @@ const TOC = [
   { id: "contact", label: "Contact" },
 ];
 
-export default function TermsPage() {
+export default async function TermsPage() {
   return (
     <main>
       <Nav />
